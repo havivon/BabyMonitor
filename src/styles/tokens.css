@@ -1,0 +1,346 @@
+/* ==========================================================================
+   BabyMonitor — Design tokens
+   Owner: Design. Source of truth for every color, size and timing in the UI.
+   Do not hard-code values in components; reference these variables.
+
+   Theming
+   - Light is the default (`:root`).
+   - Dark applies with `<html data-theme="dark">`, or automatically when the OS
+     prefers dark and the user has not forced light (`data-theme="light"`).
+   - Any element can carry `data-theme` to scope a theme (used by the mockup).
+   ========================================================================== */
+
+:root,
+[data-theme="light"] {
+  color-scheme: light;
+
+  /* ---- Neutrals (warm) ------------------------------------------------- */
+  --color-bg: #f8f5ef;              /* app background, warm paper */
+  --color-surface: #ffffff;         /* cards, inputs, tab bar */
+  --color-surface-2: #f2ede4;       /* sunken: segmented track, stepper, chips */
+  --color-surface-3: #eae4d9;       /* hover/pressed fill on surface-2 */
+  --color-surface-raised: #ffffff;  /* sheets, dialogs, menus */
+  --color-thumb: #ffffff;           /* selected segment / stepper buttons */
+  --color-border: #e4dccf;          /* hairlines, card outlines, dividers */
+  --color-border-strong: #8c8276;   /* input outlines (≥3:1 vs surface) */
+
+  --color-text: #1f2b29;            /* primary text (14.6:1 on surface) */
+  --color-text-muted: #56625f;      /* secondary text (6.3:1) */
+  --color-text-subtle: #626c69;     /* placeholders, tertiary (5.4:1) */
+
+  /* ---- Brand ----------------------------------------------------------- */
+  --color-primary: #2a746c;         /* calm teal */
+  --color-primary-hover: #23655e;
+  --color-primary-active: #1c5650;
+  --color-on-primary: #ffffff;
+  --color-primary-soft: #e0f0ec;
+  --color-on-primary-soft: #1c5650;
+
+  --color-accent: #e59468;          /* warm apricot — decorative only, never text */
+  --color-accent-soft: #fcebdf;
+  --color-on-accent-soft: #9a4520;  /* text/icons on accent-soft or surface */
+
+  /* ---- Feedback -------------------------------------------------------- */
+  --color-danger: #b83a32;
+  --color-danger-hover: #a1322b;
+  --color-on-danger: #ffffff;
+  --color-danger-soft: #fbe7e4;
+  --color-success: #2c7a4b;
+  --color-success-soft: #e3f2e8;
+  --color-warning: #8a5a00;
+  --color-warning-soft: #fff2d3;
+  --color-info: #2e6aa8;
+  --color-info-soft: #e6eff9;
+
+  /* ---- Feeding / data categories (Okabe–Ito derived, CVD-safe trio) ---- */
+  --color-breast: #b03f7a;          /* plum-rose */
+  --color-breast-soft: #fae7f0;
+  --color-on-breast: #ffffff;
+  --color-breast-fill: #b03f7a;     /* large filled areas (active side button) */
+  --color-on-breast-fill: #ffffff;
+  --color-bottle: #2d69ad;          /* blue */
+  --color-bottle-soft: #e5eef9;
+  --color-on-bottle: #ffffff;
+  --color-solid: #9e540a;           /* amber / ochre */
+  --color-solid-soft: #fcefdc;
+  --color-on-solid: #ffffff;
+  --color-growth: #6650bd;          /* violet */
+  --color-growth-soft: #ede9fa;
+  --color-on-growth: #ffffff;
+
+  /* ---- Charts ---------------------------------------------------------- */
+  --color-chart-grid: #ebe5da;
+  --color-chart-axis: #56625f;
+  --color-chart-band-outer: #f3eee6;   /* WHO P3–P97 */
+  --color-chart-band-inner: #e7e0d4;   /* WHO P15–P85 */
+  --color-chart-pline: #c9bfb0;        /* percentile lines 3/15/85/97 */
+  --color-chart-median: #9d9385;       /* P50 */
+  --color-chart-target: rgb(42 116 108 / 0.12); /* guideline range band */
+
+  /* ---- Overlays & inverse --------------------------------------------- */
+  --color-scrim: rgb(31 26 20 / 0.42);
+  --color-toast-bg: #24302e;
+  --color-toast-text: #f4efe7;
+  --color-toast-action: #9edbd1;
+  --color-tabbar-bg: rgb(255 255 255 / 0.92);
+  --color-focus-ring: #2a746c;
+  --color-focus-ring-offset: var(--color-bg);
+
+  /* ---- Elevation (warm-tinted, soft) ---------------------------------- */
+  --shadow-1: 0 1px 2px rgb(58 44 28 / 0.06), 0 1px 1px rgb(58 44 28 / 0.03);
+  --shadow-2: 0 1px 2px rgb(58 44 28 / 0.05), 0 4px 14px rgb(58 44 28 / 0.07);
+  --shadow-3: 0 2px 6px rgb(58 44 28 / 0.06), 0 12px 32px rgb(58 44 28 / 0.12);
+  --shadow-sheet: 0 -6px 32px rgb(58 44 28 / 0.16);
+  --shadow-inset-hl: inset 0 0 0 0 transparent; /* top highlight, dark only */
+}
+
+/* --------------------------------------------------------------------------
+   Dark theme — "night feed" mode: warm charcoal, no pure white, no pure black,
+   desaturated pastel accents so nothing glares at 3 a.m.
+   -------------------------------------------------------------------------- */
+[data-theme="dark"] {
+  color-scheme: dark;
+
+  --color-bg: #141211;
+  --color-surface: #1e1b19;
+  --color-surface-2: #272320;
+  --color-surface-3: #302b27;
+  --color-surface-raised: #25211e;
+  --color-thumb: #3a3530;
+  --color-border: #38322d;
+  --color-border-strong: #7d746b;
+
+  --color-text: #eae3d8;
+  --color-text-muted: #b2a99d;
+  --color-text-subtle: #9a9186;
+
+  --color-primary: #73c7ba;
+  --color-primary-hover: #86d1c5;
+  --color-primary-active: #5fb3a6;
+  --color-on-primary: #0f2421;
+  --color-primary-soft: #1b3430;
+  --color-on-primary-soft: #a6e0d6;
+
+  --color-accent: #efa27a;
+  --color-accent-soft: #3a281e;
+  --color-on-accent-soft: #f4b996;
+
+  --color-danger: #f08b80;
+  --color-danger-hover: #f39d93;
+  --color-on-danger: #2a0f0c;
+  --color-danger-soft: #3b1f1c;
+  --color-success: #7fcb98;
+  --color-success-soft: #1c3124;
+  --color-warning: #e8bc5e;
+  --color-warning-soft: #352a14;
+  --color-info: #86b5ec;
+  --color-info-soft: #1c2a3b;
+
+  --color-breast: #ea92bf;
+  --color-breast-soft: #3a2230;
+  --color-on-breast: #141211;
+  --color-breast-fill: #83405f;     /* dimmer than --color-breast: no glare at night */
+  --color-on-breast-fill: #f7ecf1;
+  --color-bottle: #86b6ee;
+  --color-bottle-soft: #1d2b3d;
+  --color-on-bottle: #141211;
+  --color-solid: #edb16a;
+  --color-solid-soft: #3a2b18;
+  --color-on-solid: #141211;
+  --color-growth: #b3a2f2;
+  --color-growth-soft: #2b2541;
+  --color-on-growth: #141211;
+
+  --color-chart-grid: #2f2a26;
+  --color-chart-axis: #b2a99d;
+  --color-chart-band-outer: #26221f;
+  --color-chart-band-inner: #312c28;
+  --color-chart-pline: #4a433d;
+  --color-chart-median: #6f665d;
+  --color-chart-target: rgb(115 199 186 / 0.14);
+
+  --color-scrim: rgb(0 0 0 / 0.56);
+  --color-toast-bg: #3a3530;
+  --color-toast-text: #eae3d8;
+  --color-toast-action: #8fd3c7;
+  --color-tabbar-bg: rgb(30 27 25 / 0.94);
+  --color-focus-ring: #73c7ba;
+  --color-focus-ring-offset: var(--color-bg);
+
+  --shadow-1: 0 1px 2px rgb(0 0 0 / 0.3);
+  --shadow-2: 0 1px 2px rgb(0 0 0 / 0.3), 0 4px 14px rgb(0 0 0 / 0.28);
+  --shadow-3: 0 2px 6px rgb(0 0 0 / 0.35), 0 12px 32px rgb(0 0 0 / 0.45);
+  --shadow-sheet: 0 -6px 32px rgb(0 0 0 / 0.5);
+  --shadow-inset-hl: inset 0 1px 0 rgb(255 245 230 / 0.04);
+}
+
+/* Auto: follow the OS unless the user explicitly chose light. Keep this block
+   identical to [data-theme="dark"] above (values are duplicated on purpose:
+   CSS cannot share a declaration block between a selector and a media query). */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+
+    --color-bg: #141211;
+    --color-surface: #1e1b19;
+    --color-surface-2: #272320;
+    --color-surface-3: #302b27;
+    --color-surface-raised: #25211e;
+    --color-thumb: #3a3530;
+    --color-border: #38322d;
+    --color-border-strong: #7d746b;
+
+    --color-text: #eae3d8;
+    --color-text-muted: #b2a99d;
+    --color-text-subtle: #9a9186;
+
+    --color-primary: #73c7ba;
+    --color-primary-hover: #86d1c5;
+    --color-primary-active: #5fb3a6;
+    --color-on-primary: #0f2421;
+    --color-primary-soft: #1b3430;
+    --color-on-primary-soft: #a6e0d6;
+
+    --color-accent: #efa27a;
+    --color-accent-soft: #3a281e;
+    --color-on-accent-soft: #f4b996;
+
+    --color-danger: #f08b80;
+    --color-danger-hover: #f39d93;
+    --color-on-danger: #2a0f0c;
+    --color-danger-soft: #3b1f1c;
+    --color-success: #7fcb98;
+    --color-success-soft: #1c3124;
+    --color-warning: #e8bc5e;
+    --color-warning-soft: #352a14;
+    --color-info: #86b5ec;
+    --color-info-soft: #1c2a3b;
+
+    --color-breast: #ea92bf;
+    --color-breast-soft: #3a2230;
+    --color-on-breast: #141211;
+    --color-breast-fill: #83405f;
+    --color-on-breast-fill: #f7ecf1;
+    --color-bottle: #86b6ee;
+    --color-bottle-soft: #1d2b3d;
+    --color-on-bottle: #141211;
+    --color-solid: #edb16a;
+    --color-solid-soft: #3a2b18;
+    --color-on-solid: #141211;
+    --color-growth: #b3a2f2;
+    --color-growth-soft: #2b2541;
+    --color-on-growth: #141211;
+
+    --color-chart-grid: #2f2a26;
+    --color-chart-axis: #b2a99d;
+    --color-chart-band-outer: #26221f;
+    --color-chart-band-inner: #312c28;
+    --color-chart-pline: #4a433d;
+    --color-chart-median: #6f665d;
+    --color-chart-target: rgb(115 199 186 / 0.14);
+
+    --color-scrim: rgb(0 0 0 / 0.56);
+    --color-toast-bg: #3a3530;
+    --color-toast-text: #eae3d8;
+    --color-toast-action: #8fd3c7;
+    --color-tabbar-bg: rgb(30 27 25 / 0.94);
+    --color-focus-ring: #73c7ba;
+    --color-focus-ring-offset: var(--color-bg);
+
+    --shadow-1: 0 1px 2px rgb(0 0 0 / 0.3);
+    --shadow-2: 0 1px 2px rgb(0 0 0 / 0.3), 0 4px 14px rgb(0 0 0 / 0.28);
+    --shadow-3: 0 2px 6px rgb(0 0 0 / 0.35), 0 12px 32px rgb(0 0 0 / 0.45);
+    --shadow-sheet: 0 -6px 32px rgb(0 0 0 / 0.5);
+    --shadow-inset-hl: inset 0 1px 0 rgb(255 245 230 / 0.04);
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Theme-independent tokens
+   -------------------------------------------------------------------------- */
+:root {
+  /* ---- Typography ------------------------------------------------------ */
+  --font-sans: "Rubik", system-ui, -apple-system, "Segoe UI", "Noto Sans Hebrew",
+    "Arial Hebrew", Arial, sans-serif;
+
+  --fw-regular: 400;
+  --fw-medium: 500;
+  --fw-semibold: 600;
+  --fw-bold: 700;
+
+  /*            size              line-height */
+  --fs-display: 4rem;      --lh-display: 1;        /* 64/64 timer */
+  --fs-hero: 2.5rem;       --lh-hero: 1.1;         /* 40/44 time-since, stat hero */
+  --fs-h1: 1.75rem;        --lh-h1: 1.2143;        /* 28/34 page titles (onboarding) */
+  --fs-h2: 1.375rem;       --lh-h2: 1.2727;        /* 22/28 app-header title, sheet title */
+  --fs-h3: 1.125rem;       --lh-h3: 1.3333;        /* 18/24 card & section titles */
+  --fs-body-lg: 1.0625rem; --lh-body-lg: 1.5294;   /* 17/26 primary list text, inputs */
+  --fs-body: 1rem;         --lh-body: 1.5;         /* 16/24 default */
+  --fs-body-sm: 0.875rem;  --lh-body-sm: 1.4286;   /* 14/20 meta, hints */
+  --fs-caption: 0.8125rem; --lh-caption: 1.3846;   /* 13/18 captions, badges */
+  --fs-micro: 0.75rem;     --lh-micro: 1.3333;     /* 12/16 tab labels, axis ticks */
+
+  /* ---- Spacing (4px grid) --------------------------------------------- */
+  --space-0: 0;
+  --space-0-5: 2px;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-7: 28px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-14: 56px;
+  --space-16: 64px;
+
+  /* ---- Radii ----------------------------------------------------------- */
+  --radius-xs: 6px;     /* badges, small chips inside dense rows */
+  --radius-sm: 10px;    /* inputs, seg options, icon bubbles */
+  --radius-md: 14px;    /* buttons, list groups */
+  --radius-lg: 20px;    /* cards, tiles */
+  --radius-xl: 28px;    /* bottom sheets (top corners), hero card */
+  --radius-pill: 999px;
+
+  /* ---- Sizing ---------------------------------------------------------- */
+  --touch-min: 48px;          /* minimum hit area, everywhere */
+  --control-h-sm: 40px;       /* visual height; hit area padded to 48 */
+  --control-h: 48px;
+  --control-h-lg: 56px;
+  --icon-sm: 18px;
+  --icon-md: 22px;
+  --icon-lg: 28px;
+  --icon-stroke: 2;           /* lucide strokeWidth; 1.75 for ≥28px */
+
+  --header-h: 56px;
+  --tabbar-h: 64px;
+  --timer-banner-h: 56px;
+  --content-max: 560px;
+  --gutter: 16px;
+
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+
+  /* ---- Motion ---------------------------------------------------------- */
+  --dur-instant: 80ms;    /* press feedback */
+  --dur-fast: 140ms;      /* hover, color, small toggles */
+  --dur-base: 220ms;      /* chips, seg thumb, toast in */
+  --dur-slow: 320ms;      /* sheet in, page fade */
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --ease-decelerate: cubic-bezier(0.05, 0.7, 0.1, 1);  /* entering */
+  --ease-accelerate: cubic-bezier(0.3, 0, 0.8, 0.15);  /* exiting */
+
+  /* ---- Z-index --------------------------------------------------------- */
+  --z-base: 0;
+  --z-sticky: 5;          /* sticky day headers */
+  --z-header: 10;
+  --z-timer-banner: 20;
+  --z-tabbar: 30;
+  --z-scrim: 40;
+  --z-sheet: 50;
+  --z-toast: 60;
+}

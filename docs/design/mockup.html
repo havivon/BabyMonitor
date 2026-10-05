@@ -1,0 +1,699 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>BabyMonitor · Mockups</title>
+<!--
+  Static design mockup. Each phone is an <iframe srcdoc> so that media queries,
+  dvh and position:fixed behave exactly like a 390×844 phone viewport.
+  The iframes load the production CSS from ../../src/styles/ (relative to this file).
+  Rubik is loaded from Google Fonts here only; the app self-hosts it via @fontsource.
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="../../src/styles/tokens.css" />
+<style>
+  body { margin: 0; font-family: "Rubik", system-ui, sans-serif; background: #e9e4db; color: #1f2b29; }
+  .board { padding: 56px 64px 72px; }
+  .board--dark { background: #0b0a09; color: #eae3d8; }
+  .board__head { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; margin-block-end: 40px; }
+  .board__title { font-size: 34px; font-weight: 600; margin: 0; letter-spacing: -0.01em; }
+  .board__sub { margin: 6px 0 0; font-size: 16px; opacity: 0.7; }
+  .swatches { display: flex; gap: 10px; direction: ltr; }
+  .sw { display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: 11px; opacity: 0.9; }
+  .sw i { inline-size: 36px; block-size: 36px; border-radius: 10px; box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.08); }
+  .grid { display: grid; grid-template-columns: repeat(3, 410px); gap: 56px 48px; justify-content: center; }
+  figure { margin: 0; display: flex; flex-direction: column; align-items: center; gap: 16px; }
+  .phone { inline-size: 410px; block-size: 864px; padding: 10px; border-radius: 56px; background: #1c1b1a;
+    box-shadow: 0 0 0 1px rgb(0 0 0 / 0.25), 0 30px 60px -20px rgb(40 30 20 / 0.35), 0 12px 24px -12px rgb(40 30 20 / 0.25); }
+  .board--dark .phone { background: #2a2826; box-shadow: 0 0 0 1px rgb(255 255 255 / 0.06), 0 30px 60px -20px rgb(0 0 0 / 0.8); }
+  .phone__screen { inline-size: 390px; block-size: 844px; border-radius: 46px; overflow: hidden; background: #fff; }
+  .phone iframe { display: block; inline-size: 390px; block-size: 844px; border: 0; }
+  figcaption { font-size: 15px; font-weight: 500; opacity: 0.75; }
+</style>
+</head>
+<body>
+<section class="board" id="board-light" data-theme="light">
+  <div class="board__head">
+    <div>
+      <h1 class="board__title">BabyMonitor · מסכי מפתח</h1>
+      <p class="board__sub">ערכת נושא בהירה · 390×844 · RTL</p>
+    </div>
+    <div class="swatches">
+      <span class="sw"><i style="background:var(--color-primary)"></i>primary</span>
+      <span class="sw"><i style="background:var(--color-accent)"></i>accent</span>
+      <span class="sw"><i style="background:var(--color-breast)"></i>breast</span>
+      <span class="sw"><i style="background:var(--color-bottle)"></i>bottle</span>
+      <span class="sw"><i style="background:var(--color-solid)"></i>solid</span>
+      <span class="sw"><i style="background:var(--color-growth)"></i>growth</span>
+      <span class="sw"><i style="background:var(--color-bg)"></i>bg</span>
+    </div>
+  </div>
+  <div class="grid" id="grid-light"></div>
+</section>
+<section class="board board--dark" id="board-dark" data-theme="dark">
+  <div class="board__head">
+    <div>
+      <h1 class="board__title">BabyMonitor · מצב לילה</h1>
+      <p class="board__sub">ערכת נושא כהה · משטחים חמים, בלי לבן טהור</p>
+    </div>
+    <div class="swatches">
+      <span class="sw"><i style="background:var(--color-primary)"></i>primary</span>
+      <span class="sw"><i style="background:var(--color-accent)"></i>accent</span>
+      <span class="sw"><i style="background:var(--color-breast)"></i>breast</span>
+      <span class="sw"><i style="background:var(--color-bottle)"></i>bottle</span>
+      <span class="sw"><i style="background:var(--color-solid)"></i>solid</span>
+      <span class="sw"><i style="background:var(--color-growth)"></i>growth</span>
+      <span class="sw"><i style="background:var(--color-surface)"></i>surface</span>
+    </div>
+  </div>
+  <div class="grid" id="grid-dark"></div>
+</section>
+
+<!-- ============ ONBOARDING ============ -->
+<template id="s-onboarding" data-label="קליטה ראשונה · Onboarding">
+<main class="onboarding">
+  <div class="onboarding__intro">
+    <div class="brand-mark" aria-hidden="true"><svg class="lucide lucide-droplet" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22a7 7 0 0 0 7-7c0-2-1-3.9-3-5.5s-3.5-4-4-6.5c-.5 2.5-2 4.9-4 6.5C6 11.1 5 13 5 15a7 7 0 0 0 7 7z" /></svg></div>
+    <h1 class="onboarding__title">ברוכים הבאים ל-BabyMonitor</h1>
+    <p class="onboarding__lead">מעקב רגוע ופשוט אחר האכלות וגדילה. כמה פרטים קטנים ומתחילים.</p>
+  </div>
+  <form class="onboarding__form">
+    <div class="field">
+      <label class="field__label" for="n">שם</label>
+      <input class="input" id="n" value="נועה" />
+    </div>
+    <div class="field">
+      <span class="field__label">תאריך לידה</span>
+      <label class="input input--picker"><svg class="lucide lucide-calendar" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 2v3" /><path d="M16 2v3" /><rect x="3" y="3" width="18" height="18" rx="2" /><path d="M3 9h18" /></svg><span class="input__value">1 ביולי 2026</span></label>
+    </div>
+    <div class="field">
+      <span class="field__label">מין</span>
+      <div class="seg seg--lg" role="radiogroup">
+        <button type="button" class="seg__option" role="radio" aria-checked="true">בת</button>
+        <button type="button" class="seg__option" role="radio" aria-checked="false">בן</button>
+      </div>
+      <span class="field__hint">משמש לחישוב אחוזוני הגדילה לפי טבלאות WHO</span>
+    </div>
+    <div class="field">
+      <label class="field__label" for="w">משקל לידה <span class="field__optional">(לא חובה)</span></label>
+      <div class="input-group">
+        <input class="input input--num" id="w" value="3.30" inputmode="decimal" />
+        <span class="input-group__affix">ק״ג</span>
+      </div>
+      <span class="field__hint">מומלץ — כך אפשר לעקוב אחרי החזרה למשקל הלידה</span>
+    </div>
+  </form>
+  <div class="onboarding__footer">
+    <button class="btn btn--primary btn--lg btn--block">התחלה</button>
+    <p class="disclaimer" style="justify-content:center"><svg class="lucide lucide-shield-check" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z" /><path d="m9 12 2 2 4-4" /></svg><span>בלי הרשמה ובלי שרת — הכול נשמר במכשיר שלך</span></p>
+  </div>
+</main>
+</template>
+
+<!-- ============ HOME ============ -->
+<template id="s-home" data-label="בית · עם טיימר פעיל" data-scroll="0">
+<div class="app app--has-timer">
+  <header class="app-header">
+    <button class="baby-switch" aria-label="החלפת ילד/ה">
+      <span class="avatar">נ</span>
+      <span class="baby-switch__text"><span class="baby-switch__name">נועה</span><span class="baby-switch__age">3 חודשים ו-4 ימים</span></span>
+      <svg class="lucide lucide-chevron-down" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg>
+    </button>
+  </header>
+  <main class="page">
+    <section class="card since" aria-labelledby="since-l">
+      <div class="since__top">
+        <span class="since__label" id="since-l">מאז ההאכלה האחרונה</span>
+        <span class="badge badge--accent badge--lg"><svg class="lucide lucide-arrow-left-right" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3 4 7l4 4" /><path d="M4 7h16" /><path d="m16 21 4-4-4-4" /><path d="M20 17H4" /></svg>הצד הבא: שמאל</span>
+      </div>
+      <div class="since__value">
+        <span class="since__part"><span>2</span><span class="since__unit">שע׳</span></span>
+        <span class="since__part"><span>40</span><span class="since__unit">ד׳</span></span>
+      </div>
+      <div class="since__meta">
+        <span class="badge badge--bottle"><svg class="lucide lucide-milk" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 2h8" /><path d="M9 2v2.789a4 4 0 0 1-.672 2.219l-.656.984A4 4 0 0 0 7 10.212V20a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-9.789a4 4 0 0 0-.672-2.219l-.656-.984A4 4 0 0 1 15 4.788V2" /><path d="M7 15a6.472 6.472 0 0 1 5 0 6.47 6.47 0 0 0 5 0" /></svg>בקבוק</span>
+        <span><span class="ltr num">120</span> מ״ל תמ״ל · <span class="ltr num">11:20</span></span>
+      </div>
+    </section>
+
+    <section class="section" aria-labelledby="add-h">
+      <h2 class="visually-hidden" id="add-h">הוספת האכלה</h2>
+      <div class="tile-grid">
+        <button class="tile tile--breast tile--active" aria-label="הנקה פעילה, פתיחת הטיימר">
+          <span class="tile__icon"><svg class="lucide lucide-heart" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 9.5a5.5 5.5 0 0 1 9.591-3.676.56.56 0 0 0 .818 0A5.49 5.49 0 0 1 22 9.5c0 2.29-1.5 4-3 5.5l-5.492 5.313a2 2 0 0 1-3 .019L5 15c-1.5-1.5-3-3.2-3-5.5" /></svg></span>
+          <span class="tile__label">הנקה</span>
+          <span class="tile__meta">פעילה · <span class="ltr num">12:34</span></span>
+        </button>
+        <button class="tile tile--bottle" aria-label="הוספת בקבוק">
+          <span class="tile__icon"><svg class="lucide lucide-milk" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 2h8" /><path d="M9 2v2.789a4 4 0 0 1-.672 2.219l-.656.984A4 4 0 0 0 7 10.212V20a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-9.789a4 4 0 0 0-.672-2.219l-.656-.984A4 4 0 0 1 15 4.788V2" /><path d="M7 15a6.472 6.472 0 0 1 5 0 6.47 6.47 0 0 0 5 0" /></svg></span>
+          <span class="tile__label">בקבוק</span>
+          <span class="tile__meta">אחרון: <span class="ltr num">120</span> מ״ל</span>
+        </button>
+        <button class="tile tile--solid" aria-label="הוספת מוצקים">
+          <span class="tile__icon"><svg class="lucide lucide-apple" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 6.528V3a1 1 0 0 1 1-1h0" /><path d="M18.237 21A15 15 0 0 0 22 11a6 6 0 0 0-10-4.472A6 6 0 0 0 2 11a15.1 15.1 0 0 0 3.763 10 3 3 0 0 0 3.648.648 5.5 5.5 0 0 1 5.178 0A3 3 0 0 0 18.237 21" /></svg></span>
+          <span class="tile__label">מוצקים</span>
+          <span class="tile__meta">אחרון: אתמול</span>
+        </button>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section__header">
+        <h2 class="section__title">היום</h2>
+        <a class="section__action" href="#">לסטטיסטיקה<svg class="lucide lucide-chevron-left" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg></a>
+      </div>
+      <div class="stat-grid">
+        <div class="stat stat--primary"><span class="stat__label"><svg class="lucide lucide-clock" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10" /><path d="M12 6v6l4 2" /></svg>האכלות</span><span class="stat__value">5</span><span class="stat__sub">אתמול: 7</span></div>
+        <div class="stat stat--bottle"><span class="stat__label"><svg class="lucide lucide-milk" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 2h8" /><path d="M9 2v2.789a4 4 0 0 1-.672 2.219l-.656.984A4 4 0 0 0 7 10.212V20a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-9.789a4 4 0 0 0-.672-2.219l-.656-.984A4 4 0 0 1 15 4.788V2" /><path d="M7 15a6.472 6.472 0 0 1 5 0 6.47 6.47 0 0 0 5 0" /></svg>בקבוק</span><span class="stat__value">360<span class="stat__unit">מ״ל</span></span><span class="stat__sub">3 בקבוקים</span></div>
+        <div class="stat stat--breast"><span class="stat__label"><svg class="lucide lucide-heart" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 9.5a5.5 5.5 0 0 1 9.591-3.676.56.56 0 0 0 .818 0A5.49 5.49 0 0 1 22 9.5c0 2.29-1.5 4-3 5.5l-5.492 5.313a2 2 0 0 1-3 .019L5 15c-1.5-1.5-3-3.2-3-5.5" /></svg>הנקה</span><span class="stat__value">42<span class="stat__unit">ד׳</span></span><span class="stat__sub">2 הנקות</span></div>
+        <div class="stat"><span class="stat__label"><svg class="lucide lucide-repeat-2" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m2 9 3-3 3 3" /><path d="M13 18H7a2 2 0 0 1-2-2V6" /><path d="m22 15-3 3-3-3" /><path d="M11 6h6a2 2 0 0 1 2 2v10" /></svg>מרווח ממוצע</span><span class="stat__value"><span class="ltr">2:35</span><span class="stat__unit">שע׳</span></span><span class="stat__sub">בין האכלות</span></div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section__header">
+        <h2 class="section__title">אחרונות</h2>
+        <a class="section__action" href="#">לכל ההיסטוריה<svg class="lucide lucide-chevron-left" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg></a>
+      </div>
+      <ol class="timeline__list" role="list">
+        <li><button class="timeline-item timeline-item--bottle"><span class="timeline-item__time">11:20</span><span class="timeline-item__icon"><svg class="lucide lucide-milk" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 2h8" /><path d="M9 2v2.789a4 4 0 0 1-.672 2.219l-.656.984A4 4 0 0 0 7 10.212V20a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-9.789a4 4 0 0 0-.672-2.219l-.656-.984A4 4 0 0 1 15 4.788V2" /><path d="M7 15a6.472 6.472 0 0 1 5 0 6.47 6.47 0 0 0 5 0" /></svg></span><span class="timeline-item__body"><span class="timeline-item__title">בקבוק</span><span class="timeline-item__meta">תמ״ל</span></span><span class="timeline-item__value"><span class="num">120</span> מ״ל</span></button></li>
+        <li><button class="timeline-item timeline-item--breast"><span class="timeline-item__time">09:05</span><span class="timeline-item__icon"><svg class="lucide lucide-heart" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 9.5a5.5 5.5 0 0 1 9.591-3.676.56.56 0 0 0 .818 0A5.49 5.49 0 0 1 22 9.5c0 2.29-1.5 4-3 5.5l-5.492 5.313a2 2 0 0 1-3 .019L5 15c-1.5-1.5-3-3.2-3-5.5" /></svg></span><span class="timeline-item__body"><span class="timeline-item__title">הנקה</span><span class="timeline-item__meta">ימין 12 ד׳ · שמאל 9 ד׳</span></span><span class="timeline-item__value">21 ד׳</span></button></li>
+      </ol>
+    </section>
+  </main>
+
+  <div class="timer-banner" role="status">
+    <button class="timer-banner__main" aria-label="פתיחת טיימר ההנקה">
+      <span class="timer-banner__icon"><svg class="lucide lucide-heart" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 9.5a5.5 5.5 0 0 1 9.591-3.676.56.56 0 0 0 .818 0A5.49 5.49 0 0 1 22 9.5c0 2.29-1.5 4-3 5.5l-5.492 5.313a2 2 0 0 1-3 .019L5 15c-1.5-1.5-3-3.2-3-5.5" /></svg></span>
+      <span class="timer-banner__text"><span class="timer-banner__title">הנקה · ימין</span><span class="timer-banner__meta">התחילה ב-<span class="ltr num">14:02</span></span></span>
+      <span class="timer-banner__time">12:34</span>
+    </button>
+    <button class="icon-btn" aria-label="השהיית ההנקה"><svg class="lucide lucide-pause" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="14" y="3" width="5" height="18" rx="1" /><rect x="5" y="3" width="5" height="18" rx="1" /></svg></button>
+  </div>
+  <nav class="tabbar" aria-label="ניווט ראשי"><div class="tabbar__inner"><a class="tabbar__item" href="#" aria-current="page"><span class="tabbar__icon"><svg class="lucide lucide-house" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8" /><path d="M3 10a2 2 0 0 1 .709-1.528l7-6a2 2 0 0 1 2.582 0l7 6A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /></svg></span>בית</a><a class="tabbar__item" href="#"><span class="tabbar__icon"><svg class="lucide lucide-history" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" /><path d="M3 3v5h5" /><path d="M12 7v5l4 2" /></svg></span>היסטוריה</a><a class="tabbar__item" href="#"><span class="tabbar__icon"><svg class="lucide lucide-sprout" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 9.536V7a4 4 0 0 1 4-4h1.5a.5.5 0 0 1 .5.5V5a4 4 0 0 1-4 4 4 4 0 0 0-4 4c0 2 1 3 1 5a5 5 0 0 1-1 3" /><path d="M4 9a5 5 0 0 1 8 4 5 5 0 0 1-8-4" /><path d="M5 21h14" /></svg></span>גדילה</a><a class="tabbar__item" href="#"><span class="tabbar__icon"><svg class="lucide lucide-chart-column" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v16a2 2 0 0 0 2 2h16" /><path d="M18 17V9" /><path d="M13 17V5" /><path d="M8 17v-3" /></svg></span>סטטיסטיקה</a><a class="tabbar__item" href="#"><span class="tabbar__icon"><svg class="lucide lucide-settings" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915" /><circle cx="12" cy="12" r="3" /></svg></span>הגדרות</a></div></nav>
+</div>
+</template>
+
+<!-- ============ TIMER – BEFORE START ============ -->
+<template id="s-timer-start" data-label="הנקה · בחירת צד (הצד הבא)">
+<div class="app">
+  <header class="app-header"><button class="baby-switch"><span class="avatar">נ</span><span class="baby-switch__text"><span class="baby-switch__name">נועה</span><span class="baby-switch__age">3 חודשים ו-4 ימים</span></span><svg class="lucide lucide-chevron-down" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg></button></header>
+<main class="page"><section class="card since"><div class="since__top"><span class="since__label">מאז ההאכלה האחרונה</span><span class="badge badge--accent badge--lg"><svg class="lucide lucide-arrow-left-right" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3 4 7l4 4" /><path d="M4 7h16" /><path d="m16 21 4-4-4-4" /><path d="M20 17H4" /></svg>הצד הבא: שמאל</span></div><div class="since__value"><span class="since__part"><span>2</span><span class="since__unit">שע׳</span></span><span class="since__part"><span>40</span><span class="since__unit">ד׳</span></span></div></section>
+<div class="tile-grid"><button class="tile tile--breast"><span class="tile__icon"><svg class="lucide lucide-heart" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 9.5a5.5 5.5 0 0 1 9.591-3.676.56.56 0 0 0 .818 0A5.49 5.49 0 0 1 22 9.5c0 2.29-1.5 4-3 5.5l-5.492 5.313a2 2 0 0 1-3 .019L5 15c-1.5-1.5-3-3.2-3-5.5" /></svg></span><span class="tile__label">הנקה</span></button><button class="tile tile--bottle"><span class="tile__icon"><svg class="lucide lucide-milk" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 2h8" /><path d="M9 2v2.789a4 4 0 0 1-.672 2.219l-.656.984A4 4 0 0 0 7 10.212V20a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-9.789a4 4 0 0 0-.672-2.219l-.656-.984A4 4 0 0 1 15 4.788V2" /><path d="M7 15a6.472 6.472 0 0 1 5 0 6.47 6.47 0 0 0 5 0" /></svg></span><span class="tile__label">בקבוק</span></button><button class="tile tile--solid"><span class="tile__icon"><svg class="lucide lucide-apple" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 6.528V3a1 1 0 0 1 1-1h0" /><path d="M18.237 21A15 15 0 0 0 22 11a6 6 0 0 0-10-4.472A6 6 0 0 0 2 11a15.1 15.1 0 0 0 3.763 10 3 3 0 0 0 3.648.648 5.5 5.5 0 0 1 5.178 0A3 3 0 0 0 18.237 21" /></svg></span><span class="tile__label">מוצקים</span></button></div></main><nav class="tabbar" aria-label="ניווט ראשי"><div class="tabbar__inner"><a class="tabbar__item" href="#" aria-current="page"><span class="tabbar__icon"><svg class="lucide lucide-house" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8" /><path d="M3 10a2 2 0 0 1 .709-1.528l7-6a2 2 0 0 1 2.582 0l7 6A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /></svg></span>בית</a><a class="tabbar__item" href="#"><span class="tabbar__icon"><svg class="lucide lucide-history" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" /><path d="M3 3v5h5" /><path d="M12 7v5l4 2" /></svg></span>היסטוריה</a><a class="tabbar__item" href="#"><span class="tabbar__icon"><svg class="lucide lucide-sprout" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 9.536V7a4 4 0 0 1 4-4h1.5a.5.5 0 0 1 .5.5V5a4 4 0 0 1-4 4 4 4 0 0 0-4 4c0 2 1 3 1 5a5 5 0 0 1-1 3" /><path d="M4 9a5 5 0 0 1 8 4 5 5 0 0 1-8-4" /><path d="M5 21h14" /></svg></span>גדילה</a><a class="tabbar__item" href="#"><span class="tabbar__icon"><svg class="lucide lucide-chart-column" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v16a2 2 0 0 0 2 2h16" /><path d="M18 17V9" /><path d="M13 17V5" /><path d="M8 17v-3" /></svg></span>סטטיסטיקה</a><a class="tabbar__item" href="#"><span class="tabbar__icon"><svg class="lucide lucide-settings" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915" /><circle cx="12" cy="12" r="3" /></svg></span>הגדרות</a></div></nav>
+  <div class="scrim"></div>
+  <div class="sheet sheet--full sheet--breast" role="dialog" aria-modal="true" aria-labelledby="t1">
+    <div class="sheet__handle"></div>
+    <div class="sheet__header">
+      <span class="sheet__icon"><svg class="lucide lucide-heart" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 9.5a5.5 5.5 0 0 1 9.591-3.676.56.56 0 0 0 .818 0A5.49 5.49 0 0 1 22 9.5c0 2.29-1.5 4-3 5.5l-5.492 5.313a2 2 0 0 1-3 .019L5 15c-1.5-1.5-3-3.2-3-5.5" /></svg></span>
+      <h2 class="sheet__title" id="t1">הנקה</h2>
+      <button class="icon-btn" aria-label="סגירה"><svg class="lucide lucide-x" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18" /><path d="m6 6 12 12" /></svg></button>
+    </div>
+    <div class="sheet__body">
+      <div class="timer">
+        <div class="timer__head">
+          <span class="badge badge--lg">בחירת צד להתחלה</span>
+          <div class="timer__display" style="color:var(--color-text-subtle)" role="timer" aria-label="00 דקות 00 שניות">00:00</div>
+          <div class="timer__breakdown">בפעם הקודמת: <strong>ימין</strong> · 14 ד׳ · <span class="ltr num">02:30</span></div>
+        </div>
+        <div class="timer__sides" role="group" aria-label="צד">
+          <button class="side-btn" aria-pressed="false">
+            <span class="side-btn__label">ימין</span>
+            <span class="side-btn__state"><svg class="lucide lucide-play" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z" /></svg>התחלה</span>
+          </button>
+          <button class="side-btn side-btn--next" aria-pressed="false" aria-describedby="nx">
+            <span class="side-btn__hint" id="nx"><svg class="lucide lucide-sparkles" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11.017 2.814a1 1 0 0 1 1.966 0l1.051 5.558a2 2 0 0 0 1.594 1.594l5.558 1.051a1 1 0 0 1 0 1.966l-5.558 1.051a2 2 0 0 0-1.594 1.594l-1.051 5.558a1 1 0 0 1-1.966 0l-1.051-5.558a2 2 0 0 0-1.594-1.594l-5.558-1.051a1 1 0 0 1 0-1.966l5.558-1.051a2 2 0 0 0 1.594-1.594z" /><path d="M20 2v4" /><path d="M22 4h-4" /><circle cx="4" cy="20" r="2" /></svg>הבא בתור</span>
+            <span class="side-btn__label">שמאל</span>
+            <span class="side-btn__state"><svg class="lucide lucide-play" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z" /></svg>התחלה</span>
+          </button>
+        </div>
+        <p class="timer__hint">הטיימר ממשיך לפעול גם כשהאפליקציה סגורה</p>
+      </div>
+    </div>
+    <div class="sheet__footer">
+      <button class="btn btn--outline"><svg class="lucide lucide-pencil" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z" /><path d="m15 5 4 4" /></svg>רישום ידני</button>
+    </div>
+  </div>
+</div>
+</template>
+
+<!-- ============ TIMER – RUNNING ============ -->
+<template id="s-timer" data-label="הנקה · טיימר פועל">
+<div class="app">
+  <header class="app-header"><button class="baby-switch"><span class="avatar">נ</span><span class="baby-switch__text"><span class="baby-switch__name">נועה</span><span class="baby-switch__age">3 חודשים ו-4 ימים</span></span><svg class="lucide lucide-chevron-down" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg></button></header>
+<main class="page"><section class="card since"><div class="since__top"><span class="since__label">מאז ההאכלה האחרונה</span><span class="badge badge--accent badge--lg"><svg class="lucide lucide-arrow-left-right" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3 4 7l4 4" /><path d="M4 7h16" /><path d="m16 21 4-4-4-4" /><path d="M20 17H4" /></svg>הצד הבא: שמאל</span></div><div class="since__value"><span class="since__part"><span>2</span><span class="since__unit">שע׳</span></span><span class="since__part"><span>40</span><span class="since__unit">ד׳</span></span></div></section>
+<div class="tile-grid"><button class="tile tile--breast"><span class="tile__icon"><svg class="lucide lucide-heart" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 9.5a5.5 5.5 0 0 1 9.591-3.676.56.56 0 0 0 .818 0A5.49 5.49 0 0 1 22 9.5c0 2.29-1.5 4-3 5.5l-5.492 5.313a2 2 0 0 1-3 .019L5 15c-1.5-1.5-3-3.2-3-5.5" /></svg></span><span class="tile__label">הנקה</span></button><button class="tile tile--bottle"><span class="tile__icon"><svg class="lucide lucide-milk" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 2h8" /><path d="M9 2v2.789a4 4 0 0 1-.672 2.219l-.656.984A4 4 0 0 0 7 10.212V20a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-9.789a4 4 0 0 0-.672-2.219l-.656-.984A4 4 0 0 1 15 4.788V2" /><path d="M7 15a6.472 6.472 0 0 1 5 0 6.47 6.47 0 0 0 5 0" /></svg></span><span class="tile__label">בקבוק</span></button><button class="tile tile--solid"><span class="tile__icon"><svg class="lucide lucide-apple" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 6.528V3a1 1 0 0 1 1-1h0" /><path d="M18.237 21A15 15 0 0 0 22 11a6 6 0 0 0-10-4.472A6 6 0 0 0 2 11a15.1 15.1 0 0 0 3.763 10 3 3 0 0 0 3.648.648 5.5 5.5 0 0 1 5.178 0A3 3 0 0 0 18.237 21" /></svg></span><span class="tile__label">מוצקים</span></button></div></main><nav class="tabbar" aria-label="ניווט ראשי"><div class="tabbar__inner"><a class="tabbar__item" href="#" aria-current="page"><span class="tabbar__icon"><svg class="lucide lucide-house" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8" /><path d="M3 10a2 2 0 0 1 .709-1.528l7-6a2 2 0 0 1 2.582 0l7 6A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /></svg></span>בית</a><a class="tabbar__item" href="#"><span class="tabbar__icon"><svg class="lucide lucide-history" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" /><path d="M3 3v5h5" /><path d="M12 7v5l4 2" /></svg></span>היסטוריה</a><a class="tabbar__item" href="#"><span class="tabbar__icon"><svg class="lucide lucide-sprout" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 9.536V7a4 4 0 0 1 4-4h1.5a.5.5 0 0 1 .5.5V5a4 4 0 0 1-4 4 4 4 0 0 0-4 4c0 2 1 3 1 5a5 5 0 0 1-1 3" /><path d="M4 9a5 5 0 0 1 8 4 5 5 0 0 1-8-4" /><path d="M5 21h14" /></svg></span>גדילה</a><a class="tabbar__item" href="#"><span class="tabbar__icon"><svg class="lucide lucide-chart-column" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v16a2 2 0 0 0 2 2h16" /><path d="M18 17V9" /><path d="M13 17V5" /><path d="M8 17v-3" /></svg></span>סטטיסטיקה</a><a class="tabbar__item" href="#"><span class="tabbar__icon"><svg class="lucide lucide-settings" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915" /><circle cx="12" cy="12" r="3" /></svg></span>הגדרות</a></div></nav>
+  <div class="scrim"></div>
+  <div class="sheet sheet--full sheet--breast" role="dialog" aria-modal="true" aria-labelledby="t2">
+    <div class="sheet__handle"></div>
+    <div class="sheet__header">
+      <span class="sheet__icon"><svg class="lucide lucide-heart" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 9.5a5.5 5.5 0 0 1 9.591-3.676.56.56 0 0 0 .818 0A5.49 5.49 0 0 1 22 9.5c0 2.29-1.5 4-3 5.5l-5.492 5.313a2 2 0 0 1-3 .019L5 15c-1.5-1.5-3-3.2-3-5.5" /></svg></span>
+      <h2 class="sheet__title" id="t2">הנקה</h2>
+      <button class="icon-btn" aria-label="מזעור — הטיימר ימשיך לפעול"><svg class="lucide lucide-chevron-down" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg></button>
+    </div>
+    <div class="sheet__body">
+      <div class="timer">
+        <div class="timer__head">
+          <span class="badge badge--breast badge--lg badge--live"><span class="badge__dot"></span>פועל · התחילה ב-<span class="ltr num">14:02</span></span>
+          <div class="timer__display" role="timer" aria-label="12 דקות 34 שניות">12:34</div>
+          <div class="timer__breakdown"><span>ימין <strong class="ltr num">08:10</strong></span><span>שמאל <strong class="ltr num">04:24</strong></span></div>
+        </div>
+        <div class="timer__sides" role="group" aria-label="צד">
+          <button class="side-btn side-btn--active" aria-pressed="true">
+            <span class="side-btn__label">ימין</span>
+            <span class="side-btn__time">08:10</span>
+            <span class="side-btn__state"><svg class="lucide lucide-timer" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="10" x2="14" y1="2" y2="2" /><line x1="12" x2="15" y1="14" y2="11" /><circle cx="12" cy="14" r="8" /></svg>צד פעיל</span>
+          </button>
+          <button class="side-btn" aria-pressed="false">
+            <span class="side-btn__label">שמאל</span>
+            <span class="side-btn__time">04:24</span>
+            <span class="side-btn__state"><svg class="lucide lucide-arrow-left-right" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3 4 7l4 4" /><path d="M4 7h16" /><path d="m16 21 4-4-4-4" /><path d="M20 17H4" /></svg>החלפה לצד זה</span>
+          </button>
+        </div>
+        <div class="cluster cluster--1" style="justify-content:center">
+          <button class="btn btn--ghost btn--sm"><svg class="lucide lucide-clock" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10" /><path d="M12 6v6l4 2" /></svg>עריכת שעת התחלה</button>
+          <button class="btn btn--ghost-danger btn--sm"><svg class="lucide lucide-trash-2" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 11v6" /><path d="M14 11v6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" /><path d="M3 6h18" /><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /></svg>ביטול הנקה</button>
+        </div>
+      </div>
+    </div>
+    <div class="sheet__footer">
+      <button class="btn btn--secondary btn--lg"><svg class="lucide lucide-pause" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="14" y="3" width="5" height="18" rx="1" /><rect x="5" y="3" width="5" height="18" rx="1" /></svg>השהיה</button>
+      <button class="btn btn--primary btn--lg"><svg class="lucide lucide-check" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5" /></svg>סיום ושמירה</button>
+    </div>
+  </div>
+</div>
+</template>
+
+<!-- ============ BOTTLE SHEET ============ -->
+<template id="s-bottle" data-label="בקבוק · גיליון הוספה">
+<div class="app">
+  <header class="app-header"><button class="baby-switch"><span class="avatar">נ</span><span class="baby-switch__text"><span class="baby-switch__name">נועה</span><span class="baby-switch__age">3 חודשים ו-4 ימים</span></span><svg class="lucide lucide-chevron-down" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg></button></header>
+<main class="page"><section class="card since"><div class="since__top"><span class="since__label">מאז ההאכלה האחרונה</span><span class="badge badge--accent badge--lg"><svg class="lucide lucide-arrow-left-right" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3 4 7l4 4" /><path d="M4 7h16" /><path d="m16 21 4-4-4-4" /><path d="M20 17H4" /></svg>הצד הבא: שמאל</span></div><div class="since__value"><span class="since__part"><span>2</span><span class="since__unit">שע׳</span></span><span class="since__part"><span>40</span><span class="since__unit">ד׳</span></span></div></section>
+<div class="tile-grid"><button class="tile tile--breast"><span class="tile__icon"><svg class="lucide lucide-heart" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 9.5a5.5 5.5 0 0 1 9.591-3.676.56.56 0 0 0 .818 0A5.49 5.49 0 0 1 22 9.5c0 2.29-1.5 4-3 5.5l-5.492 5.313a2 2 0 0 1-3 .019L5 15c-1.5-1.5-3-3.2-3-5.5" /></svg></span><span class="tile__label">הנקה</span></button><button class="tile tile--bottle"><span class="tile__icon"><svg class="lucide lucide-milk" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 2h8" /><path d="M9 2v2.789a4 4 0 0 1-.672 2.219l-.656.984A4 4 0 0 0 7 10.212V20a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-9.789a4 4 0 0 0-.672-2.219l-.656-.984A4 4 0 0 1 15 4.788V2" /><path d="M7 15a6.472 6.472 0 0 1 5 0 6.47 6.47 0 0 0 5 0" /></svg></span><span class="tile__label">בקבוק</span></button><button class="tile tile--solid"><span class="tile__icon"><svg class="lucide lucide-apple" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 6.528V3a1 1 0 0 1 1-1h0" /><path d="M18.237 21A15 15 0 0 0 22 11a6 6 0 0 0-10-4.472A6 6 0 0 0 2 11a15.1 15.1 0 0 0 3.763 10 3 3 0 0 0 3.648.648 5.5 5.5 0 0 1 5.178 0A3 3 0 0 0 18.237 21" /></svg></span><span class="tile__label">מוצקים</span></button></div></main><nav class="tabbar" aria-label="ניווט ראשי"><div class="tabbar__inner"><a class="tabbar__item" href="#" aria-current="page"><span class="tabbar__icon"><svg class="lucide lucide-house" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8" /><path d="M3 10a2 2 0 0 1 .709-1.528l7-6a2 2 0 0 1 2.582 0l7 6A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /></svg></span>בית</a><a class="tabbar__item" href="#"><span class="tabbar__icon"><svg class="lucide lucide-history" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" /><path d="M3 3v5h5" /><path d="M12 7v5l4 2" /></svg></span>היסטוריה</a><a class="tabbar__item" href="#"><span class="tabbar__icon"><svg class="lucide lucide-sprout" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 9.536V7a4 4 0 0 1 4-4h1.5a.5.5 0 0 1 .5.5V5a4 4 0 0 1-4 4 4 4 0 0 0-4 4c0 2 1 3 1 5a5 5 0 0 1-1 3" /><path d="M4 9a5 5 0 0 1 8 4 5 5 0 0 1-8-4" /><path d="M5 21h14" /></svg></span>גדילה</a><a class="tabbar__item" href="#"><span class="tabbar__icon"><svg class="lucide lucide-chart-column" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v16a2 2 0 0 0 2 2h16" /><path d="M18 17V9" /><path d="M13 17V5" /><path d="M8 17v-3" /></svg></span>סטטיסטיקה</a><a class="tabbar__item" href="#"><span class="tabbar__icon"><svg class="lucide lucide-settings" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915" /><circle cx="12" cy="12" r="3" /></svg></span>הגדרות</a></div></nav>
+  <div class="scrim"></div>
+  <div class="sheet sheet--bottle" role="dialog" aria-modal="true" aria-labelledby="t3">
+    <div class="sheet__handle"></div>
+    <div class="sheet__header">
+      <span class="sheet__icon"><svg class="lucide lucide-milk" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 2h8" /><path d="M9 2v2.789a4 4 0 0 1-.672 2.219l-.656.984A4 4 0 0 0 7 10.212V20a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-9.789a4 4 0 0 0-.672-2.219l-.656-.984A4 4 0 0 1 15 4.788V2" /><path d="M7 15a6.472 6.472 0 0 1 5 0 6.47 6.47 0 0 0 5 0" /></svg></span>
+      <h2 class="sheet__title" id="t3">בקבוק</h2>
+      <button class="icon-btn" aria-label="סגירה"><svg class="lucide lucide-x" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18" /><path d="m6 6 12 12" /></svg></button>
+    </div>
+    <div class="sheet__body">
+      <div class="seg seg--lg" role="radiogroup" aria-label="תוכן הבקבוק">
+        <button class="seg__option" role="radio" aria-checked="false"><svg class="lucide lucide-droplet" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22a7 7 0 0 0 7-7c0-2-1-3.9-3-5.5s-3.5-4-4-6.5c-.5 2.5-2 4.9-4 6.5C6 11.1 5 13 5 15a7 7 0 0 0 7 7z" /></svg>חלב אם שאוב</button>
+        <button class="seg__option" role="radio" aria-checked="true"><svg class="lucide lucide-milk" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 2h8" /><path d="M9 2v2.789a4 4 0 0 1-.672 2.219l-.656.984A4 4 0 0 0 7 10.212V20a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-9.789a4 4 0 0 0-.672-2.219l-.656-.984A4 4 0 0 1 15 4.788V2" /><path d="M7 15a6.472 6.472 0 0 1 5 0 6.47 6.47 0 0 0 5 0" /></svg>תמ״ל</button>
+      </div>
+      <div class="field">
+        <span class="field__label">כמות</span>
+        <div class="stepper">
+          <button class="stepper__btn" aria-label="הפחתה של 10 מ״ל"><svg class="lucide lucide-minus" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14" /></svg></button>
+          <div class="stepper__value"><input class="stepper__input" value="120" inputmode="numeric" aria-label="כמות במ״ל" /><span class="stepper__unit">מ״ל</span></div>
+          <button class="stepper__btn" aria-label="הוספה של 10 מ״ל"><svg class="lucide lucide-plus" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14" /><path d="M12 5v14" /></svg></button>
+        </div>
+        <div class="chip-grid" role="group" aria-label="כמויות מהירות">
+          <button class="chip chip--lg" aria-pressed="false"><span class="num">30</span></button>
+          <button class="chip chip--lg" aria-pressed="false"><span class="num">60</span></button>
+          <button class="chip chip--lg" aria-pressed="false"><span class="num">90</span></button>
+          <button class="chip chip--lg" aria-pressed="true"><span class="num">120</span></button>
+          <button class="chip chip--lg" aria-pressed="false"><span class="num">150</span></button>
+        </div>
+      </div>
+      <div class="field">
+        <span class="field__label">שעה</span>
+        <label class="input input--picker"><svg class="lucide lucide-clock" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10" /><path d="M12 6v6l4 2" /></svg><span class="input__value">היום, <span class="ltr num">14:05</span></span><svg class="lucide lucide-chevron-down" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg></label>
+        <div class="chip-row" role="group" aria-label="זמנים מהירים">
+          <button class="chip" aria-pressed="true">עכשיו</button>
+          <button class="chip" aria-pressed="false">לפני 15 ד׳</button>
+          <button class="chip" aria-pressed="false">לפני 30 ד׳</button>
+          <button class="chip" aria-pressed="false">לפני שעה</button>
+        </div>
+      </div>
+      <div class="field">
+        <label class="field__label" for="note">הערה <span class="field__optional">(לא חובה)</span></label>
+        <textarea class="textarea" id="note" rows="2" placeholder="למשל: גיהוק אחרי חצי בקבוק"></textarea>
+      </div>
+    </div>
+    <div class="sheet__footer">
+      <button class="btn btn--primary btn--lg"><svg class="lucide lucide-check" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5" /></svg>שמירה</button>
+    </div>
+  </div>
+</div>
+</template>
+
+<!-- ============ HISTORY ============ -->
+<template id="s-history" data-label="היסטוריה · עם הודעת ביטול">
+<div class="app">
+  <header class="app-header is-scrolled">
+    <h1 class="app-header__title">היסטוריה</h1>
+    <div class="app-header__actions"><button class="icon-btn" aria-label="מעבר לתאריך"><svg class="lucide lucide-calendar" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 2v3" /><path d="M16 2v3" /><rect x="3" y="3" width="18" height="18" rx="2" /><path d="M3 9h18" /></svg></button></div>
+  </header>
+  <main class="page" style="gap:var(--space-2)">
+    <div class="chip-row" role="group" aria-label="סינון לפי סוג">
+      <button class="chip" aria-pressed="true">הכול</button>
+      <button class="chip chip--breast" aria-pressed="false"><span class="chip__dot"></span>הנקה</button>
+      <button class="chip chip--bottle" aria-pressed="false"><span class="chip__dot"></span>בקבוק</button>
+      <button class="chip chip--solid" aria-pressed="false"><span class="chip__dot"></span>מוצקים</button>
+    </div>
+    <ol class="timeline" role="list">
+      <li class="timeline__day">
+        <h2 class="day-header"><span class="day-header__title">היום · יום ב׳, 5 באוקטובר</span><span class="day-header__summary">5 האכלות · 360 מ״ל</span></h2>
+        <ol class="timeline__list" role="list">
+          <li><button class="timeline-item timeline-item--bottle"><span class="timeline-item__time">11:20</span><span class="timeline-item__icon"><svg class="lucide lucide-milk" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 2h8" /><path d="M9 2v2.789a4 4 0 0 1-.672 2.219l-.656.984A4 4 0 0 0 7 10.212V20a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-9.789a4 4 0 0 0-.672-2.219l-.656-.984A4 4 0 0 1 15 4.788V2" /><path d="M7 15a6.472 6.472 0 0 1 5 0 6.47 6.47 0 0 0 5 0" /></svg></span><span class="timeline-item__body"><span class="timeline-item__title">בקבוק</span><span class="timeline-item__meta">תמ״ל</span></span><span class="timeline-item__value"><span class="num">120</span> מ״ל</span></button></li>
+          <li><button class="timeline-item timeline-item--breast"><span class="timeline-item__time">09:05</span><span class="timeline-item__icon"><svg class="lucide lucide-heart" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 9.5a5.5 5.5 0 0 1 9.591-3.676.56.56 0 0 0 .818 0A5.49 5.49 0 0 1 22 9.5c0 2.29-1.5 4-3 5.5l-5.492 5.313a2 2 0 0 1-3 .019L5 15c-1.5-1.5-3-3.2-3-5.5" /></svg></span><span class="timeline-item__body"><span class="timeline-item__title">הנקה</span><span class="timeline-item__meta">ימין 12 ד׳ · שמאל 9 ד׳</span></span><span class="timeline-item__value">21 ד׳</span></button></li>
+          <li><button class="timeline-item timeline-item--solid"><span class="timeline-item__time">07:40</span><span class="timeline-item__icon"><svg class="lucide lucide-apple" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 6.528V3a1 1 0 0 1 1-1h0" /><path d="M18.237 21A15 15 0 0 0 22 11a6 6 0 0 0-10-4.472A6 6 0 0 0 2 11a15.1 15.1 0 0 0 3.763 10 3 3 0 0 0 3.648.648 5.5 5.5 0 0 1 5.178 0A3 3 0 0 0 18.237 21" /></svg></span><span class="timeline-item__body"><span class="timeline-item__title">מוצקים <span class="badge badge--accent">חדש</span></span><span class="timeline-item__meta">בטטה · <span class="ltr">2–3</span> כפיות</span><span class="timeline-item__note">ללא תגובה מיוחדת</span></span><span class="timeline-item__value"></span></button></li>
+          <li><button class="timeline-item timeline-item--bottle"><span class="timeline-item__time">05:10</span><span class="timeline-item__icon"><svg class="lucide lucide-droplet" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22a7 7 0 0 0 7-7c0-2-1-3.9-3-5.5s-3.5-4-4-6.5c-.5 2.5-2 4.9-4 6.5C6 11.1 5 13 5 15a7 7 0 0 0 7 7z" /></svg></span><span class="timeline-item__body"><span class="timeline-item__title">בקבוק</span><span class="timeline-item__meta">חלב אם שאוב</span></span><span class="timeline-item__value"><span class="num">90</span> מ״ל</span></button></li>
+          <li><button class="timeline-item timeline-item--breast"><span class="timeline-item__time">02:30</span><span class="timeline-item__icon"><svg class="lucide lucide-heart" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 9.5a5.5 5.5 0 0 1 9.591-3.676.56.56 0 0 0 .818 0A5.49 5.49 0 0 1 22 9.5c0 2.29-1.5 4-3 5.5l-5.492 5.313a2 2 0 0 1-3 .019L5 15c-1.5-1.5-3-3.2-3-5.5" /></svg></span><span class="timeline-item__body"><span class="timeline-item__title">הנקה</span><span class="timeline-item__meta">ימין 14 ד׳</span></span><span class="timeline-item__value">14 ד׳</span></button></li>
+        </ol>
+      </li>
+      <li class="timeline__day">
+        <h2 class="day-header"><span class="day-header__title">אתמול · יום א׳, 4 באוקטובר</span><span class="day-header__summary">7 האכלות · 480 מ״ל</span></h2>
+        <ol class="timeline__list" role="list">
+          <li><button class="timeline-item timeline-item--breast"><span class="timeline-item__time">22:45</span><span class="timeline-item__icon"><svg class="lucide lucide-heart" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 9.5a5.5 5.5 0 0 1 9.591-3.676.56.56 0 0 0 .818 0A5.49 5.49 0 0 1 22 9.5c0 2.29-1.5 4-3 5.5l-5.492 5.313a2 2 0 0 1-3 .019L5 15c-1.5-1.5-3-3.2-3-5.5" /></svg></span><span class="timeline-item__body"><span class="timeline-item__title">הנקה</span><span class="timeline-item__meta">שמאל 11 ד׳ · ימין 7 ד׳</span></span><span class="timeline-item__value">18 ד׳</span></button></li>
+          <li><button class="timeline-item timeline-item--bottle"><span class="timeline-item__time">20:10</span><span class="timeline-item__icon"><svg class="lucide lucide-milk" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 2h8" /><path d="M9 2v2.789a4 4 0 0 1-.672 2.219l-.656.984A4 4 0 0 0 7 10.212V20a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-9.789a4 4 0 0 0-.672-2.219l-.656-.984A4 4 0 0 1 15 4.788V2" /><path d="M7 15a6.472 6.472 0 0 1 5 0 6.47 6.47 0 0 0 5 0" /></svg></span><span class="timeline-item__body"><span class="timeline-item__title">בקבוק</span><span class="timeline-item__meta">תמ״ל</span></span><span class="timeline-item__value"><span class="num">150</span> מ״ל</span></button></li>
+        </ol>
+      </li>
+    </ol>
+  </main>
+  <div class="toast-region" aria-live="polite">
+    <div class="toast" role="status"><svg class="lucide lucide-check" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5" /></svg><span class="toast__text">הרישום נמחק</span><button class="toast__action"><svg class="lucide lucide-undo-2 flip-rtl" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 14 4 9l5-5" /><path d="M4 9h10.5a5.5 5.5 0 0 1 5.5 5.5a5.5 5.5 0 0 1-5.5 5.5H11" /></svg>בטל</button></div>
+  </div>
+  <nav class="tabbar" aria-label="ניווט ראשי"><div class="tabbar__inner"><a class="tabbar__item" href="#"><span class="tabbar__icon"><svg class="lucide lucide-house" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8" /><path d="M3 10a2 2 0 0 1 .709-1.528l7-6a2 2 0 0 1 2.582 0l7 6A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /></svg></span>בית</a><a class="tabbar__item" href="#" aria-current="page"><span class="tabbar__icon"><svg class="lucide lucide-history" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" /><path d="M3 3v5h5" /><path d="M12 7v5l4 2" /></svg></span>היסטוריה</a><a class="tabbar__item" href="#"><span class="tabbar__icon"><svg class="lucide lucide-sprout" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 9.536V7a4 4 0 0 1 4-4h1.5a.5.5 0 0 1 .5.5V5a4 4 0 0 1-4 4 4 4 0 0 0-4 4c0 2 1 3 1 5a5 5 0 0 1-1 3" /><path d="M4 9a5 5 0 0 1 8 4 5 5 0 0 1-8-4" /><path d="M5 21h14" /></svg></span>גדילה</a><a class="tabbar__item" href="#"><span class="tabbar__icon"><svg class="lucide lucide-chart-column" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v16a2 2 0 0 0 2 2h16" /><path d="M18 17V9" /><path d="M13 17V5" /><path d="M8 17v-3" /></svg></span>סטטיסטיקה</a><a class="tabbar__item" href="#"><span class="tabbar__icon"><svg class="lucide lucide-settings" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915" /><circle cx="12" cy="12" r="3" /></svg></span>הגדרות</a></div></nav>
+</div>
+</template>
+
+<!-- ============ GROWTH ============ -->
+<template id="s-growth" data-label="גדילה · אחוזונים WHO">
+<div class="app">
+  <header class="app-header">
+    <h1 class="app-header__title">גדילה</h1>
+    <div class="app-header__actions"><button class="btn btn--secondary btn--sm"><svg class="lucide lucide-plus" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14" /><path d="M12 5v14" /></svg>הוספת מדידה</button></div>
+  </header>
+  <main class="page" style="gap:var(--space-4)">
+    <div class="seg" role="radiogroup" aria-label="מדד">
+      <button class="seg__option" role="radio" aria-checked="true">משקל</button>
+      <button class="seg__option" role="radio" aria-checked="false">אורך</button>
+      <button class="seg__option" role="radio" aria-checked="false">היקף ראש</button>
+    </div>
+    <section class="card card--roomy">
+      <div class="percentile">
+        <div class="percentile__badge" aria-label="אחוזון 48"><span class="percentile__value">48</span><span class="percentile__label">אחוזון</span></div>
+        <div class="percentile__body">
+          <span class="percentile__title">משקל אחרון · 1 באוקטובר</span>
+          <span class="percentile__main"><span class="ltr num">5.82</span> ק״ג</span>
+          <span class="text-sm text-muted">קרוב לחציון לפי WHO</span>
+        </div>
+      </div>
+      <div class="pscale" aria-hidden="true">
+        <div class="pscale__track"><span class="pscale__marker" style="--p:48%"></span></div>
+        <div class="pscale__ticks"><span style="left:3%">3</span><span style="left:15%">15</span><span style="left:50%">50</span><span style="left:85%">85</span><span style="left:97%">97</span></div>
+      </div>
+      <hr class="divider" />
+      <div class="kv">
+        <div class="kv__item"><span class="kv__label">עלייה ליום</span><span class="kv__value"><span class="ltr">+27</span> גר׳</span></div>
+        <div class="kv__item"><span class="kv__label">עלייה לשבוע</span><span class="kv__value"><span class="ltr">+190</span> גר׳</span></div>
+        <div class="kv__item"><span class="kv__label">ממשקל הלידה</span><span class="kv__value"><span class="ltr">+76%</span></span></div>
+      </div>
+    </section>
+    <section class="card">
+      <div class="card__header"><div><h2 class="card__title">משקל לגיל</h2><p class="card__subtitle">בנות · <span class="ltr">0–6</span> חודשים · WHO</p></div></div>
+      <div class="chart"><svg viewBox="0 0 324 236" width="100%" height="100%" role="img" aria-label="עקומת משקל לגיל עם אחוזוני WHO"><line x1="30" x2="300" y1="200" y2="200" style="stroke:var(--color-chart-grid)"/><text x="22" y="204" text-anchor="end" style="fill:var(--color-chart-axis);font-size:11px">2</text><line x1="30" x2="300" y1="155.5" y2="155.5" style="stroke:var(--color-chart-grid)"/><text x="22" y="159.5" text-anchor="end" style="fill:var(--color-chart-axis);font-size:11px">4</text><line x1="30" x2="300" y1="111" y2="111" style="stroke:var(--color-chart-grid)"/><text x="22" y="115" text-anchor="end" style="fill:var(--color-chart-axis);font-size:11px">6</text><line x1="30" x2="300" y1="66.5" y2="66.5" style="stroke:var(--color-chart-grid)"/><text x="22" y="70.5" text-anchor="end" style="fill:var(--color-chart-axis);font-size:11px">8</text><line x1="30" x2="300" y1="22" y2="22" style="stroke:var(--color-chart-grid)"/><text x="22" y="26" text-anchor="end" style="fill:var(--color-chart-axis);font-size:11px">10</text><text x="30" y="218" text-anchor="middle" style="fill:var(--color-chart-axis);font-size:11px">0</text><text x="75" y="218" text-anchor="middle" style="fill:var(--color-chart-axis);font-size:11px">1</text><text x="120" y="218" text-anchor="middle" style="fill:var(--color-chart-axis);font-size:11px">2</text><text x="165" y="218" text-anchor="middle" style="fill:var(--color-chart-axis);font-size:11px">3</text><text x="210" y="218" text-anchor="middle" style="fill:var(--color-chart-axis);font-size:11px">4</text><text x="255" y="218" text-anchor="middle" style="fill:var(--color-chart-axis);font-size:11px">5</text><text x="300" y="218" text-anchor="middle" style="fill:var(--color-chart-axis);font-size:11px">6</text><text x="22" y="20" text-anchor="end" style="fill:var(--color-chart-axis);font-size:10px"></text><path d="M30.0,191.1 C37.5,188.1 60.0,179.2 75.0,173.3 C90.0,167.4 105.0,160.7 120.0,155.5 C135.0,150.3 150.0,146.2 165.0,142.2 C180.0,138.1 195.0,134.4 210.0,131.0 C225.0,127.7 240.0,124.7 255.0,122.1 C270.0,119.5 292.5,116.6 300.0,115.5 L300.0,39.8 C292.5,41.7 270.0,46.8 255.0,50.9 C240.0,55.0 225.0,59.5 210.0,64.3 C195.0,69.1 180.0,73.9 165.0,79.8 C150.0,85.8 135.0,92.5 120.0,99.9 C105.0,107.3 90.0,115.8 75.0,124.3 C60.0,132.9 37.5,146.6 30.0,151.1 Z" style="fill:var(--color-chart-band-outer)"/><path d="M30.0,182.2 C37.5,179.2 60.0,170.7 75.0,164.4 C90.0,158.1 105.0,149.9 120.0,144.4 C135.0,138.8 150.0,135.1 165.0,131.0 C180.0,126.9 195.0,123.6 210.0,119.9 C225.0,116.2 240.0,111.7 255.0,108.8 C270.0,105.8 292.5,103.2 300.0,102.1 L300.0,62.1 C292.5,63.5 270.0,67.6 255.0,71.0 C240.0,74.3 225.0,77.6 210.0,82.1 C195.0,86.5 180.0,92.1 165.0,97.7 C150.0,103.2 135.0,108.8 120.0,115.5 C105.0,122.1 90.0,129.9 75.0,137.7 C60.0,145.5 37.5,158.1 30.0,162.2 Z" style="fill:var(--color-chart-band-inner)"/><path d="M30.0,191.1 C37.5,188.1 60.0,179.2 75.0,173.3 C90.0,167.4 105.0,160.7 120.0,155.5 C135.0,150.3 150.0,146.2 165.0,142.2 C180.0,138.1 195.0,134.4 210.0,131.0 C225.0,127.7 240.0,124.7 255.0,122.1 C270.0,119.5 292.5,116.6 300.0,115.5" fill="none" style="stroke:var(--color-chart-pline)" stroke-width="1"/><path d="M30.0,182.2 C37.5,179.2 60.0,170.7 75.0,164.4 C90.0,158.1 105.0,149.9 120.0,144.4 C135.0,138.8 150.0,135.1 165.0,131.0 C180.0,126.9 195.0,123.6 210.0,119.9 C225.0,116.2 240.0,111.7 255.0,108.8 C270.0,105.8 292.5,103.2 300.0,102.1" fill="none" style="stroke:var(--color-chart-pline)" stroke-width="1"/><path d="M30.0,162.2 C37.5,158.1 60.0,145.5 75.0,137.7 C90.0,129.9 105.0,122.1 120.0,115.5 C135.0,108.8 150.0,103.2 165.0,97.7 C180.0,92.1 195.0,86.5 210.0,82.1 C225.0,77.6 240.0,74.3 255.0,71.0 C270.0,67.6 292.5,63.5 300.0,62.1" fill="none" style="stroke:var(--color-chart-pline)" stroke-width="1"/><path d="M30.0,151.1 C37.5,146.6 60.0,132.9 75.0,124.3 C90.0,115.8 105.0,107.3 120.0,99.9 C135.0,92.5 150.0,85.8 165.0,79.8 C180.0,73.9 195.0,69.1 210.0,64.3 C225.0,59.5 240.0,55.0 255.0,50.9 C270.0,46.8 292.5,41.7 300.0,39.8" fill="none" style="stroke:var(--color-chart-pline)" stroke-width="1"/><path d="M30.0,173.3 C37.5,169.6 60.0,158.1 75.0,151.1 C90.0,144.0 105.0,137.0 120.0,131.0 C135.0,125.1 150.0,120.3 165.0,115.5 C180.0,110.6 195.0,106.2 210.0,102.1 C225.0,98.0 240.0,94.3 255.0,91.0 C270.0,87.6 292.5,83.6 300.0,82.1" fill="none" style="stroke:var(--color-chart-median)" stroke-width="1.5" stroke-dasharray="4 4"/><text x="305" y="118.95" style="fill:var(--color-chart-axis);font-size:10px">3</text><text x="305" y="105.6" style="fill:var(--color-chart-axis);font-size:10px">15</text><text x="305" y="85.575" style="fill:var(--color-chart-axis);font-size:10px">50</text><text x="305" y="65.55000000000001" style="fill:var(--color-chart-axis);font-size:10px">85</text><text x="305" y="43.30000000000001" style="fill:var(--color-chart-axis);font-size:10px">97</text><path d="M30.0,171.1 C31.3,171.8 33.9,176.1 37.6,175.5 C41.4,175.0 46.3,171.6 52.5,167.7 C58.7,163.9 63.8,158.2 75.0,152.4 C86.3,146.6 104.8,139.0 120.0,132.8 C135.2,126.6 158.6,118.0 166.3,115.0" fill="none" style="stroke:var(--color-growth)" stroke-width="2.5" stroke-linecap="round"/><circle cx="30" cy="171.075" r="4" style="fill:var(--color-growth);stroke:var(--color-surface)" stroke-width="2"/><circle cx="37.65" cy="175.525" r="4" style="fill:var(--color-growth);stroke:var(--color-surface)" stroke-width="2"/><circle cx="52.5" cy="167.7375" r="4" style="fill:var(--color-growth);stroke:var(--color-surface)" stroke-width="2"/><circle cx="75" cy="152.385" r="4" style="fill:var(--color-growth);stroke:var(--color-surface)" stroke-width="2"/><circle cx="120" cy="132.805" r="4" style="fill:var(--color-growth);stroke:var(--color-surface)" stroke-width="2"/><circle cx="166.35" cy="115.005" r="4" style="fill:var(--color-growth);stroke:var(--color-surface)" stroke-width="2"/><circle cx="166.35" cy="115.005" r="7" fill="none" style="stroke:var(--color-growth)" stroke-width="2" opacity=".35"/><text x="165" y="235" text-anchor="middle" style="fill:var(--color-chart-axis);font-size:10px">גיל בחודשים</text><text x="22" y="21" text-anchor="end" style="fill:var(--color-chart-axis);font-size:10px">ק״ג</text></svg></div>
+      <div class="chart-legend">
+        <span class="legend-item"><span class="legend-swatch legend-swatch--line legend-swatch--growth"></span>נועה</span>
+        <span class="legend-item"><span class="legend-swatch legend-swatch--dashed"></span>אחוזון 50</span>
+        <span class="legend-item"><span class="legend-swatch legend-swatch--band"></span>אחוזונים <span class="ltr">15–85</span></span>
+      </div>
+    </section>
+    <section class="section">
+      <div class="section__header"><h2 class="section__title">מדידות</h2></div>
+      <ul class="list" role="list">
+        <li><button class="row row--growth"><span class="row__icon"><svg class="lucide lucide-weight" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="5" r="3" /><path d="M6.5 8a2 2 0 0 0-1.905 1.46L2.1 18.5A2 2 0 0 0 4 21h16a2 2 0 0 0 1.925-2.54L19.4 9.5A2 2 0 0 0 17.48 8Z" /></svg></span><span class="row__body"><span class="row__title">1 באוקטובר 2026</span><span class="row__sub"><span class="ltr num">59.5</span> ס״מ · היקף ראש <span class="ltr num">39.8</span> ס״מ</span></span><span class="row__end"><span class="row__value"><span class="ltr num">5.82</span> ק״ג</span><span class="badge badge--growth">48</span></span></button></li>
+        <li><button class="row row--growth"><span class="row__icon"><svg class="lucide lucide-weight" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="5" r="3" /><path d="M6.5 8a2 2 0 0 0-1.905 1.46L2.1 18.5A2 2 0 0 0 4 21h16a2 2 0 0 0 1.925-2.54L19.4 9.5A2 2 0 0 0 17.48 8Z" /></svg></span><span class="row__body"><span class="row__title">1 בספטמבר 2026</span><span class="row__sub"><span class="ltr num">56.8</span> ס״מ</span></span><span class="row__end"><span class="row__value"><span class="ltr num">5.02</span> ק״ג</span><span class="badge badge--growth">51</span></span></button></li>
+      </ul>
+    </section>
+  </main>
+  <nav class="tabbar" aria-label="ניווט ראשי"><div class="tabbar__inner"><a class="tabbar__item" href="#"><span class="tabbar__icon"><svg class="lucide lucide-house" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8" /><path d="M3 10a2 2 0 0 1 .709-1.528l7-6a2 2 0 0 1 2.582 0l7 6A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /></svg></span>בית</a><a class="tabbar__item" href="#"><span class="tabbar__icon"><svg class="lucide lucide-history" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" /><path d="M3 3v5h5" /><path d="M12 7v5l4 2" /></svg></span>היסטוריה</a><a class="tabbar__item" href="#" aria-current="page"><span class="tabbar__icon"><svg class="lucide lucide-sprout" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 9.536V7a4 4 0 0 1 4-4h1.5a.5.5 0 0 1 .5.5V5a4 4 0 0 1-4 4 4 4 0 0 0-4 4c0 2 1 3 1 5a5 5 0 0 1-1 3" /><path d="M4 9a5 5 0 0 1 8 4 5 5 0 0 1-8-4" /><path d="M5 21h14" /></svg></span>גדילה</a><a class="tabbar__item" href="#"><span class="tabbar__icon"><svg class="lucide lucide-chart-column" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v16a2 2 0 0 0 2 2h16" /><path d="M18 17V9" /><path d="M13 17V5" /><path d="M8 17v-3" /></svg></span>סטטיסטיקה</a><a class="tabbar__item" href="#"><span class="tabbar__icon"><svg class="lucide lucide-settings" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915" /><circle cx="12" cy="12" r="3" /></svg></span>הגדרות</a></div></nav>
+</div>
+</template>
+
+<!-- ============ STATS ============ -->
+<template id="s-stats" data-label="סטטיסטיקה · 7 ימים">
+<div class="app">
+  <header class="app-header">
+    <h1 class="app-header__title">סטטיסטיקה</h1>
+  </header>
+  <main class="page" style="gap:var(--space-4)">
+    <div class="seg" role="radiogroup" aria-label="טווח">
+      <button class="seg__option" role="radio" aria-checked="true">7 ימים</button>
+      <button class="seg__option" role="radio" aria-checked="false">14 ימים</button>
+      <button class="seg__option" role="radio" aria-checked="false">30 ימים</button>
+    </div>
+    <div class="stat-grid">
+      <div class="stat stat--primary"><span class="stat__label"><svg class="lucide lucide-clock" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10" /><path d="M12 6v6l4 2" /></svg>האכלות ביום</span><span class="stat__value">6.4</span><span class="stat__delta"><svg class="lucide lucide-trending-up" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 7h6v6" /><path d="m22 7-8.5 8.5-5-5L2 17" /></svg><span class="ltr">+0.3</span> מהשבוע הקודם</span></div>
+      <div class="stat stat--bottle"><span class="stat__label"><svg class="lucide lucide-milk" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 2h8" /><path d="M9 2v2.789a4 4 0 0 1-.672 2.219l-.656.984A4 4 0 0 0 7 10.212V20a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-9.789a4 4 0 0 0-.672-2.219l-.656-.984A4 4 0 0 1 15 4.788V2" /><path d="M7 15a6.472 6.472 0 0 1 5 0 6.47 6.47 0 0 0 5 0" /></svg>בקבוק ביום</span><span class="stat__value">710<span class="stat__unit">מ״ל</span></span><span class="stat__sub">ממוצע יומי</span></div>
+      <div class="stat stat--breast"><span class="stat__label"><svg class="lucide lucide-heart" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 9.5a5.5 5.5 0 0 1 9.591-3.676.56.56 0 0 0 .818 0A5.49 5.49 0 0 1 22 9.5c0 2.29-1.5 4-3 5.5l-5.492 5.313a2 2 0 0 1-3 .019L5 15c-1.5-1.5-3-3.2-3-5.5" /></svg>הנקה ביום</span><span class="stat__value">58<span class="stat__unit">ד׳</span></span><span class="stat__sub">ממוצע יומי</span></div>
+      <div class="stat"><span class="stat__label"><svg class="lucide lucide-repeat-2" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m2 9 3-3 3 3" /><path d="M13 18H7a2 2 0 0 1-2-2V6" /><path d="m22 15-3 3-3-3" /><path d="M11 6h6a2 2 0 0 1 2 2v10" /></svg>מרווח ממוצע</span><span class="stat__value"><span class="ltr">2:50</span><span class="stat__unit">שע׳</span></span><span class="stat__sub">בין האכלות</span></div>
+    </div>
+    <section class="card">
+      <div class="card__header"><h2 class="card__title">האכלות לפי יום</h2></div>
+      <div class="chart" style="--chart-h:180px"><svg viewBox="0 0 324 180" width="100%" height="100%" role="img" aria-label="מספר האכלות לפי יום ולפי סוג"><defs><clipPath id="fb0"><rect x="34.85714285714286" y="26.5" width="24" height="129.5" rx="6"/></clipPath><clipPath id="fb1"><rect x="76.57142857142858" y="26.5" width="24" height="129.5" rx="6"/></clipPath><clipPath id="fb2"><rect x="118.28571428571428" y="45" width="24" height="111" rx="6"/></clipPath><clipPath id="fb3"><rect x="160" y="8" width="24" height="148" rx="6"/></clipPath><clipPath id="fb4"><rect x="201.71428571428572" y="8" width="24" height="148" rx="6"/></clipPath><clipPath id="fb5"><rect x="243.42857142857144" y="26.5" width="24" height="129.5" rx="6"/></clipPath><clipPath id="fb6"><rect x="285.1428571428571" y="63.5" width="24" height="92.5" rx="6"/></clipPath></defs><line x1="26" x2="318" y1="156" y2="156" style="stroke:var(--color-chart-grid)"/><text x="18" y="160" text-anchor="end" style="fill:var(--color-chart-axis);font-size:11px">0</text><line x1="26" x2="318" y1="119" y2="119" style="stroke:var(--color-chart-grid)"/><text x="18" y="123" text-anchor="end" style="fill:var(--color-chart-axis);font-size:11px">2</text><line x1="26" x2="318" y1="82" y2="82" style="stroke:var(--color-chart-grid)"/><text x="18" y="86" text-anchor="end" style="fill:var(--color-chart-axis);font-size:11px">4</text><line x1="26" x2="318" y1="45" y2="45" style="stroke:var(--color-chart-grid)"/><text x="18" y="49" text-anchor="end" style="fill:var(--color-chart-axis);font-size:11px">6</text><line x1="26" x2="318" y1="8" y2="8" style="stroke:var(--color-chart-grid)"/><text x="18" y="12" text-anchor="end" style="fill:var(--color-chart-axis);font-size:11px">8</text><g clip-path="url(#fb0)"><rect x="34.85714285714286" y="100.5" width="24" height="55.5" style="fill:var(--color-breast)"/><rect x="34.85714285714286" y="45" width="24" height="55.5" style="fill:var(--color-bottle)"/><rect x="34.85714285714286" y="99.5" width="24" height="2" style="fill:var(--color-surface)"/><rect x="34.85714285714286" y="26.5" width="24" height="18.5" style="fill:var(--color-solid)"/><rect x="34.85714285714286" y="44" width="24" height="2" style="fill:var(--color-surface)"/></g><text x="46.85714285714286" y="174" text-anchor="middle" style="fill:var(--color-chart-axis);font-size:11px">ג׳</text><g clip-path="url(#fb1)"><rect x="76.57142857142858" y="82" width="24" height="74" style="fill:var(--color-breast)"/><rect x="76.57142857142858" y="45" width="24" height="37" style="fill:var(--color-bottle)"/><rect x="76.57142857142858" y="81" width="24" height="2" style="fill:var(--color-surface)"/><rect x="76.57142857142858" y="26.5" width="24" height="18.5" style="fill:var(--color-solid)"/><rect x="76.57142857142858" y="44" width="24" height="2" style="fill:var(--color-surface)"/></g><text x="88.57142857142858" y="174" text-anchor="middle" style="fill:var(--color-chart-axis);font-size:11px">ד׳</text><g clip-path="url(#fb2)"><rect x="118.28571428571428" y="100.5" width="24" height="55.5" style="fill:var(--color-breast)"/><rect x="118.28571428571428" y="45" width="24" height="55.5" style="fill:var(--color-bottle)"/><rect x="118.28571428571428" y="99.5" width="24" height="2" style="fill:var(--color-surface)"/></g><text x="130.28571428571428" y="174" text-anchor="middle" style="fill:var(--color-chart-axis);font-size:11px">ה׳</text><g clip-path="url(#fb3)"><rect x="160" y="82" width="24" height="74" style="fill:var(--color-breast)"/><rect x="160" y="26.5" width="24" height="55.5" style="fill:var(--color-bottle)"/><rect x="160" y="81" width="24" height="2" style="fill:var(--color-surface)"/><rect x="160" y="8" width="24" height="18.5" style="fill:var(--color-solid)"/><rect x="160" y="25.5" width="24" height="2" style="fill:var(--color-surface)"/></g><text x="172" y="174" text-anchor="middle" style="fill:var(--color-chart-axis);font-size:11px">ו׳</text><g clip-path="url(#fb4)"><rect x="201.71428571428572" y="100.5" width="24" height="55.5" style="fill:var(--color-breast)"/><rect x="201.71428571428572" y="26.5" width="24" height="74" style="fill:var(--color-bottle)"/><rect x="201.71428571428572" y="99.5" width="24" height="2" style="fill:var(--color-surface)"/><rect x="201.71428571428572" y="8" width="24" height="18.5" style="fill:var(--color-solid)"/><rect x="201.71428571428572" y="25.5" width="24" height="2" style="fill:var(--color-surface)"/></g><text x="213.71428571428572" y="174" text-anchor="middle" style="fill:var(--color-chart-axis);font-size:11px">ש׳</text><g clip-path="url(#fb5)"><rect x="243.42857142857144" y="100.5" width="24" height="55.5" style="fill:var(--color-breast)"/><rect x="243.42857142857144" y="45" width="24" height="55.5" style="fill:var(--color-bottle)"/><rect x="243.42857142857144" y="99.5" width="24" height="2" style="fill:var(--color-surface)"/><rect x="243.42857142857144" y="26.5" width="24" height="18.5" style="fill:var(--color-solid)"/><rect x="243.42857142857144" y="44" width="24" height="2" style="fill:var(--color-surface)"/></g><text x="255.42857142857144" y="174" text-anchor="middle" style="fill:var(--color-chart-axis);font-size:11px">א׳</text><g clip-path="url(#fb6)"><rect x="285.1428571428571" y="119" width="24" height="37" style="fill:var(--color-breast)"/><rect x="285.1428571428571" y="63.5" width="24" height="55.5" style="fill:var(--color-bottle)"/><rect x="285.1428571428571" y="118" width="24" height="2" style="fill:var(--color-surface)"/></g><text x="297.1428571428571" y="174" text-anchor="middle" style="fill:var(--color-chart-axis);font-size:11px;font-weight:600">היום</text></svg></div>
+      <div class="chart-legend">
+        <span class="legend-item"><span class="legend-swatch legend-swatch--breast"></span>הנקה</span>
+        <span class="legend-item"><span class="legend-swatch legend-swatch--bottle"></span>בקבוק</span>
+        <span class="legend-item"><span class="legend-swatch legend-swatch--solid"></span>מוצקים</span>
+      </div>
+    </section>
+    <section class="card">
+      <div class="card__header"><h2 class="card__title">כמות בקבוק יומית</h2></div>
+      <div class="chart" style="--chart-h:170px"><svg viewBox="0 0 324 170" width="100%" height="100%" role="img" aria-label="כמות בקבוק יומית במ״ל"><line x1="36" x2="318" y1="146" y2="146" style="stroke:var(--color-chart-grid)"/><text x="28" y="150" text-anchor="end" style="fill:var(--color-chart-axis);font-size:11px">0</text><line x1="36" x2="318" y1="100" y2="100" style="stroke:var(--color-chart-grid)"/><text x="28" y="104" text-anchor="end" style="fill:var(--color-chart-axis);font-size:11px">400</text><line x1="36" x2="318" y1="54" y2="54" style="stroke:var(--color-chart-grid)"/><text x="28" y="58" text-anchor="end" style="fill:var(--color-chart-axis);font-size:11px">800</text><line x1="36" x2="318" y1="8" y2="8" style="stroke:var(--color-chart-grid)"/><text x="28" y="12" text-anchor="end" style="fill:var(--color-chart-axis);font-size:11px">1,200</text><rect x="36" y="26.400000000000006" width="282" height="39.099999999999994" style="fill:var(--color-chart-target)"/><line x1="36" x2="318" y1="65.5" y2="65.5" style="stroke:var(--color-primary)" stroke-width="1" stroke-dasharray="3 3" opacity=".7"/><line x1="36" x2="318" y1="26.400000000000006" y2="26.400000000000006" style="stroke:var(--color-primary)" stroke-width="1" stroke-dasharray="3 3" opacity=".7"/><path d="M44.14285714285714,146 V78.4 q0,-6 6,-6 h12 q6,0 6,6 V146 Z" style="fill:var(--color-bottle)"/><text x="56.14285714285714" y="164" text-anchor="middle" style="fill:var(--color-chart-axis);font-size:11px">ג׳</text><path d="M84.42857142857142,146 V69.2 q0,-6 6,-6 h12 q6,0 6,6 V146 Z" style="fill:var(--color-bottle)"/><text x="96.42857142857142" y="164" text-anchor="middle" style="fill:var(--color-chart-axis);font-size:11px">ד׳</text><path d="M124.71428571428572,146 V72.65 q0,-6 6,-6 h12 q6,0 6,6 V146 Z" style="fill:var(--color-bottle)"/><text x="136.71428571428572" y="164" text-anchor="middle" style="fill:var(--color-chart-axis);font-size:11px">ה׳</text><path d="M165,146 V64.6 q0,-6 6,-6 h12 q6,0 6,6 V146 Z" style="fill:var(--color-bottle)"/><text x="177" y="164" text-anchor="middle" style="fill:var(--color-chart-axis);font-size:11px">ו׳</text><path d="M205.28571428571428,146 V71.5 q0,-6 6,-6 h12 q6,0 6,6 V146 Z" style="fill:var(--color-bottle)"/><text x="217.28571428571428" y="164" text-anchor="middle" style="fill:var(--color-chart-axis);font-size:11px">ש׳</text><path d="M245.57142857142856,146 V66.325 q0,-6 6,-6 h12 q6,0 6,6 V146 Z" style="fill:var(--color-bottle)"/><text x="257.57142857142856" y="164" text-anchor="middle" style="fill:var(--color-chart-axis);font-size:11px">א׳</text><path d="M285.8571428571429,146 V110.6 q0,-6 6,-6 h12 q6,0 6,6 V146 Z" style="fill:var(--color-bottle)" opacity=".45"/><text x="297.8571428571429" y="164" text-anchor="middle" style="fill:var(--color-chart-axis);font-size:11px;font-weight:600">היום</text></svg></div>
+      <div class="chart-legend">
+        <span class="legend-item"><span class="legend-swatch legend-swatch--bottle"></span>מ״ל ביום</span>
+        <span class="legend-item"><span class="legend-swatch legend-swatch--target"></span>טווח מומלץ (בקבוק בלבד)</span>
+      </div>
+    </section>
+  </main>
+  <nav class="tabbar" aria-label="ניווט ראשי"><div class="tabbar__inner"><a class="tabbar__item" href="#"><span class="tabbar__icon"><svg class="lucide lucide-house" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8" /><path d="M3 10a2 2 0 0 1 .709-1.528l7-6a2 2 0 0 1 2.582 0l7 6A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /></svg></span>בית</a><a class="tabbar__item" href="#"><span class="tabbar__icon"><svg class="lucide lucide-history" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" /><path d="M3 3v5h5" /><path d="M12 7v5l4 2" /></svg></span>היסטוריה</a><a class="tabbar__item" href="#"><span class="tabbar__icon"><svg class="lucide lucide-sprout" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 9.536V7a4 4 0 0 1 4-4h1.5a.5.5 0 0 1 .5.5V5a4 4 0 0 1-4 4 4 4 0 0 0-4 4c0 2 1 3 1 5a5 5 0 0 1-1 3" /><path d="M4 9a5 5 0 0 1 8 4 5 5 0 0 1-8-4" /><path d="M5 21h14" /></svg></span>גדילה</a><a class="tabbar__item" href="#" aria-current="page"><span class="tabbar__icon"><svg class="lucide lucide-chart-column" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v16a2 2 0 0 0 2 2h16" /><path d="M18 17V9" /><path d="M13 17V5" /><path d="M8 17v-3" /></svg></span>סטטיסטיקה</a><a class="tabbar__item" href="#"><span class="tabbar__icon"><svg class="lucide lucide-settings" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915" /><circle cx="12" cy="12" r="3" /></svg></span>הגדרות</a></div></nav>
+</div>
+</template>
+
+<!-- ============ SETTINGS ============ -->
+<template id="s-settings" data-label="הגדרות">
+<div class="app">
+  <header class="app-header">
+    <h1 class="app-header__title">הגדרות</h1>
+  </header>
+  <main class="page" style="gap:var(--space-5)">
+    <section class="section" style="gap:var(--space-2)">
+      <h2 class="section__eyebrow">ילדים</h2>
+      <ul class="list" role="list">
+        <li><button class="row"><span class="avatar">נ</span><span class="row__body"><span class="row__title">נועה</span><span class="row__sub">תאריך לידה: <span class="ltr num">1.7.2026</span></span></span><span class="row__end"><span class="badge badge--primary"><svg class="lucide lucide-check" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5" /></svg>נבחר</span><svg class="lucide lucide-chevron-left" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg></span></button></li>
+        <li><button class="row"><span class="avatar avatar--alt">א</span><span class="row__body"><span class="row__title">איתי</span><span class="row__sub">תאריך לידה: <span class="ltr num">1.7.2026</span></span></span><span class="row__end"><svg class="lucide lucide-chevron-left" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg></span></button></li>
+        <li><button class="row row--primary"><span class="row__icon"><svg class="lucide lucide-plus" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14" /><path d="M12 5v14" /></svg></span><span class="row__body"><span class="row__title">הוספת ילד/ה</span></span></button></li>
+      </ul>
+    </section>
+    <section class="section" style="gap:var(--space-2)">
+      <h2 class="section__eyebrow">יחידות ותצוגה</h2>
+      <ul class="list" role="list">
+        <li><div class="row"><span class="row__icon"><svg class="lucide lucide-milk" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 2h8" /><path d="M9 2v2.789a4 4 0 0 1-.672 2.219l-.656.984A4 4 0 0 0 7 10.212V20a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-9.789a4 4 0 0 0-.672-2.219l-.656-.984A4 4 0 0 1 15 4.788V2" /><path d="M7 15a6.472 6.472 0 0 1 5 0 6.47 6.47 0 0 0 5 0" /></svg></span><span class="row__body"><span class="row__title">נפח</span></span><div class="seg seg--inline" role="radiogroup" aria-label="יחידת נפח"><button class="seg__option" role="radio" aria-checked="true">מ״ל</button><button class="seg__option" role="radio" aria-checked="false">oz</button></div></div></li>
+        <li><div class="row"><span class="row__icon"><svg class="lucide lucide-weight" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="5" r="3" /><path d="M6.5 8a2 2 0 0 0-1.905 1.46L2.1 18.5A2 2 0 0 0 4 21h16a2 2 0 0 0 1.925-2.54L19.4 9.5A2 2 0 0 0 17.48 8Z" /></svg></span><span class="row__body"><span class="row__title">משקל</span></span><div class="seg seg--inline" role="radiogroup" aria-label="יחידת משקל"><button class="seg__option" role="radio" aria-checked="true">ק״ג</button><button class="seg__option" role="radio" aria-checked="false">lb</button></div></div></li>
+        <li><div class="row row--wrap"><span class="row__icon"><svg class="lucide lucide-sun-moon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2v2" /><path d="M14.837 16.385a6 6 0 1 1-7.223-7.222c.624-.147.97.66.715 1.248a4 4 0 0 0 5.26 5.259c.589-.255 1.396.09 1.248.715" /><path d="M16 12a4 4 0 0 0-4-4" /><path d="m19 5-1.256 1.256" /><path d="M20 12h2" /></svg></span><span class="row__body"><span class="row__title">ערכת נושא</span></span><div class="seg" role="radiogroup" aria-label="ערכת נושא"><button class="seg__option" role="radio" aria-checked="true">אוטומטי</button><button class="seg__option" role="radio" aria-checked="false">בהיר</button><button class="seg__option" role="radio" aria-checked="false">כהה</button></div></div></li>
+      </ul>
+    </section>
+    <section class="section" style="gap:var(--space-2)">
+      <h2 class="section__eyebrow">גיבוי ונתונים</h2>
+      <ul class="list" role="list">
+        <li><button class="row"><span class="row__icon"><svg class="lucide lucide-download" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V3" /><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><path d="m7 10 5 5 5-5" /></svg></span><span class="row__body"><span class="row__title">ייצוא גיבוי</span><span class="row__sub">קובץ JSON לשמירה או להעברה למכשיר אחר</span></span><span class="row__end"><svg class="lucide lucide-chevron-left" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg></span></button></li>
+        <li><button class="row"><span class="row__icon"><svg class="lucide lucide-upload" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12" /><path d="m17 8-5-5-5 5" /><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /></svg></span><span class="row__body"><span class="row__title">ייבוא מגיבוי</span></span><span class="row__end"><svg class="lucide lucide-chevron-left" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg></span></button></li>
+        <li><button class="row"><span class="row__icon"><svg class="lucide lucide-file-spreadsheet" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z" /><path d="M14 2v5a1 1 0 0 0 1 1h5" /><path d="M8 13h2" /><path d="M14 13h2" /><path d="M8 17h2" /><path d="M14 17h2" /></svg></span><span class="row__body"><span class="row__title">ייצוא לגיליון (CSV)</span></span><span class="row__end"><svg class="lucide lucide-chevron-left" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg></span></button></li>
+        <li><button class="row row--danger"><span class="row__icon"><svg class="lucide lucide-trash-2" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 11v6" /><path d="M14 11v6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" /><path d="M3 6h18" /><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /></svg></span><span class="row__body"><span class="row__title">מחיקת כל הנתונים</span></span></button></li>
+      </ul>
+    </section>
+    <section class="section" style="gap:var(--space-2)">
+      <h2 class="section__eyebrow">אודות</h2>
+      <ul class="list" role="list">
+        <li><div class="row"><span class="row__icon"><svg class="lucide lucide-shield-check" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z" /><path d="m9 12 2 2 4-4" /></svg></span><span class="row__body"><span class="row__title">הנתונים נשמרים רק במכשיר הזה</span><span class="row__sub">אין חשבון, אין שרת ואין שיתוף</span></span></div></li>
+        <li><div class="row"><span class="row__icon"><svg class="lucide lucide-info" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10" /><path d="M12 16v-4" /><path d="M12 8h.01" /></svg></span><span class="row__body"><span class="row__title">גרסה</span></span><span class="row__end ltr num">1.0.0</span></div></li>
+      </ul>
+      <p class="disclaimer" style="padding-inline:var(--space-1)"><svg class="lucide lucide-info" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10" /><path d="M12 16v-4" /><path d="M12 8h.01" /></svg><span>BabyMonitor נועדה למעקב אישי. החישובים מבוססים על הנחיות כלליות ואינם תחליף לייעוץ רפואי.</span></p>
+    </section>
+  </main>
+  <nav class="tabbar" aria-label="ניווט ראשי"><div class="tabbar__inner"><a class="tabbar__item" href="#"><span class="tabbar__icon"><svg class="lucide lucide-house" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8" /><path d="M3 10a2 2 0 0 1 .709-1.528l7-6a2 2 0 0 1 2.582 0l7 6A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /></svg></span>בית</a><a class="tabbar__item" href="#"><span class="tabbar__icon"><svg class="lucide lucide-history" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" /><path d="M3 3v5h5" /><path d="M12 7v5l4 2" /></svg></span>היסטוריה</a><a class="tabbar__item" href="#"><span class="tabbar__icon"><svg class="lucide lucide-sprout" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 9.536V7a4 4 0 0 1 4-4h1.5a.5.5 0 0 1 .5.5V5a4 4 0 0 1-4 4 4 4 0 0 0-4 4c0 2 1 3 1 5a5 5 0 0 1-1 3" /><path d="M4 9a5 5 0 0 1 8 4 5 5 0 0 1-8-4" /><path d="M5 21h14" /></svg></span>גדילה</a><a class="tabbar__item" href="#"><span class="tabbar__icon"><svg class="lucide lucide-chart-column" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v16a2 2 0 0 0 2 2h16" /><path d="M18 17V9" /><path d="M13 17V5" /><path d="M8 17v-3" /></svg></span>סטטיסטיקה</a><a class="tabbar__item" href="#" aria-current="page"><span class="tabbar__icon"><svg class="lucide lucide-settings" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915" /><circle cx="12" cy="12" r="3" /></svg></span>הגדרות</a></div></nav>
+</div>
+</template>
+
+<!-- ============ SOLIDS SHEET ============ -->
+<template id="s-solids" data-label="מוצקים · גיליון הוספה">
+<div class="app">
+  <header class="app-header"><button class="baby-switch"><span class="avatar">נ</span><span class="baby-switch__text"><span class="baby-switch__name">נועה</span><span class="baby-switch__age">3 חודשים ו-4 ימים</span></span><svg class="lucide lucide-chevron-down" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg></button></header>
+<main class="page"><section class="card since"><div class="since__top"><span class="since__label">מאז ההאכלה האחרונה</span><span class="badge badge--accent badge--lg"><svg class="lucide lucide-arrow-left-right" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3 4 7l4 4" /><path d="M4 7h16" /><path d="m16 21 4-4-4-4" /><path d="M20 17H4" /></svg>הצד הבא: שמאל</span></div><div class="since__value"><span class="since__part"><span>2</span><span class="since__unit">שע׳</span></span><span class="since__part"><span>40</span><span class="since__unit">ד׳</span></span></div></section>
+<div class="tile-grid"><button class="tile tile--breast"><span class="tile__icon"><svg class="lucide lucide-heart" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 9.5a5.5 5.5 0 0 1 9.591-3.676.56.56 0 0 0 .818 0A5.49 5.49 0 0 1 22 9.5c0 2.29-1.5 4-3 5.5l-5.492 5.313a2 2 0 0 1-3 .019L5 15c-1.5-1.5-3-3.2-3-5.5" /></svg></span><span class="tile__label">הנקה</span></button><button class="tile tile--bottle"><span class="tile__icon"><svg class="lucide lucide-milk" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 2h8" /><path d="M9 2v2.789a4 4 0 0 1-.672 2.219l-.656.984A4 4 0 0 0 7 10.212V20a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-9.789a4 4 0 0 0-.672-2.219l-.656-.984A4 4 0 0 1 15 4.788V2" /><path d="M7 15a6.472 6.472 0 0 1 5 0 6.47 6.47 0 0 0 5 0" /></svg></span><span class="tile__label">בקבוק</span></button><button class="tile tile--solid"><span class="tile__icon"><svg class="lucide lucide-apple" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 6.528V3a1 1 0 0 1 1-1h0" /><path d="M18.237 21A15 15 0 0 0 22 11a6 6 0 0 0-10-4.472A6 6 0 0 0 2 11a15.1 15.1 0 0 0 3.763 10 3 3 0 0 0 3.648.648 5.5 5.5 0 0 1 5.178 0A3 3 0 0 0 18.237 21" /></svg></span><span class="tile__label">מוצקים</span></button></div></main><nav class="tabbar" aria-label="ניווט ראשי"><div class="tabbar__inner"><a class="tabbar__item" href="#" aria-current="page"><span class="tabbar__icon"><svg class="lucide lucide-house" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8" /><path d="M3 10a2 2 0 0 1 .709-1.528l7-6a2 2 0 0 1 2.582 0l7 6A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /></svg></span>בית</a><a class="tabbar__item" href="#"><span class="tabbar__icon"><svg class="lucide lucide-history" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" /><path d="M3 3v5h5" /><path d="M12 7v5l4 2" /></svg></span>היסטוריה</a><a class="tabbar__item" href="#"><span class="tabbar__icon"><svg class="lucide lucide-sprout" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 9.536V7a4 4 0 0 1 4-4h1.5a.5.5 0 0 1 .5.5V5a4 4 0 0 1-4 4 4 4 0 0 0-4 4c0 2 1 3 1 5a5 5 0 0 1-1 3" /><path d="M4 9a5 5 0 0 1 8 4 5 5 0 0 1-8-4" /><path d="M5 21h14" /></svg></span>גדילה</a><a class="tabbar__item" href="#"><span class="tabbar__icon"><svg class="lucide lucide-chart-column" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v16a2 2 0 0 0 2 2h16" /><path d="M18 17V9" /><path d="M13 17V5" /><path d="M8 17v-3" /></svg></span>סטטיסטיקה</a><a class="tabbar__item" href="#"><span class="tabbar__icon"><svg class="lucide lucide-settings" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915" /><circle cx="12" cy="12" r="3" /></svg></span>הגדרות</a></div></nav>
+  <div class="scrim"></div>
+  <div class="sheet sheet--solid" role="dialog" aria-modal="true" aria-labelledby="t5">
+    <div class="sheet__handle"></div>
+    <div class="sheet__header">
+      <span class="sheet__icon"><svg class="lucide lucide-apple" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 6.528V3a1 1 0 0 1 1-1h0" /><path d="M18.237 21A15 15 0 0 0 22 11a6 6 0 0 0-10-4.472A6 6 0 0 0 2 11a15.1 15.1 0 0 0 3.763 10 3 3 0 0 0 3.648.648 5.5 5.5 0 0 1 5.178 0A3 3 0 0 0 18.237 21" /></svg></span>
+      <h2 class="sheet__title" id="t5">מוצקים</h2>
+      <button class="icon-btn" aria-label="סגירה"><svg class="lucide lucide-x" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18" /><path d="m6 6 12 12" /></svg></button>
+    </div>
+    <div class="sheet__body" style="gap:var(--space-5)">
+      <div class="field">
+        <label class="field__label" for="food">מזון</label>
+        <input class="input" id="food" value="אבוקדו" />
+        <div class="chip-row" role="group" aria-label="מזונות אחרונים">
+          <button class="chip" aria-pressed="false"><svg class="lucide lucide-plus" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14" /><path d="M12 5v14" /></svg>בטטה</button>
+          <button class="chip" aria-pressed="false"><svg class="lucide lucide-plus" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14" /><path d="M12 5v14" /></svg>דלעת</button>
+          <button class="chip" aria-pressed="false"><svg class="lucide lucide-plus" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14" /><path d="M12 5v14" /></svg>בננה</button>
+          <button class="chip" aria-pressed="false"><svg class="lucide lucide-plus" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14" /><path d="M12 5v14" /></svg>גזר</button>
+        </div>
+      </div>
+      <div class="field">
+        <span class="field__label">כמות משוערת <span class="field__optional">(לא חובה)</span></span>
+        <div class="cluster" role="group" aria-label="כמות משוערת">
+          <button class="chip" aria-pressed="false">טעימה</button>
+          <button class="chip" aria-pressed="true">כפית</button>
+          <button class="chip" aria-pressed="false"><span class="ltr">2–3</span> כפיות</button>
+          <button class="chip" aria-pressed="false">חצי קערית</button>
+          <button class="chip" aria-pressed="false">קערית</button>
+        </div>
+      </div>
+      <label class="switch-row">
+        <span class="switch-row__text"><span class="switch-row__title">מזון חדש</span><span class="switch-row__hint">עוזר לזהות רגישויות בהמשך</span></span>
+        <input type="checkbox" role="switch" class="switch" checked />
+      </label>
+      <div class="field">
+        <span class="field__label">תגובה</span>
+        <div class="cluster" role="group" aria-label="תגובה">
+          <button class="chip" aria-pressed="true">ללא תגובה</button>
+          <button class="chip" aria-pressed="false">פריחה</button>
+          <button class="chip" aria-pressed="false">אי-נוחות בבטן</button>
+          <button class="chip" aria-pressed="false">הקאה</button>
+          <button class="chip" aria-pressed="false">אחר</button>
+        </div>
+      </div>
+      <div class="field">
+        <span class="field__label">שעה</span>
+        <label class="input input--picker"><svg class="lucide lucide-clock" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10" /><path d="M12 6v6l4 2" /></svg><span class="input__value">היום, <span class="ltr num">12:30</span></span><svg class="lucide lucide-chevron-down" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg></label>
+      </div>
+    </div>
+    <div class="sheet__footer">
+      <button class="btn btn--primary btn--lg"><svg class="lucide lucide-check" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5" /></svg>שמירה</button>
+    </div>
+  </div>
+</div>
+</template>
+
+<!-- ============ HOME – FIRST RUN (EMPTY) ============ -->
+<template id="s-home-empty" data-label="בית · מצב ריק (שימוש ראשון)">
+<div class="app">
+  <header class="app-header">
+    <button class="baby-switch" aria-label="החלפת ילד/ה">
+      <span class="avatar">נ</span>
+      <span class="baby-switch__text"><span class="baby-switch__name">נועה</span><span class="baby-switch__age">בת 5 ימים</span></span>
+      <svg class="lucide lucide-chevron-down" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg>
+    </button>
+  </header>
+  <main class="page">
+    <section class="card since">
+      <div class="empty empty--compact">
+        <span class="empty__icon"><svg class="lucide lucide-clock" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10" /><path d="M12 6v6l4 2" /></svg></span>
+        <h2 class="empty__title">עוד לא נרשמו האכלות</h2>
+        <p class="empty__text">בחירה באחד מסוגי ההאכלה כאן למטה תתחיל את הרישום. כל רישום אפשר לערוך אחר כך.</p>
+      </div>
+    </section>
+    <div class="tile-grid">
+      <button class="tile tile--breast" aria-label="התחלת הנקה"><span class="tile__icon"><svg class="lucide lucide-heart" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 9.5a5.5 5.5 0 0 1 9.591-3.676.56.56 0 0 0 .818 0A5.49 5.49 0 0 1 22 9.5c0 2.29-1.5 4-3 5.5l-5.492 5.313a2 2 0 0 1-3 .019L5 15c-1.5-1.5-3-3.2-3-5.5" /></svg></span><span class="tile__label">הנקה</span><span class="tile__meta">טיימר ימין/שמאל</span></button>
+      <button class="tile tile--bottle" aria-label="הוספת בקבוק"><span class="tile__icon"><svg class="lucide lucide-milk" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 2h8" /><path d="M9 2v2.789a4 4 0 0 1-.672 2.219l-.656.984A4 4 0 0 0 7 10.212V20a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-9.789a4 4 0 0 0-.672-2.219l-.656-.984A4 4 0 0 1 15 4.788V2" /><path d="M7 15a6.472 6.472 0 0 1 5 0 6.47 6.47 0 0 0 5 0" /></svg></span><span class="tile__label">בקבוק</span><span class="tile__meta">חלב אם או תמ״ל</span></button>
+      <button class="tile tile--solid" aria-label="הוספת מוצקים"><span class="tile__icon"><svg class="lucide lucide-apple" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 6.528V3a1 1 0 0 1 1-1h0" /><path d="M18.237 21A15 15 0 0 0 22 11a6 6 0 0 0-10-4.472A6 6 0 0 0 2 11a15.1 15.1 0 0 0 3.763 10 3 3 0 0 0 3.648.648 5.5 5.5 0 0 1 5.178 0A3 3 0 0 0 18.237 21" /></svg></span><span class="tile__label">מוצקים</span><span class="tile__meta">מזון וכמות</span></button>
+    </div>
+    <div class="banner banner--info" role="note">
+      <svg class="lucide lucide-info banner__icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10" /><path d="M12 16v-4" /><path d="M12 8h.01" /></svg>
+      <div class="banner__body">
+        <span class="banner__title">אפשר להתקין למסך הבית</span>
+        <span class="banner__text">כך האפליקציה נפתחת מהר יותר ועובדת גם בלי אינטרנט.</span>
+      </div>
+    </div>
+    <div class="banner banner--warning" role="note">
+      <svg class="lucide lucide-triangle-alert banner__icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3" /><path d="M12 9v4" /><path d="M12 17h.01" /></svg>
+      <div class="banner__body">
+        <span class="banner__title">ירידה של 11% ממשקל הלידה</span>
+        <span class="banner__text">ירידה של יותר מ-10% בימים הראשונים מצדיקה בדיקה. כדאי להתייעץ עם רופא/ת הילדים.</span>
+      </div>
+    </div>
+  </main>
+  <nav class="tabbar" aria-label="ניווט ראשי"><div class="tabbar__inner"><a class="tabbar__item" href="#" aria-current="page"><span class="tabbar__icon"><svg class="lucide lucide-house" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8" /><path d="M3 10a2 2 0 0 1 .709-1.528l7-6a2 2 0 0 1 2.582 0l7 6A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /></svg></span>בית</a><a class="tabbar__item" href="#"><span class="tabbar__icon"><svg class="lucide lucide-history" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" /><path d="M3 3v5h5" /><path d="M12 7v5l4 2" /></svg></span>היסטוריה</a><a class="tabbar__item" href="#"><span class="tabbar__icon"><svg class="lucide lucide-sprout" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 9.536V7a4 4 0 0 1 4-4h1.5a.5.5 0 0 1 .5.5V5a4 4 0 0 1-4 4 4 4 0 0 0-4 4c0 2 1 3 1 5a5 5 0 0 1-1 3" /><path d="M4 9a5 5 0 0 1 8 4 5 5 0 0 1-8-4" /><path d="M5 21h14" /></svg></span>גדילה</a><a class="tabbar__item" href="#"><span class="tabbar__icon"><svg class="lucide lucide-chart-column" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v16a2 2 0 0 0 2 2h16" /><path d="M18 17V9" /><path d="M13 17V5" /><path d="M8 17v-3" /></svg></span>סטטיסטיקה</a><a class="tabbar__item" href="#"><span class="tabbar__icon"><svg class="lucide lucide-settings" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915" /><circle cx="12" cy="12" r="3" /></svg></span>הגדרות</a></div></nav>
+</div>
+</template>
+
+<!-- ============ CONFIRM DIALOG ============ -->
+<template id="s-dialog" data-label="אישור פעולה הרסנית">
+<div class="app">
+  <header class="app-header"><h1 class="app-header__title">הגדרות</h1></header>
+  <main class="page" style="gap:var(--space-5)">
+    <section class="section" style="gap:var(--space-2)">
+      <h2 class="section__eyebrow">גיבוי ונתונים</h2>
+      <ul class="list" role="list">
+        <li><button class="row"><span class="row__icon"><svg class="lucide lucide-download" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V3" /><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><path d="m7 10 5 5 5-5" /></svg></span><span class="row__body"><span class="row__title">ייצוא גיבוי</span></span><span class="row__end"><svg class="lucide lucide-chevron-left" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg></span></button></li>
+        <li><button class="row"><span class="row__icon"><svg class="lucide lucide-upload" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12" /><path d="m17 8-5-5-5 5" /><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /></svg></span><span class="row__body"><span class="row__title">ייבוא מגיבוי</span></span><span class="row__end"><svg class="lucide lucide-chevron-left" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg></span></button></li>
+        <li><button class="row row--danger"><span class="row__icon"><svg class="lucide lucide-trash-2" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 11v6" /><path d="M14 11v6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" /><path d="M3 6h18" /><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /></svg></span><span class="row__body"><span class="row__title">מחיקת כל הנתונים</span></span></button></li>
+      </ul>
+    </section>
+  </main>
+  <div class="scrim"></div>
+  <div class="dialog" role="alertdialog" aria-modal="true" aria-labelledby="d1" aria-describedby="d2">
+    <span class="dialog__icon"><svg class="lucide lucide-trash-2" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 11v6" /><path d="M14 11v6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" /><path d="M3 6h18" /><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /></svg></span>
+    <h2 class="dialog__title" id="d1">למחוק את כל הנתונים?</h2>
+    <p class="dialog__text" id="d2">כל ההאכלות, המדידות והילדים יימחקו מהמכשיר הזה. אי אפשר לבטל את הפעולה — אלא אם נשמר קובץ גיבוי.</p>
+    <div class="dialog__actions">
+      <button class="btn btn--danger btn--block">מחיקה לצמיתות</button>
+      <button class="btn btn--outline btn--block">ביטול</button>
+    </div>
+  </div>
+  <nav class="tabbar" aria-label="ניווט ראשי"><div class="tabbar__inner"><a class="tabbar__item" href="#"><span class="tabbar__icon"><svg class="lucide lucide-house" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8" /><path d="M3 10a2 2 0 0 1 .709-1.528l7-6a2 2 0 0 1 2.582 0l7 6A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /></svg></span>בית</a><a class="tabbar__item" href="#"><span class="tabbar__icon"><svg class="lucide lucide-history" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" /><path d="M3 3v5h5" /><path d="M12 7v5l4 2" /></svg></span>היסטוריה</a><a class="tabbar__item" href="#"><span class="tabbar__icon"><svg class="lucide lucide-sprout" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 9.536V7a4 4 0 0 1 4-4h1.5a.5.5 0 0 1 .5.5V5a4 4 0 0 1-4 4 4 4 0 0 0-4 4c0 2 1 3 1 5a5 5 0 0 1-1 3" /><path d="M4 9a5 5 0 0 1 8 4 5 5 0 0 1-8-4" /><path d="M5 21h14" /></svg></span>גדילה</a><a class="tabbar__item" href="#"><span class="tabbar__icon"><svg class="lucide lucide-chart-column" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v16a2 2 0 0 0 2 2h16" /><path d="M18 17V9" /><path d="M13 17V5" /><path d="M8 17v-3" /></svg></span>סטטיסטיקה</a><a class="tabbar__item" href="#" aria-current="page"><span class="tabbar__icon"><svg class="lucide lucide-settings" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915" /><circle cx="12" cy="12" r="3" /></svg></span>הגדרות</a></div></nav>
+</div>
+</template>
+
+
+<script>
+  const order = ["s-onboarding", "s-home-empty", "s-home", "s-timer-start", "s-timer", "s-bottle", "s-solids", "s-history", "s-growth", "s-stats", "s-settings", "s-dialog"];
+  const head = (theme) => `<!doctype html><html lang="he" dir="rtl" data-theme="${theme}"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../src/styles/tokens.css">
+<link rel="stylesheet" href="../../src/styles/global.css">
+<link rel="stylesheet" href="../../src/styles/components.css">
+<style>
+  :root { --safe-top: 44px; --safe-bottom: 22px; }
+  body { overflow: hidden; }
+  *, *::before, *::after { animation-play-state: paused !important; animation-delay: -10s !important; }
+  .mock-status { position: fixed; inset-block-start: 0; inset-inline: 0; z-index: 100; block-size: 44px; direction: ltr;
+    display: flex; align-items: center; justify-content: space-between; padding: 4px 30px 0; font: 600 15px/1 var(--font-sans); color: var(--color-text); pointer-events: none; }
+  .mock-status b { display: inline-flex; gap: 5px; align-items: center; }
+  .mock-status i { display: inline-block; inline-size: 24px; block-size: 11px; border-radius: 3px; border: 1.5px solid currentColor; opacity: .85; position: relative; }
+  .mock-status i::after { content: ""; position: absolute; inset: 1.5px 5px 1.5px 1.5px; background: currentColor; border-radius: 1px; }
+  .mock-home { position: fixed; inset-block-end: 8px; left: 50%; z-index: 100; inline-size: 134px; block-size: 5px; margin-left: -67px; border-radius: 3px; background: var(--color-text); opacity: .8; }
+</style></head><body>`;
+  for (const theme of ["light", "dark"]) {
+    const grid = document.getElementById("grid-" + theme);
+    for (const id of order) {
+      const t = document.getElementById(id);
+      const fig = document.createElement("figure");
+      const phone = document.createElement("div");
+      phone.className = "phone";
+      const screen = document.createElement("div");
+      screen.className = "phone__screen";
+      const frame = document.createElement("iframe");
+      frame.title = t.dataset.label;
+      frame.loading = "eager";
+      frame.srcdoc = head(theme) + '<div class="mock-status"><span>9:41</span><b><span>5G</span><i></i></b></div>' + t.innerHTML + '<div class="mock-home"></div></body></html>';
+      screen.append(frame);
+      phone.append(screen);
+      const cap = document.createElement("figcaption");
+      cap.textContent = t.dataset.label;
+      fig.append(phone, cap);
+      grid.append(fig);
+    }
+  }
+</script>
+</body>
+</html>

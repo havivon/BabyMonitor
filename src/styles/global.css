@@ -1,0 +1,241 @@
+/* ==========================================================================
+   BabyMonitor — Global base styles
+   Import order in main.tsx:  tokens.css → global.css → components.css
+   Font: Rubik is self-hosted via @fontsource (weights 400/500/600/700, Hebrew
+   + Latin subsets). This file only references the family name.
+   ========================================================================== */
+
+/* ---- Reset ------------------------------------------------------------- */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+* {
+  margin: 0;
+}
+
+html {
+  direction: rtl;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
+  scroll-padding-block: calc(var(--header-h) + var(--safe-top) + var(--space-4))
+    calc(var(--tabbar-h) + var(--safe-bottom) + var(--space-4));
+}
+
+body {
+  min-height: 100dvh;
+  font-family: var(--font-sans);
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+  font-weight: var(--fw-regular);
+  color: var(--color-text);
+  background-color: var(--color-bg);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  overscroll-behavior-y: none;
+}
+
+img,
+picture,
+svg,
+video,
+canvas {
+  display: block;
+  max-width: 100%;
+}
+
+/* lucide icons inherit color and never shrink inside flex rows */
+svg.lucide {
+  flex-shrink: 0;
+}
+
+input,
+button,
+textarea,
+select {
+  font: inherit;
+  color: inherit;
+  letter-spacing: inherit;
+}
+
+button {
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  touch-action: manipulation; /* no 300ms delay / double-tap zoom */
+}
+
+button:disabled {
+  cursor: not-allowed;
+}
+
+a {
+  color: var(--color-primary);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+}
+
+p,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  overflow-wrap: break-word;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-weight: var(--fw-semibold);
+  text-wrap: balance;
+}
+
+p {
+  text-wrap: pretty;
+}
+
+ul[role="list"],
+ol[role="list"] {
+  list-style: none;
+  padding: 0;
+}
+
+#root {
+  isolation: isolate;
+}
+
+::selection {
+  background: var(--color-primary-soft);
+  color: var(--color-on-primary-soft);
+}
+
+/* ---- Focus ------------------------------------------------------------- */
+:focus {
+  outline: none;
+}
+
+:focus-visible {
+  outline: 3px solid var(--color-focus-ring);
+  outline-offset: 2px;
+}
+
+/* ---- Reduced motion ---------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ==========================================================================
+   Utilities
+   ========================================================================== */
+
+/* Screen-reader only */
+.visually-hidden {
+  position: absolute !important;
+  inline-size: 1px !important;
+  block-size: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0 0 0 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
+/* Left-to-right island for numbers, times, units-with-numbers, Latin text.
+   Use on an inline element: <span class="ltr num">12:45</span> */
+.ltr {
+  direction: ltr;
+  unicode-bidi: isolate;
+}
+
+/* Tabular figures so live timers and columns of numbers don't jitter */
+.num {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+}
+
+/* Mirror a directional icon in RTL (back arrows, undo, chevrons in custom use) */
+.flip-rtl:dir(rtl) {
+  transform: scaleX(-1);
+}
+
+.truncate {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  min-inline-size: 0;
+}
+
+.text-muted {
+  color: var(--color-text-muted);
+}
+
+.text-subtle {
+  color: var(--color-text-subtle);
+}
+
+.text-sm {
+  font-size: var(--fs-body-sm);
+  line-height: var(--lh-body-sm);
+}
+
+.text-center {
+  text-align: center;
+}
+
+/* Vertical rhythm: children separated by --stack-gap (default 16px) */
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--stack-gap, var(--space-4));
+}
+
+.stack--2 { --stack-gap: var(--space-2); }
+.stack--3 { --stack-gap: var(--space-3); }
+.stack--4 { --stack-gap: var(--space-4); }
+.stack--6 { --stack-gap: var(--space-6); }
+.stack--8 { --stack-gap: var(--space-8); }
+
+/* Horizontal group that wraps: chips, button groups, meta rows */
+.cluster {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--cluster-gap, var(--space-2));
+}
+
+.cluster--1 { --cluster-gap: var(--space-1); }
+.cluster--3 { --cluster-gap: var(--space-3); }
+.cluster--4 { --cluster-gap: var(--space-4); }
+.cluster--nowrap { flex-wrap: nowrap; }
+.cluster--between { justify-content: space-between; }
+
+/* Push the next siblings to the inline-end inside a flex row */
+.spacer {
+  flex: 1 1 auto;
+}
+
+/* Equal-width grids */
+.grid-2,
+.grid-3 {
+  display: grid;
+  gap: var(--grid-gap, var(--space-3));
+}
+
+.grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.grid-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
