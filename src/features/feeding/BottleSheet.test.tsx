@@ -98,11 +98,7 @@ describe('BottleSheet', () => {
     seedStore({ entries: [existing] });
     const onClose = vi.fn();
     renderInShell(
-      <BottleSheet
-        open
-        onClose={onClose}
-        entry={appStore.getState().entries[0] as BottleEntry}
-      />,
+      <BottleSheet open onClose={onClose} entry={appStore.getState().entries[0] as BottleEntry} />,
     );
     expect(screen.getByRole('heading', { name: 'עריכת האכלה' })).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'מחיקה' }));

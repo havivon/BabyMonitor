@@ -252,6 +252,8 @@ export const he = {
     recent: 'מזונות אחרונים',
     amount: 'כמות משוערת',
     amounts: ['טעימה', 'כפית', '2–3 כפיות', 'חצי קערית', 'קערית'] as readonly string[],
+    amountOther: 'כמות אחרת',
+    amountOtherPh: 'או כמות אחרת, למשל: 50 גר׳',
     isNew: 'מזון חדש',
     isNewHint: 'עוזר לזהות רגישויות בהמשך',
     reaction: 'תגובה',

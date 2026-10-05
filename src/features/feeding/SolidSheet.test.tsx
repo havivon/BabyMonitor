@@ -58,7 +58,10 @@ describe('SolidSheet', () => {
     expect(spoon).toHaveAttribute('aria-checked', 'false');
     fireEvent.click(screen.getByRole('radio', { name: 'חצי קערית' }));
 
-    expect(screen.getByRole('radio', { name: 'ללא תגובה' })).toHaveAttribute('aria-checked', 'true');
+    expect(screen.getByRole('radio', { name: 'ללא תגובה' })).toHaveAttribute(
+      'aria-checked',
+      'true',
+    );
     fireEvent.click(screen.getByRole('radio', { name: 'אחר' }));
     fireEvent.change(screen.getByRole('textbox', { name: 'מה קרה?' }), {
       target: { value: 'אדמומיות סביב הפה' },
@@ -76,6 +79,19 @@ describe('SolidSheet', () => {
     });
     expect(onClose).toHaveBeenCalled();
     expect(screen.getByText('הרישום נשמר')).toBeInTheDocument();
+  });
+
+  it('accepts a free-text amount instead of a chip', () => {
+    seedStore();
+    renderInShell(<SolidSheet open onClose={() => undefined} />);
+    fireEvent.change(foodInput(), { target: { value: 'יוגורט' } });
+    fireEvent.click(screen.getByRole('radio', { name: 'כפית' }));
+    fireEvent.change(screen.getByRole('textbox', { name: 'כמות אחרת' }), {
+      target: { value: '50 גר׳' },
+    });
+    expect(screen.getByRole('radio', { name: 'כפית' })).toHaveAttribute('aria-checked', 'false');
+    fireEvent.click(screen.getByRole('button', { name: 'שמירה' }));
+    expect(appStore.getState().entries[0]).toMatchObject({ amount: '50 גר׳' });
   });
 
   it('requires at least one food', () => {

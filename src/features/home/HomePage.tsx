@@ -48,6 +48,7 @@ export function HomePage() {
     <>
       <AppHeader start={<BabySwitcher />} />
       <main className="page">
+        <h1 className="visually-hidden">{he.tab.home}</h1>
         <SinceCard
           last={last}
           nextSide={suggestion ? SIDE_LABEL[suggestion.side] : null}

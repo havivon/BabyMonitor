@@ -300,8 +300,7 @@ export function TimerSheet({ open, onClose }: TimerSheetProps) {
           <div className="banner__body">
             <span className="banner__title">{he.timer.stale.title}</span>
             <span className="banner__text">
-              {he.timer.stale.text}{' '}
-              ({he.banner.meta}
+              {he.timer.stale.text} ({he.banner.meta}
               <span className="ltr num">{formatClock(startedAt ?? now)}</span>)
             </span>
           </div>

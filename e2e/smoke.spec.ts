@@ -12,7 +12,15 @@ test('app shell loads in Hebrew RTL without console errors', async ({ page }) =>
   await expect(page).toHaveTitle('מעקב האכלה');
   await expect(page.locator('html')).toHaveAttribute('lang', 'he');
   await expect(page.locator('html')).toHaveAttribute('dir', 'rtl');
-  await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
+  // First run: no baby yet → onboarding.
+  await expect(
+    page.getByRole('heading', { level: 1, name: 'ברוכים הבאים ל-BabyMonitor' }),
+  ).toBeVisible();
+  await page.getByLabel('שם').fill('נועה');
+  await page.getByLabel('תאריך לידה').fill('2026-07-01');
+  await page.getByRole('radio', { name: 'בת' }).click();
+  await page.getByRole('button', { name: 'התחלה' }).click();
+  await expect(page.getByText('עוד לא נרשמו האכלות')).toBeVisible();
 
   // Hash routes resolve.
   await page.goto('/#/settings');

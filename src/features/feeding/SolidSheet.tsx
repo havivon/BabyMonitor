@@ -150,17 +150,18 @@ export function SolidSheet({ open, onClose, entry }: SolidSheetProps) {
     const reactionValue =
       reaction === he.solid.reactionOther ? other.trim() || he.solid.reactionOther : reaction;
     const trimmedNote = note.trim();
+    const trimmedAmount = amount?.trim();
     const data = {
       at: savedAt,
       foods: allFoods,
       isNewFood: isNew,
       reaction: reactionValue,
-      ...(amount ? { amount } : {}),
+      ...(trimmedAmount ? { amount: trimmedAmount } : {}),
       ...(trimmedNote ? { note: trimmedNote } : {}),
     };
     if (entry) {
       const next: SolidEntry = { ...entry, ...data };
-      if (!amount) delete next.amount;
+      if (!trimmedAmount) delete next.amount;
       if (!trimmedNote) delete next.note;
       actions.update(next);
     } else {
@@ -279,6 +280,15 @@ export function SolidSheet({ open, onClose, entry }: SolidSheetProps) {
             allowDeselect
             selectOnFocus={false}
             ariaLabelledby={ids.amountLabel}
+          />
+          <input
+            className="input"
+            type="text"
+            maxLength={40}
+            aria-label={he.solid.amountOther}
+            placeholder={he.solid.amountOtherPh}
+            value={amount !== null && !he.solid.amounts.includes(amount) ? amount : ''}
+            onChange={(e) => setAmount(e.currentTarget.value || null)}
           />
         </Field>
 
