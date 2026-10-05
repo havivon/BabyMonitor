@@ -1,0 +1,15 @@
+# generated / vendored
+node_modules
+dist
+dev-dist
+coverage
+test-results
+playwright-report
+package-lock.json
+public
+src/domain/growth/data
+
+# owned by others — never reformat
+data
+docs
+src/styles
