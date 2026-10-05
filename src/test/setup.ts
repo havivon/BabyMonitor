@@ -27,6 +27,10 @@ if (typeof HTMLDialogElement !== 'undefined' && !('showModal' in HTMLDialogEleme
   });
 }
 
+// jsdom does not implement scrolling APIs; they are irrelevant to behaviour under test.
+window.scrollTo = () => undefined;
+Element.prototype.scrollIntoView = () => undefined;
+
 // Vitest globals are off, so Testing Library cannot auto-register its cleanup.
 afterEach(() => {
   cleanup();

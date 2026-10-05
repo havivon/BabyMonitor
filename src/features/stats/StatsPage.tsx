@@ -103,10 +103,11 @@ export function StatsPage() {
 
   const { current, previous } = summary;
   const vsLabel = range === 7 ? 'מהשבוע הקודם' : 'מהתקופה הקודמת';
-  const change = (d: number | null, digits: number) =>
+  /** Change vs the previous period, always carrying the metric's unit (except plain counts). */
+  const change = (d: number | null, digits: number, unit?: string) =>
     d === null || current.activeDays === 0 || previous.activeDays === 0
       ? null
-      : { text: signed(d, digits), direction: d };
+      : { text: signed(d, digits), direction: d, unit };
   const vol = (ml: number) =>
     volumeUnit === 'ml' ? Math.round(ml) : Math.round(mlToOz(ml) * 10) / 10;
   const volDigits = volumeUnit === 'ml' ? 0 : 1;
@@ -169,6 +170,7 @@ export function StatsPage() {
                     previous.bottleMlPerDay === null ? null : vol(previous.bottleMlPerDay),
                   ),
                   volDigits,
+                  volUnit,
                 )}
                 vsLabel={vsLabel}
               />
@@ -188,6 +190,7 @@ export function StatsPage() {
                     previous.breastMinPerDay === null ? null : Math.round(previous.breastMinPerDay),
                   ),
                   0,
+                  UNIT_LABELS.minutesShort,
                 )}
                 vsLabel={vsLabel}
               />
@@ -204,8 +207,11 @@ export function StatsPage() {
                 unit={current.avgIntervalMs === null ? undefined : UNIT_LABELS.hoursShort}
                 change={(() => {
                   const d = delta(current.avgIntervalMs, previous.avgIntervalMs);
-                  const c = change(d === null ? null : Math.round(d / 60_000), 0);
-                  return c && { ...c, unit: UNIT_LABELS.minutesShort };
+                  return change(
+                    d === null ? null : Math.round(d / 60_000),
+                    0,
+                    UNIT_LABELS.minutesShort,
+                  );
                 })()}
                 vsLabel={vsLabel}
               />

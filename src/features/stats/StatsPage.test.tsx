@@ -18,12 +18,12 @@ afterEach(() => {
   vi.useRealTimers();
 });
 
-function seed() {
+function seed(days = 14, split = 7) {
   const s = appStore.getState();
   const baby = s.addBaby({ name: 'נועה', birthDate: '2026-07-01', sex: 'female' });
-  // Last 7 complete days: 8 bottles × 100 ml; the 7 days before: 6 × 100 ml.
-  for (let d = 1; d <= 14; d++) {
-    const n = d <= 7 ? 8 : 6;
+  // Last `split` complete days: 8 bottles × 100 ml; the days before: 6 × 100 ml.
+  for (let d = 1; d <= days; d++) {
+    const n = d <= split ? 8 : 6;
     for (let i = 0; i < n; i++) {
       s.addEntry({
         babyId: baby.id,
@@ -53,6 +53,12 @@ describe('StatsPage', () => {
     expect(within(tile('האכלות ביום')).getByText('+2')).toBeInTheDocument();
     expect(within(tile('האכלות ביום')).getByText(/מהשבוע הקודם/)).toBeInTheDocument();
     expect(within(tile('בקבוק ביום')).getByText('800')).toBeInTheDocument();
+    // Every delta carries its unit (counts excepted).
+    expect(tile('בקבוק ביום').querySelector('.stat__delta')).toHaveTextContent(
+      '+200 מ״ל מהשבוע הקודם',
+    );
+    expect(tile('הנקה ביום').querySelector('.stat__delta')).toHaveTextContent('0 ד׳ מהשבוע הקודם');
+    expect(tile('מרווח ממוצע').querySelector('.stat__delta')).toHaveTextContent(/ד׳ מהשבוע הקודם$/);
     expect(tile('הנקה ביום').querySelector('.stat__value')).toHaveTextContent('0ד׳');
     expect(screen.getByRole('heading', { name: 'האכלות לפי יום' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'כמות בקבוק יומית' })).toBeInTheDocument();
@@ -72,11 +78,45 @@ describe('StatsPage', () => {
     expect(within(tile('בקבוק ביום')).getByText('700')).toBeInTheDocument();
   });
 
+  it('words the comparison per range ("מהתקופה הקודמת" for 14/30 days)', async () => {
+    seed(28, 14);
+    const user = userEvent.setup();
+    render(<StatsPage />);
+    await user.click(screen.getByRole('radio', { name: '14 ימים' }));
+    expect(tile('בקבוק ביום').querySelector('.stat__delta')).toHaveTextContent(
+      '+200 מ״ל מהתקופה הקודמת',
+    );
+    expect(screen.queryByText(/מהשבוע הקודם/)).not.toBeInTheDocument();
+  });
+
+  it('shows the bottle guideline band only for a mainly bottle-fed baby', () => {
+    const baby = seed();
+    appStore.getState().addMeasurement({ babyId: baby.id, date: '2026-10-01', weightG: 5000 });
+    const { unmount } = render(<StatsPage />);
+    expect(screen.getByText('טווח מומלץ (בקבוק בלבד)')).toBeInTheDocument();
+    unmount();
+    // Mixed feeding: a breastfeed today → no ml target (DESIGN §6.20).
+    appStore.getState().addEntry({
+      babyId: baby.id,
+      type: 'breast',
+      startedAt: NOW - 3_600_000,
+      endedAt: NOW - 3_000_000,
+      segments: [{ side: 'left', startedAt: NOW - 3_600_000, endedAt: NOW - 3_000_000 }],
+    });
+    render(<StatsPage />);
+    expect(screen.getByRole('heading', { name: 'כמות בקבוק יומית' })).toBeInTheDocument();
+    expect(screen.queryByText('טווח מומלץ (בקבוק בלבד)')).not.toBeInTheDocument();
+    expect(screen.queryByText(/לפי כ-150 מ״ל לק״ג/)).not.toBeInTheDocument();
+  });
+
   it('respects the volume unit', () => {
     seed();
     appStore.getState().updateSettings({ volumeUnit: 'oz' });
     render(<StatsPage />);
     expect(within(tile('בקבוק ביום')).getByText('27.1')).toBeInTheDocument();
-    expect(within(tile('בקבוק ביום')).getByText('oz')).toBeInTheDocument();
+    expect(tile('בקבוק ביום').querySelector('.stat__unit')).toHaveTextContent('oz');
+    expect(tile('בקבוק ביום').querySelector('.stat__delta')).toHaveTextContent(
+      '+6.8 oz מהשבוע הקודם',
+    );
   });
 });
