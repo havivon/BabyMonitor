@@ -70,6 +70,13 @@ export interface AppActions {
    */
   finishTimer: (babyId: string, options?: { endAt?: EpochMs; note?: string }) => BreastEntry | null;
   discardTimer: (babyId: string) => void;
+  /** Corrects the start time of the running/paused timer (see `setTimerStart`). */
+  setTimerStart: (babyId: string, startedAt: EpochMs) => void;
+  /**
+   * Puts a timer back (undo of "finish" / "discard"). No-op if the baby is gone or already has a
+   * timer, so it can never clobber a newer one.
+   */
+  restoreTimer: (timer: ActiveTimer) => void;
 
   // settings & data
   updateSettings: (patch: Partial<Settings>) => void;
@@ -102,7 +109,9 @@ function withoutKey<T>(record: Record<string, T>, key: string): Record<string, T
 }
 
 export function createAppStore(options: CreateAppStoreOptions = {}): AppStore {
-  const now = options.now ?? Date.now;
+  // Resolve Date.now lazily on every call (not captured once) so a replaced/mocked clock — e.g.
+  // fake timers installed after this module was imported — is honoured by the singleton store.
+  const now = options.now ?? (() => Date.now());
   const id = options.generateId ?? (() => nanoid());
   const name = options.name ?? STORAGE_KEY;
   const rawStorage = options.storage;
@@ -222,6 +231,13 @@ export function createAppStore(options: CreateAppStoreOptions = {}): AppStore {
           },
           discardTimer: (babyId) =>
             set((s) => ({ activeTimers: withoutKey(s.activeTimers, babyId) })),
+          setTimerStart: (babyId, startedAt) =>
+            updateTimer(babyId, (t) => timer.setTimerStart(t, startedAt, now())),
+          restoreTimer: (restored) => {
+            const s = get();
+            if (!babyExists(restored.babyId) || s.activeTimers[restored.babyId]) return;
+            set({ activeTimers: { ...s.activeTimers, [restored.babyId]: restored } });
+          },
 
           updateSettings: (patch) => set((s) => ({ settings: { ...s.settings, ...patch } })),
           importBackup: (data) =>

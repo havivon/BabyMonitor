@@ -1,0 +1,35 @@
+/* ==========================================================================
+   BabyMonitor — small app-level additions to components.css (engineering).
+   Imported last in main.tsx. Every rule here is listed in the hand-off report.
+   ========================================================================== */
+
+/* 1. Day header (DESIGN §6.14): when "היום · יום ב׳, 5 באוקטובר" and the day summary do not fit on
+      one line (≤ 390px), drop the summary to its own line instead of both breaking mid-phrase. */
+.day-header {
+  flex-wrap: wrap;
+  row-gap: 0;
+}
+
+/* 2. Sheet exit (DESIGN §4 / §6.10: "Closing slides down in 220ms"). components.css only ships the
+      enter keyframes; Sheet.tsx sets [data-closing] and waits for animationend before close().
+      Reduced motion: global.css shortens every animation to ~0, so the exit is instant. */
+@keyframes bm-sheet-out {
+  to { transform: translateY(100%); }
+}
+@keyframes bm-dialog-out {
+  to { opacity: 0; transform: scale(0.96); }
+}
+@keyframes bm-fade-out {
+  to { opacity: 0; }
+}
+.sheet[data-closing] {
+  animation: bm-sheet-out var(--dur-base) var(--ease-accelerate) forwards;
+}
+.sheet[data-closing]::backdrop {
+  animation: bm-fade-out var(--dur-base) var(--ease-accelerate) forwards;
+}
+@media (min-width: 640px) {
+  .sheet[data-closing] {
+    animation-name: bm-dialog-out;
+  }
+}

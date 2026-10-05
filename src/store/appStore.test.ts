@@ -242,6 +242,36 @@ describe('timer actions', () => {
   });
 });
 
+describe('timer corrections & undo', () => {
+  beforeEach(() => {
+    store.getState().addBaby(newBaby);
+  });
+
+  it('setTimerStart moves the start of the running timer earlier', () => {
+    const s = store.getState();
+    s.startTimer('id1', 'left');
+    clock += 2 * MIN;
+    s.setTimerStart('id1', T0 - 5 * MIN);
+    expect(selectActiveTimer(store.getState())?.segments[0]?.startedAt).toBe(T0 - 5 * MIN);
+  });
+
+  it('restoreTimer undoes finish, but never overwrites an existing timer', () => {
+    const s = store.getState();
+    s.startTimer('id1', 'left');
+    clock += 10 * MIN;
+    const before = selectActiveTimer(store.getState())!;
+    const entry = s.finishTimer('id1')!;
+    s.deleteEntry(entry.id);
+    s.restoreTimer(before);
+    expect(selectActiveTimer(store.getState())).toEqual(before);
+    expect(store.getState().entries).toEqual([]);
+    s.restoreTimer({ ...before, segments: [] });
+    expect(selectActiveTimer(store.getState())).toEqual(before);
+    s.restoreTimer({ babyId: 'ghost', segments: [] });
+    expect(store.getState().activeTimers.ghost).toBeUndefined();
+  });
+});
+
 describe('settings, import & reset', () => {
   it('updates settings', () => {
     store.getState().updateSettings({ theme: 'dark', weightUnit: 'lb' });
@@ -302,5 +332,18 @@ describe('persistence', () => {
     const s = freshStore({ [STORAGE_KEY]: old });
     expect(s.getState().babies).toEqual([]);
     expect(migratePersistedState({ a: 1 }, 0)).toEqual({ a: 1 });
+  });
+});
+
+describe('default clock', () => {
+  it('reads Date.now on every call, so fake timers installed later are honoured', () => {
+    const s = createAppStore({ storage: memoryStorage(), generateId: () => 'b1' });
+    vi.useFakeTimers({ now: T0 + 5 * MIN });
+    try {
+      s.getState().addBaby(newBaby);
+      expect(s.getState().babies[0]?.createdAt).toBe(T0 + 5 * MIN);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });

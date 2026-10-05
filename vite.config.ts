@@ -1,15 +1,22 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
+import pkg from './package.json' with { type: 'json' };
 
-/** Brand teal used for the manifest + theme-color until the designer's tokens settle. */
-const THEME_COLOR = '#2F8F83';
-const BACKGROUND_COLOR = '#F6FAF9';
+/**
+ * Colors from src/styles/tokens.css (DESIGN §2): the app bar matches the warm paper background
+ * (`--color-bg` light), so the standalone window blends with the header; icons use `--color-primary`.
+ */
+const THEME_COLOR = '#f8f5ef';
+const BACKGROUND_COLOR = '#f8f5ef';
 
 // https://vite.dev/config/
 export default defineConfig({
   // Relative base so the static build works from any sub-path (HashRouter handles routing).
   base: './',
+  define: {
+    'import.meta.env.VITE_APP_VERSION': JSON.stringify(pkg.version),
+  },
   plugins: [
     react(),
     VitePWA({
@@ -17,9 +24,10 @@ export default defineConfig({
       includeManifestIcons: false, // already matched by globPatterns (avoids duplicate precache entries)
       injectRegister: 'auto',
       manifest: {
-        name: 'מעקב האכלה לתינוק',
+        name: 'BabyMonitor — מעקב האכלה וגדילה',
         short_name: 'מעקב האכלה',
-        description: 'מעקב האכלה, הנקה ומשקל לתינוק — פרטי, עובד ללא אינטרנט',
+        description:
+          'מעקב רגוע ופשוט אחר האכלות וגדילה. הכול נשמר במכשיר שלך ועובד גם בלי אינטרנט.',
         lang: 'he',
         dir: 'rtl',
         display: 'standalone',

@@ -57,17 +57,17 @@ describe('formatting', () => {
     expect(formatVolume(120)).toBe('120 מ״ל');
     expect(formatVolume(119.6, 'ml')).toBe('120 מ״ל');
     expect(formatVolume(1000)).toBe('1,000 מ״ל');
-    expect(formatVolume(120, 'oz')).toBe('4.1 אונ׳');
+    expect(formatVolume(120, 'oz')).toBe('4.1 oz');
   });
 
   it('formats weights', () => {
     expect(formatWeight(3450)).toBe('3.45 ק״ג');
     expect(formatWeight(3400)).toBe('3.40 ק״ג');
-    expect(formatWeight(3450, 'lb')).toBe('7.61 ליב׳');
+    expect(formatWeight(3450, 'lb')).toBe('7.6 lb');
     expect(formatWeightDelta(25)).toBe('+25 גר׳');
     expect(formatWeightDelta(-40.4)).toBe('−40 גר׳');
     expect(formatWeightDelta(0)).toBe('0 גר׳');
-    expect(formatWeightDelta(-453.59237, 'lb')).toBe('−1.00 ליב׳');
+    expect(formatWeightDelta(-453.59237, 'lb')).toBe('−1.00 lb');
     expect(formatLength(525)).toBe('52.5 ס״מ');
     expect(formatLength(500)).toBe('50 ס״מ');
   });
@@ -84,20 +84,20 @@ describe('formatting', () => {
   });
 
   it('formats summary durations', () => {
-    expect(formatDuration(0)).toBe('0 דק׳');
+    expect(formatDuration(0)).toBe('0 ד׳');
     expect(formatDuration(20_000)).toBe('פחות מדקה');
-    expect(formatDuration(25 * MIN)).toBe('25 דק׳');
-    expect(formatDuration(25 * MIN + 31_000)).toBe('26 דק׳');
-    expect(formatDuration(65 * MIN)).toBe('1 ש׳ 5 דק׳');
-    expect(formatDuration(2 * HOUR)).toBe('2 ש׳');
+    expect(formatDuration(25 * MIN)).toBe('25 ד׳');
+    expect(formatDuration(25 * MIN + 31_000)).toBe('26 ד׳');
+    expect(formatDuration(65 * MIN)).toBe('1 שע׳ 5 ד׳');
+    expect(formatDuration(2 * HOUR)).toBe('2 שע׳');
   });
 
   it('formats time since', () => {
     expect(formatHoursMinutes(2 * HOUR + 15 * MIN + 59_000)).toBe('2:15');
     expect(formatTimeSince(-1)).toBe('עכשיו');
     expect(formatTimeSince(59_000)).toBe('עכשיו');
-    expect(formatTimeSince(25 * MIN)).toBe('לפני 25 דק׳');
-    expect(formatTimeSince(2 * HOUR + 15 * MIN)).toBe('לפני 2:15 ש׳');
+    expect(formatTimeSince(25 * MIN)).toBe('לפני 25 ד׳');
+    expect(formatTimeSince(2 * HOUR + 15 * MIN)).toBe('לפני 2:15 שע׳');
     expect(formatTimeSince(DAY + HOUR)).toBe('לפני יום');
     expect(formatTimeSince(2 * DAY)).toBe('לפני יומיים');
     expect(formatTimeSince(5 * DAY)).toBe('לפני 5 ימים');

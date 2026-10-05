@@ -13,6 +13,7 @@ import { toDateKey } from './dates';
 import type {
   BottleContent,
   BreastEntry,
+  BreastSegment,
   EpochMs,
   FeedingEntry,
   FeedingType,
@@ -64,14 +65,19 @@ export function breastDurations(entry: Pick<BreastEntry, 'segments'>): SideDurat
   return out;
 }
 
-/** The side of the chronologically last non-empty segment, or `null`. */
-export function lastSideOf(entry: Pick<BreastEntry, 'segments'>): Side | null {
-  let last: { side: Side; startedAt: EpochMs } | null = null;
+/** The chronologically last non-empty segment, or `null`. */
+export function lastSegmentOf(entry: Pick<BreastEntry, 'segments'>): BreastSegment | null {
+  let last: BreastSegment | null = null;
   for (const seg of entry.segments) {
     if (seg.endedAt <= seg.startedAt) continue;
     if (!last || seg.startedAt >= last.startedAt) last = seg;
   }
-  return last?.side ?? null;
+  return last;
+}
+
+/** The side of the chronologically last non-empty segment, or `null`. */
+export function lastSideOf(entry: Pick<BreastEntry, 'segments'>): Side | null {
+  return lastSegmentOf(entry)?.side ?? null;
 }
 
 // ---------------------------------------------------------------- last feed / next side
@@ -89,6 +95,12 @@ export function lastFeed(
   return best;
 }
 
+/**
+ * A final segment shorter than this was probably not finished (baby fell asleep / was unlatched),
+ * so the same side is suggested again (DESIGN.md §6.17).
+ */
+export const UNFINISHED_SEGMENT_MS = 2 * 60_000;
+
 export interface SideSuggestion {
   side: Side;
   /** Side the previous breastfeed finished on. */
@@ -99,17 +111,24 @@ export interface SideSuggestion {
 
 /**
  * Next-side rule: take the most recent breastfeed (by start time) that has at least one non-empty
- * segment, find the side of its LAST segment (the side the baby finished on), and suggest the OTHER
- * side. This covers both "ended on X → start on the other" and "only one side used → offer the
- * other". Returns `null` when there is no usable breastfeed history.
+ * segment, find its LAST segment (the side the baby finished on), and suggest the OTHER side. This
+ * covers both "ended on X → start on the other" and "only one side used → offer the other".
+ * Exception: when that last segment lasted under 2 minutes it was probably not finished, so the
+ * SAME side is suggested again. Returns `null` when there is no usable breastfeed history.
  */
 export function suggestNextSide(entries: readonly FeedingEntry[]): SideSuggestion | null {
   const breastfeeds = entries
     .filter((e): e is BreastEntry => e.type === 'breast')
     .sort(compareEntriesDesc);
   for (const entry of breastfeeds) {
-    const lastSide = lastSideOf(entry);
-    if (lastSide) return { side: otherSide(lastSide), lastSide, basedOnEntryId: entry.id };
+    const last = lastSegmentOf(entry);
+    if (!last) continue;
+    const unfinished = last.endedAt - last.startedAt < UNFINISHED_SEGMENT_MS;
+    return {
+      side: unfinished ? last.side : otherSide(last.side),
+      lastSide: last.side,
+      basedOnEntryId: entry.id,
+    };
   }
   return null;
 }

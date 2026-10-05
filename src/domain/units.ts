@@ -16,13 +16,13 @@ export const G_PER_LB = 453.59237;
 
 export const UNIT_LABELS = {
   ml: 'מ״ל',
-  oz: 'אונ׳',
+  oz: 'oz',
   kg: 'ק״ג',
-  lb: 'ליב׳',
+  lb: 'lb',
   g: 'גר׳',
   cm: 'ס״מ',
-  minutesShort: 'דק׳',
-  hoursShort: 'ש׳',
+  minutesShort: 'ד׳',
+  hoursShort: 'שע׳',
 } as const;
 
 // ---------------------------------------------------------------- conversions
@@ -76,22 +76,22 @@ export function formatNumber(
   return fmt.format(Object.is(value, -0) ? 0 : value);
 }
 
-/** "120 מ״ל" / "4.1 אונ׳". ml are whole numbers; oz one decimal. */
+/** "120 מ״ל" / "4.1 oz". ml are whole numbers; oz one decimal (DESIGN §8.3). */
 export function formatVolume(ml: number, unit: VolumeUnit = 'ml'): string {
   return unit === 'ml'
     ? `${formatNumber(Math.round(ml))} ${UNIT_LABELS.ml}`
     : `${formatNumber(mlToOz(ml), 1)} ${UNIT_LABELS.oz}`;
 }
 
-/** "3.45 ק״ג" / "7.61 ליב׳" (always two decimals for stable column alignment). */
+/** "3.45 ק״ג" (two decimals) / "7.6 lb" (one decimal) — DESIGN §8.3. */
 export function formatWeight(g: number, unit: WeightUnit = 'kg'): string {
   return unit === 'kg'
     ? `${formatNumber(gToKg(g), 2)} ${UNIT_LABELS.kg}`
-    : `${formatNumber(gToLb(g), 2)} ${UNIT_LABELS.lb}`;
+    : `${formatNumber(gToLb(g), 1)} ${UNIT_LABELS.lb}`;
 }
 
 /**
- * Signed weight change: "+25 גר׳" / "−40 גר׳" in grams for kg users, "+0.06 ליב׳" for lb users.
+ * Signed weight change: "+25 גר׳" / "−40 גר׳" in grams for kg users, "+0.06 lb" for lb users.
  * Uses a real minus sign (U+2212) for legibility.
  */
 export function formatWeightDelta(deltaG: number, unit: WeightUnit = 'kg'): string {
@@ -121,8 +121,8 @@ export function formatTimer(ms: number): string {
 }
 
 /**
- * Summary duration rounded to whole minutes: "25 דק׳", "1 ש׳ 5 דק׳", "2 ש׳".
- * Non-zero durations under 30 s show as "פחות מדקה"; zero shows "0 דק׳".
+ * Summary duration rounded to whole minutes: "25 ד׳", "1 שע׳ 5 ד׳", "2 שע׳" (DESIGN §8.1 glossary).
+ * Non-zero durations under 30 s show as "פחות מדקה"; zero shows "0 ד׳".
  */
 export function formatDuration(ms: number): string {
   const safe = Math.max(0, ms);
@@ -143,7 +143,7 @@ export function formatHoursMinutes(ms: number): string {
 
 /**
  * Relative time since an event, floored:
- * < 1 min → "עכשיו"; < 1 h → "לפני 25 דק׳"; < 24 h → "לפני 2:15 ש׳";
+ * < 1 min → "עכשיו"; < 1 h → "לפני 25 ד׳"; < 24 h → "לפני 2:15 שע׳";
  * otherwise "לפני יום" / "לפני יומיים" / "לפני 3 ימים".
  */
 export function formatTimeSince(elapsedMs: number): string {

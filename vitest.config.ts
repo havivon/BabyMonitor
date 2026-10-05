@@ -1,5 +1,6 @@
 import { defineConfig } from 'vitest/config';
 import react from '@vitejs/plugin-react';
+import pkg from './package.json' with { type: 'json' };
 
 // Pin the timezone for every worker BEFORE they spawn: all date logic is local-time based
 // and tests assert Israel-local behaviour (incl. DST transitions).
@@ -7,6 +8,9 @@ process.env.TZ = 'Asia/Jerusalem';
 
 export default defineConfig({
   plugins: [react()],
+  define: {
+    'import.meta.env.VITE_APP_VERSION': JSON.stringify(pkg.version),
+  },
   test: {
     environment: 'jsdom',
     env: { TZ: 'Asia/Jerusalem' },

@@ -6,6 +6,7 @@ import {
   isTimerStale,
   pauseTimer,
   resumeTimer,
+  setTimerStart,
   startTimer,
   STALE_TIMER_MS,
   switchSide,
@@ -167,5 +168,31 @@ describe('isTimerStale', () => {
     expect(isTimerStale(t, T0 + 6 * HOUR)).toBe(false);
     expect(isTimerStale(t, T0 + 6 * HOUR + 1)).toBe(true);
     expect(isTimerStale(t, T0 + 2 * HOUR, HOUR)).toBe(true);
+  });
+});
+
+describe('setTimerStart', () => {
+  it('moves the first segment start earlier (forgot to press start)', () => {
+    const t = startTimer('baby1', 'left', T0);
+    const moved = setTimerStart(t, T0 - 6 * MIN, T0 + MIN);
+    expect(moved.segments[0]).toEqual({ side: 'left', startedAt: T0 - 6 * MIN });
+    expect(timerElapsed(moved, T0 + MIN).total).toBe(7 * MIN);
+  });
+
+  it('clamps to the end of a closed first segment and to now', () => {
+    let t = startTimer('baby1', 'left', T0);
+    t = switchSide(t, T0 + 5 * MIN);
+    expect(setTimerStart(t, T0 + 9 * MIN, T0 + 10 * MIN).segments[0]?.startedAt).toBe(T0 + 5 * MIN);
+    const running = startTimer('baby1', 'right', T0);
+    expect(setTimerStart(running, T0 + 3 * HOUR, T0 + 2 * MIN).segments[0]?.startedAt).toBe(
+      T0 + 2 * MIN,
+    );
+  });
+
+  it('returns the same timer when nothing changes or it is empty', () => {
+    const t = startTimer('baby1', 'left', T0);
+    expect(setTimerStart(t, T0, T0 + MIN)).toBe(t);
+    const empty = { babyId: 'baby1', segments: [] };
+    expect(setTimerStart(empty, T0, T0)).toBe(empty);
   });
 });

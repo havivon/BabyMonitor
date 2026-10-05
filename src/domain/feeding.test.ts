@@ -12,6 +12,7 @@ import {
   otherSide,
   sortEntriesDesc,
   suggestNextSide,
+  lastSegmentOf,
   todayTotals,
   totalsOf,
 } from './feeding';
@@ -84,6 +85,17 @@ describe('next side suggestion', () => {
   it('suggests the other side when only one side was used', () => {
     expect(suggestNextSide([breast(t0, [['left', 12]])])?.side).toBe('right');
     expect(suggestNextSide([breast(t0, [['right', 12]])])?.side).toBe('left');
+  });
+
+  it('suggests the same side again when the last segment was under 2 minutes', () => {
+    const shortLast = breast(t0, [
+      ['left', 12],
+      ['right', 1],
+    ]);
+    expect(suggestNextSide([shortLast])).toMatchObject({ side: 'right', lastSide: 'right' });
+    expect(suggestNextSide([breast(t0, [['left', 2]])])?.side).toBe('right');
+    expect(lastSegmentOf(shortLast)?.side).toBe('right');
+    expect(lastSegmentOf({ segments: [] })).toBeNull();
   });
 
   it('uses segment chronology, not array order', () => {

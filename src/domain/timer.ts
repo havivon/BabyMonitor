@@ -77,6 +77,20 @@ export function resumeTimer(timer: ActiveTimer, now: EpochMs): ActiveTimer {
   return { babyId: timer.babyId, segments: [...timer.segments, { side, startedAt: at }] };
 }
 
+/**
+ * Corrects when the feed started (the parent pressed start late). Moves the FIRST segment's start;
+ * the new start is clamped so it is never after `now` nor after that segment's end (a segment can
+ * never become negative). Returns the same object when nothing changes.
+ */
+export function setTimerStart(timer: ActiveTimer, startedAt: EpochMs, now: EpochMs): ActiveTimer {
+  const [first, ...rest] = timer.segments;
+  if (!first) return timer;
+  const latest = Math.min(first.endedAt ?? now, now);
+  const at = Math.min(startedAt, Math.max(latest, first.startedAt));
+  if (at === first.startedAt) return timer;
+  return { ...timer, segments: [{ ...first, startedAt: at }, ...rest] };
+}
+
 export interface TimerElapsed {
   left: number;
   right: number;
