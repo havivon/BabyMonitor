@@ -48,6 +48,11 @@ const SYNC_ROW: Record<
  * (each confirmed). Renders nothing when the cloud isn't configured or auth isn't known yet.
  */
 export function AccountSection() {
+  // A module constant: when the cloud isn't configured nothing below runs (no router/cloud hooks).
+  return isCloudConfigured ? <ConfiguredAccountSection /> : null;
+}
+
+function ConfiguredAccountSection() {
   const { ready, user, family, status, lastSyncedAt } = useCloud();
   const flows = useAccountFlows();
   const toast = useToast();
@@ -71,7 +76,7 @@ export function AccountSection() {
   useToastOnError(session.error, session.clearError);
   useToastOnError(retry.error, retry.clearError);
 
-  if (!isCloudConfigured || !ready) return null;
+  if (!ready) return null;
   if (!user) return <BackupNote variant="settings" />;
 
   const runConfirmed = async (): Promise<void> => {

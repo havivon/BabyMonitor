@@ -59,7 +59,10 @@ service cloud.firestore {
         && request.resource.data.members.keys().hasOnly([me()])
         && validMember(request.resource.data.members[me()]);
 
-      allow update: if signedIn() && (leave() || rename() || join());
+      // Separate statements: each is evaluated on its own (an error in one never blocks another).
+      allow update: if signedIn() && leave();
+      allow update: if signedIn() && rename();
+      allow update: if signedIn() && join();
 
       // A member may rename the family.
       function rename() {
