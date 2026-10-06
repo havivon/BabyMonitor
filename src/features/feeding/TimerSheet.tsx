@@ -424,8 +424,10 @@ export function TimerSheet({ open, onClose }: TimerSheetProps) {
                 stateIcon = <TimerIcon aria-hidden="true" />;
                 stateText = he.timer.activeSide;
               } else if (active && paused) {
-                stateIcon = <Play aria-hidden="true" />;
-                stateText = he.timer.resume;
+                // Still the active side (tapping it resumes); the footer owns the "המשך" action,
+                // so the side keeps a distinct name.
+                stateIcon = <Pause aria-hidden="true" />;
+                stateText = he.timer.activeSide;
               } else if (timer) {
                 stateIcon = <ArrowLeftRight aria-hidden="true" />;
                 stateText = he.timer.switchHere;

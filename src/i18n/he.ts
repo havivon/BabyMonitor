@@ -106,6 +106,8 @@ export const he = {
       title: 'הנקה בתהליך',
       paused: 'הנקה מושהית',
       live: 'פעילה',
+      // Distinct from the banner's "פתיחת טיימר ההנקה" so the two controls are told apart.
+      open: 'מעבר לטיימר',
       side: (side: string) => `צד ${side}`,
     },
     nextSide: (side: string) => `הצד הבא: ${side}`,

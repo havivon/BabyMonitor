@@ -156,7 +156,7 @@ function ActiveFeedCard({ timer, onOpen }: { timer: ActiveTimer; onOpen: () => v
     <button
       type="button"
       className="card since card--interactive"
-      aria-label={`${label} · ${side} — ${he.banner.open}`}
+      aria-label={`${label} · ${side}, ${he.home.active.open}`}
       onClick={onOpen}
     >
       <span className="since__top">

@@ -75,6 +75,24 @@ export function lastSegmentOf(entry: Pick<BreastEntry, 'segments'>): BreastSegme
   return last;
 }
 
+/**
+ * Total time of the final run of consecutive same-side segments — a pause splits one side into
+ * several segments, and "left 3 min ‖ pause ‖ left 1 min" is a 4-minute final run, not 1 minute.
+ */
+export function lastSideRunMs(entry: Pick<BreastEntry, 'segments'>): number {
+  const segs = entry.segments
+    .filter((s) => s.endedAt > s.startedAt)
+    .sort((a, b) => a.startedAt - b.startedAt);
+  const side = segs[segs.length - 1]?.side;
+  let total = 0;
+  for (let i = segs.length - 1; i >= 0; i--) {
+    const seg = segs[i];
+    if (!seg || seg.side !== side) break;
+    total += seg.endedAt - seg.startedAt;
+  }
+  return total;
+}
+
 /** The side of the chronologically last non-empty segment, or `null`. */
 export function lastSideOf(entry: Pick<BreastEntry, 'segments'>): Side | null {
   return lastSegmentOf(entry)?.side ?? null;
@@ -113,8 +131,8 @@ export interface SideSuggestion {
  * Next-side rule: take the most recent breastfeed (by start time) that has at least one non-empty
  * segment, find its LAST segment (the side the baby finished on), and suggest the OTHER side. This
  * covers both "ended on X → start on the other" and "only one side used → offer the other".
- * Exception: when that last segment lasted under 2 minutes it was probably not finished, so the
- * SAME side is suggested again. Returns `null` when there is no usable breastfeed history.
+ * Exception: when the final run on that side (pause-split segments summed) lasted under 2 minutes
+ * it was probably not finished, so the SAME side is suggested again. Returns `null` when there is no usable breastfeed history.
  */
 export function suggestNextSide(entries: readonly FeedingEntry[]): SideSuggestion | null {
   const breastfeeds = entries
@@ -123,7 +141,8 @@ export function suggestNextSide(entries: readonly FeedingEntry[]): SideSuggestio
   for (const entry of breastfeeds) {
     const last = lastSegmentOf(entry);
     if (!last) continue;
-    const unfinished = last.endedAt - last.startedAt < UNFINISHED_SEGMENT_MS;
+    // Measure the whole final same-side run, so a pause on the last side doesn't count as "short".
+    const unfinished = lastSideRunMs(entry) < UNFINISHED_SEGMENT_MS;
     return {
       side: unfinished ? last.side : otherSide(last.side),
       lastSide: last.side,

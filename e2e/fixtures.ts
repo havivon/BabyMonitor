@@ -213,9 +213,27 @@ export async function readStore(page: Page): Promise<Required<SeedData> & { sett
   return (JSON.parse(raw) as { state: Required<SeedData> & { settings: Settings } }).state;
 }
 
-/** Installs the fake clock at `time` (default NOW) — call before the first navigation. */
+/**
+ * Installs the fake clock at `time` (default NOW) — call before the first navigation. The clock
+ * keeps running in real time (React Suspense / lazy routes need timers); jump with
+ * `page.clock.fastForward()`. Second-level displays may therefore drift by a few real seconds —
+ * use `mmss()` for tolerant timer-display assertions.
+ */
 export async function freezeClockAt(page: Page, time = NOW): Promise<void> {
   await page.clock.install({ time });
+}
+
+/** Regex for a `mm:ss` timer display that may be up to 9 real seconds past `m` whole minutes. */
+export function mmss(minutes: number): RegExp {
+  const h = Math.floor(minutes / 60);
+  const m = String(minutes % 60).padStart(2, '0');
+  return h ? new RegExp(`^${h}:${m}:0\\d$`) : new RegExp(`^${m}:0\\d$`);
+}
+
+/** Asserts `actual` is `expected` ms plus at most `slackMs` of real elapsed time. */
+export function expectApprox(actual: number, expected: number, slackMs = 10_000): void {
+  expect(actual).toBeGreaterThanOrEqual(expected);
+  expect(actual).toBeLessThanOrEqual(expected + slackMs);
 }
 
 // ---------------------------------------------------------------------------------- UI helpers

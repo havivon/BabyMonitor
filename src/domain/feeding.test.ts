@@ -13,6 +13,7 @@ import {
   sortEntriesDesc,
   suggestNextSide,
   lastSegmentOf,
+  lastSideRunMs,
   todayTotals,
   totalsOf,
 } from './feeding';
@@ -96,6 +97,30 @@ describe('next side suggestion', () => {
     expect(suggestNextSide([breast(t0, [['left', 2]])])?.side).toBe('right');
     expect(lastSegmentOf(shortLast)?.side).toBe('right');
     expect(lastSegmentOf({ segments: [] })).toBeNull();
+  });
+
+  it('sums a pause-split last side before applying the 2-minute rule (BUG-001)', () => {
+    const e = breast(t0, [
+      ['right', 5],
+      ['left', 3],
+    ]);
+    const last = e.segments[1]!;
+    // left 3 min ‖ 2 min pause ‖ left 1 min
+    const paused = {
+      ...e,
+      segments: [
+        e.segments[0]!,
+        last,
+        {
+          side: 'left' as const,
+          startedAt: last.endedAt + 2 * MIN,
+          endedAt: last.endedAt + 3 * MIN,
+        },
+      ],
+    };
+    expect(lastSideRunMs(paused)).toBe(4 * MIN);
+    expect(suggestNextSide([paused])?.side).toBe('right');
+    expect(lastSideRunMs({ segments: [] })).toBe(0);
   });
 
   it('uses segment chronology, not array order', () => {
