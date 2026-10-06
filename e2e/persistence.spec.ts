@@ -22,7 +22,12 @@ test.describe('persistence', () => {
   });
 
   test('entries, settings and the active baby survive a reload', async ({ page }) => {
-    await seed(page, { babies: [makeBaby({ id: 'a', name: 'נועה' }), makeBaby({ id: 'b', name: 'איתי', sex: 'male' })] });
+    await seed(page, {
+      babies: [
+        makeBaby({ id: 'a', name: 'נועה' }),
+        makeBaby({ id: 'b', name: 'איתי', sex: 'male' }),
+      ],
+    });
     await page.goto('/');
     await page.getByRole('button', { name: 'הוספת בקבוק' }).click();
     await dialog(page, 'בקבוק').getByRole('button', { name: 'שמירה' }).click();
@@ -31,7 +36,10 @@ test.describe('persistence', () => {
     await page.getByRole('button', { name: 'בחירת איתי' }).click();
     await page.getByRole('button', { name: 'בחירת נועה' }).click();
     await page.reload();
-    await expect(page.getByRole('radio', { name: 'אונקיות' })).toHaveAttribute('aria-checked', 'true');
+    await expect(page.getByRole('radio', { name: 'אונקיות' })).toHaveAttribute(
+      'aria-checked',
+      'true',
+    );
     await gotoTab(page, 'history');
     await expect(timelineItems(page)).toHaveCount(1);
     await expect(timelineItems(page).first()).toContainText('oz');
@@ -48,11 +56,24 @@ test.describe('persistence', () => {
     await expect(page).toHaveURL(/#\/$/);
     expect(await readEnvelope(page)).toEqual({
       state: {
-        babies: [{ id: expect.any(String), name: 'נועה', birthDate: '2026-08-01', sex: 'female', createdAt: expect.any(Number) }],
+        babies: [
+          {
+            id: expect.any(String),
+            name: 'נועה',
+            birthDate: '2026-08-01',
+            sex: 'female',
+            createdAt: expect.any(Number),
+          },
+        ],
         entries: [],
         measurements: [],
         activeTimers: {},
-        settings: { volumeUnit: 'ml', weightUnit: 'kg', theme: 'auto', activeBabyId: expect.any(String) },
+        settings: {
+          volumeUnit: 'ml',
+          weightUnit: 'kg',
+          theme: 'auto',
+          activeBabyId: expect.any(String),
+        },
       },
       version: 1,
     });
@@ -62,11 +83,19 @@ test.describe('persistence', () => {
 test.describe('corrupt storage', () => {
   test.use({ consoleAllow: /persisted state rejected|\[store\]/ });
 
-  test('schema-invalid data: app recovers to onboarding and keeps a :corrupt copy', async ({ page }) => {
+  test('schema-invalid data: app recovers to onboarding and keeps a :corrupt copy', async ({
+    page,
+  }) => {
     await freezeClockAt(page);
-    const state = persistedState({ babies: [makeBaby({ id: 'b1' })], entries: [bottle('b1', NOW - 1000, 90)] });
+    const state = persistedState({
+      babies: [makeBaby({ id: 'b1' })],
+      entries: [bottle('b1', NOW - 1000, 90)],
+    });
     // amountMl must be a number — corrupt it.
-    const bad = { state: { ...state, entries: state.entries.map((e) => ({ ...e, amountMl: 'lots' })) }, version: 1 };
+    const bad = {
+      state: { ...state, entries: state.entries.map((e) => ({ ...e, amountMl: 'lots' })) },
+      version: 1,
+    };
     const raw = JSON.stringify(bad);
     await seed(page, raw);
     await page.goto('/');
@@ -77,7 +106,9 @@ test.describe('corrupt storage', () => {
 
   // BUG-008: a NON-JSON value never reaches the store's `merge` (zustand's JSON storage throws while
   // parsing), so no ":corrupt" copy is kept and the next write overwrites the user's bytes.
-  test('unparseable JSON: app recovers and keeps the original bytes in :corrupt (BUG-008)', async ({ page }) => {
+  test('unparseable JSON: app recovers and keeps the original bytes in :corrupt (BUG-008)', async ({
+    page,
+  }) => {
     await freezeClockAt(page);
     const raw = '{"state":{"babies":[{"id":"b1","name":"נועה"'; // truncated write
     await seed(page, raw);
@@ -107,7 +138,10 @@ test.describe('corrupt storage', () => {
 
   test('a future store version is not silently discarded', async ({ page }) => {
     await freezeClockAt(page);
-    const v2 = { state: persistedState({ babies: [makeBaby({ id: 'b1', name: 'נועה' })] }), version: 2 };
+    const v2 = {
+      state: persistedState({ babies: [makeBaby({ id: 'b1', name: 'נועה' })] }),
+      version: 2,
+    };
     await seed(page, JSON.stringify(v2));
     await page.goto('/');
     // Either it loads the (compatible) data or it preserves it in :corrupt — never loses it.

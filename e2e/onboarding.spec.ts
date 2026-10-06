@@ -10,12 +10,16 @@ test.describe('first run / onboarding', () => {
     await expect(page).toHaveURL(/#\/onboarding$/);
     await expect(page.locator('html')).toHaveAttribute('dir', 'rtl');
     await expect(page.locator('html')).toHaveAttribute('lang', 'he');
-    await expect(page.getByRole('heading', { level: 1, name: 'ברוכים הבאים ל-BabyMonitor' })).toBeVisible();
+    await expect(
+      page.getByRole('heading', { level: 1, name: 'ברוכים הבאים ל-BabyMonitor' }),
+    ).toBeVisible();
     await expect(page.getByRole('navigation', { name: 'ניווט ראשי' })).toHaveCount(0);
     await expect(page.getByText('בלי הרשמה ובלי שרת — הכול נשמר במכשיר שלך')).toBeVisible();
   });
 
-  test('validates on blur: required name, birth date not in future, sex required', async ({ page }) => {
+  test('validates on blur: required name, birth date not in future, sex required', async ({
+    page,
+  }) => {
     await page.goto('/');
     const start = page.getByRole('button', { name: 'התחלה' });
     // Disabled-looking until required fields are valid.
@@ -76,6 +80,11 @@ test.describe('first run / onboarding', () => {
     // Visiting onboarding again with a baby keeps "add child" semantics, not first run.
     const stored = await readStore(page);
     expect(stored.babies).toHaveLength(1);
-    expect(stored.babies[0]).toMatchObject({ name: 'נועה', birthDate: '2026-08-01', sex: 'female', birthWeightG: 3300 });
+    expect(stored.babies[0]).toMatchObject({
+      name: 'נועה',
+      birthDate: '2026-08-01',
+      sex: 'female',
+      birthWeightG: 3300,
+    });
   });
 });

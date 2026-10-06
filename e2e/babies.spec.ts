@@ -20,7 +20,9 @@ test.describe('multiple babies', () => {
     await freezeClockAt(page);
   });
 
-  test('add a second baby from the header switcher, switch back and forth, data stays isolated', async ({ page }) => {
+  test('add a second baby from the header switcher, switch back and forth, data stays isolated', async ({
+    page,
+  }) => {
     await page.goto('/');
     await onboard(page, { name: 'נועה', birthDate: '2026-08-01', sex: 'בת' });
 
@@ -48,7 +50,10 @@ test.describe('multiple babies', () => {
     // Switch back to A — A's bottle is there.
     await gotoTab(page, 'home');
     await page.getByRole('button', { name: /החלפת ילד\/ה/ }).click();
-    await expect(switcher.getByRole('radio', { name: /איתי/ })).toHaveAttribute('aria-checked', 'true');
+    await expect(switcher.getByRole('radio', { name: /איתי/ })).toHaveAttribute(
+      'aria-checked',
+      'true',
+    );
     await switcher.getByRole('radio', { name: /נועה/ }).click();
     await expect(switcher).toBeHidden();
     await expect(page.getByRole('button', { name: /החלפת ילד\/ה: נועה/ })).toBeVisible();
@@ -58,7 +63,13 @@ test.describe('multiple babies', () => {
 
   test('history, stats and growth only show the active baby', async ({ page }) => {
     const a = makeBaby({ id: 'a', name: 'נועה', birthWeightG: 3300 });
-    const b = makeBaby({ id: 'b', name: 'איתי', sex: 'male', birthDate: '2026-09-15', birthWeightG: 3600 });
+    const b = makeBaby({
+      id: 'b',
+      name: 'איתי',
+      sex: 'male',
+      birthDate: '2026-09-15',
+      birthWeightG: 3600,
+    });
     await seed(page, {
       babies: [a, b],
       entries: [
@@ -86,7 +97,9 @@ test.describe('multiple babies', () => {
     await expect(page.getByText('בנות · ')).toBeVisible();
   });
 
-  test('a running timer belongs to its baby and is not shown for another baby', async ({ page }) => {
+  test('a running timer belongs to its baby and is not shown for another baby', async ({
+    page,
+  }) => {
     const a = makeBaby({ id: 'a', name: 'נועה' });
     const b = makeBaby({ id: 'b', name: 'איתי', sex: 'male' });
     await seed(page, {

@@ -288,7 +288,10 @@ export const ROUTES = {
 } as const;
 
 export async function gotoTab(page: Page, tab: keyof typeof TABS): Promise<void> {
-  await page.getByRole('navigation', { name: 'ניווט ראשי' }).getByRole('link', { name: TABS[tab] }).click();
+  await page
+    .getByRole('navigation', { name: 'ניווט ראשי' })
+    .getByRole('link', { name: TABS[tab] })
+    .click();
   await expect(
     page.getByRole('navigation', { name: 'ניווט ראשי' }).getByRole('link', { name: TABS[tab] }),
   ).toHaveAttribute('aria-current', 'page');
@@ -311,7 +314,12 @@ export function toast(page: Page): Locator {
 /** Completes onboarding through the UI. */
 export async function onboard(
   page: Page,
-  { name = 'נועה', birthDate = '2026-08-01', sex = 'בת', weight }: {
+  {
+    name = 'נועה',
+    birthDate = '2026-08-01',
+    sex = 'בת',
+    weight,
+  }: {
     name?: string;
     birthDate?: string;
     sex?: 'בת' | 'בן';
@@ -338,7 +346,10 @@ export async function compactText(locator: Locator): Promise<string> {
 /** Normalised text (collapses whitespace, strips bidi isolation marks). */
 export async function text(locator: Locator): Promise<string> {
   const t = (await locator.textContent()) ?? '';
-  return t.replace(/[⁦-⁩‎‏]/g, '').replace(/\s+/g, ' ').trim();
+  return t
+    .replace(/[⁦-⁩‎‏]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
 }
 
 // ---------------------------------------------------------------------------------- a11y / layout
@@ -415,7 +426,8 @@ export async function expectNoHorizontalOverflow(page: Page, context = ''): Prom
   const report = await page.evaluate(() => {
     const out: string[] = [];
     const doc = document.documentElement;
-    if (doc.scrollWidth > doc.clientWidth) out.push(`document ${doc.scrollWidth} > ${doc.clientWidth}`);
+    if (doc.scrollWidth > doc.clientWidth)
+      out.push(`document ${doc.scrollWidth} > ${doc.clientWidth}`);
     for (const d of Array.from(document.querySelectorAll('dialog[open]'))) {
       const el = d as HTMLElement;
       if (el.scrollWidth > el.clientWidth + 1)

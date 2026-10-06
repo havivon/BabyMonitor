@@ -36,15 +36,24 @@ test.describe('bottle', () => {
     await page.goto('/');
     const sheet = await openBottle(page);
     // Defaults: breast milk, 90 ml, now.
-    await expect(sheet.getByRole('radio', { name: 'חלב אם שאוב' })).toHaveAttribute('aria-checked', 'true');
+    await expect(sheet.getByRole('radio', { name: 'חלב אם שאוב' })).toHaveAttribute(
+      'aria-checked',
+      'true',
+    );
     await expect(sheet.getByLabel('כמות במ״ל')).toHaveValue('90');
-    await expect(sheet.getByRole('button', { name: '90 מ״ל' })).toHaveAttribute('aria-pressed', 'true');
+    await expect(sheet.getByRole('button', { name: '90 מ״ל' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
 
     await sheet.getByRole('radio', { name: 'תמ״ל' }).click();
     await sheet.getByRole('button', { name: '120 מ״ל' }).click();
     await sheet.getByRole('button', { name: 'הוספה של 10 מ״ל' }).click();
     await expect(sheet.getByLabel('כמות במ״ל')).toHaveValue('130');
-    await expect(sheet.getByRole('button', { name: '120 מ״ל' })).toHaveAttribute('aria-pressed', 'false');
+    await expect(sheet.getByRole('button', { name: '120 מ״ל' })).toHaveAttribute(
+      'aria-pressed',
+      'false',
+    );
     await sheet.getByRole('button', { name: 'לפני 30 ד׳' }).click();
     await sheet.getByLabel(/הערה/).fill('גיהוק אחרי חצי');
     await sheet.getByRole('button', { name: 'שמירה' }).click();
@@ -53,7 +62,12 @@ test.describe('bottle', () => {
 
     const { entries } = await readStore(page);
     expect(entries).toHaveLength(1);
-    expect(entries[0]).toMatchObject({ type: 'bottle', content: 'formula', amountMl: 130, note: 'גיהוק אחרי חצי' });
+    expect(entries[0]).toMatchObject({
+      type: 'bottle',
+      content: 'formula',
+      amountMl: 130,
+      note: 'גיהוק אחרי חצי',
+    });
     expectApprox((entries[0] as { at: number }).at, NOW - 30 * MIN);
 
     await gotoTab(page, 'history');
@@ -67,7 +81,10 @@ test.describe('bottle', () => {
     await gotoTab(page, 'home');
     await expect(page.getByRole('button', { name: 'הוספת בקבוק' })).toContainText('אחרון: 130 מ״ל');
     const again = await openBottle(page);
-    await expect(again.getByRole('radio', { name: 'תמ״ל' })).toHaveAttribute('aria-checked', 'true');
+    await expect(again.getByRole('radio', { name: 'תמ״ל' })).toHaveAttribute(
+      'aria-checked',
+      'true',
+    );
     await expect(again.getByLabel('כמות במ״ל')).toHaveValue('130');
   });
 
@@ -88,7 +105,9 @@ test.describe('bottle', () => {
     expect((await readStore(page)).entries).toEqual([]);
   });
 
-  test('validation: amount > 500 rejected, > 400 warns but saves, future time rejected', async ({ page }) => {
+  test('validation: amount > 500 rejected, > 400 warns but saves, future time rejected', async ({
+    page,
+  }) => {
     await seed(page, { babies: [baby] });
     await page.goto('/');
     const sheet = await openBottle(page);
@@ -129,7 +148,10 @@ test.describe('bottle', () => {
   });
 
   test('edit an entry, then undo the edit', async ({ page }) => {
-    await seed(page, { babies: [baby], entries: [bottle('b1', NOW - 60 * MIN, 90, 'breastmilk', { id: 'x1' })] });
+    await seed(page, {
+      babies: [baby],
+      entries: [bottle('b1', NOW - 60 * MIN, 90, 'breastmilk', { id: 'x1' })],
+    });
     await page.goto('/#/history');
     await timelineItems(page).first().click();
     const sheet = dialog(page, 'עריכת האכלה');
@@ -138,9 +160,20 @@ test.describe('bottle', () => {
     await sheet.getByRole('radio', { name: 'תמ״ל' }).click();
     await sheet.getByRole('button', { name: 'שמירה' }).click();
     await expect(toast(page)).toContainText('השינויים נשמרו');
-    await expect(timelineItems(page).first().locator('.timeline-item__value')).toHaveText('150 מ״ל');
+    await expect(timelineItems(page).first().locator('.timeline-item__value')).toHaveText(
+      '150 מ״ל',
+    );
     let { entries } = await readStore(page);
-    expect(entries).toEqual([{ id: 'x1', babyId: 'b1', type: 'bottle', at: NOW - 60 * MIN, content: 'formula', amountMl: 150 }]);
+    expect(entries).toEqual([
+      {
+        id: 'x1',
+        babyId: 'b1',
+        type: 'bottle',
+        at: NOW - 60 * MIN,
+        content: 'formula',
+        amountMl: 150,
+      },
+    ]);
 
     await toast(page).getByRole('button', { name: 'בטל' }).click();
     await expect(timelineItems(page).first().locator('.timeline-item__value')).toHaveText('90 מ״ל');
@@ -190,10 +223,16 @@ test.describe('bottle', () => {
   });
 
   test('ml ↔ oz switch is reflected everywhere and stored ml never changes', async ({ page }) => {
-    await seed(page, { babies: [baby], entries: [bottle('b1', NOW - 60 * MIN, 120, 'formula', { id: 'x1' })] });
+    await seed(page, {
+      babies: [baby],
+      entries: [bottle('b1', NOW - 60 * MIN, 120, 'formula', { id: 'x1' })],
+    });
     await page.goto('/#/settings');
     await page.getByRole('radio', { name: 'אונקיות' }).click();
-    await expect(page.getByRole('radio', { name: 'אונקיות' })).toHaveAttribute('aria-checked', 'true');
+    await expect(page.getByRole('radio', { name: 'אונקיות' })).toHaveAttribute(
+      'aria-checked',
+      'true',
+    );
 
     await gotoTab(page, 'home');
     await expect(page.getByRole('button', { name: 'הוספת בקבוק' })).toContainText('אחרון: 4.1 oz');
@@ -221,7 +260,9 @@ test.describe('bottle', () => {
     await add.getByRole('button', { name: '3 oz', exact: true }).click();
     await add.getByRole('button', { name: 'שמירה' }).click();
     await expect(add).toBeHidden();
-    const amounts = (await readStore(page)).entries.map((e) => (e as { amountMl: number }).amountMl).sort();
+    const amounts = (await readStore(page)).entries
+      .map((e) => (e as { amountMl: number }).amountMl)
+      .sort();
     expect(amounts).toEqual([120, 89]);
 
     // Back to ml.

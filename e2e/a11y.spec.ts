@@ -19,14 +19,22 @@ import {
 import { eachSheet } from './walk';
 
 const rich: SeedData = {
-  babies: [makeBaby({ id: 'b1', birthWeightG: 3300 }), makeBaby({ id: 'b2', name: 'איתי', sex: 'male' })],
+  babies: [
+    makeBaby({ id: 'b1', birthWeightG: 3300 }),
+    makeBaby({ id: 'b2', name: 'איתי', sex: 'male' }),
+  ],
   entries: [
-    breast('b1', NOW - 3 * HOUR, [['right', 10], ['left', 6]]),
+    breast('b1', NOW - 3 * HOUR, [
+      ['right', 10],
+      ['left', 6],
+    ]),
     bottle('b1', NOW - 2 * HOUR, 120),
     solid('b1', NOW - 1 * HOUR, ['בטטה'], { isNewFood: true, reaction: 'פריחה' }),
     bottle('b1', NOW - 26 * HOUR, 90),
   ],
-  measurements: [{ id: 'm1', babyId: 'b1', date: '2026-09-01', weightG: 4200, lengthMm: 540, headMm: 370 }],
+  measurements: [
+    { id: 'm1', babyId: 'b1', date: '2026-09-01', weightG: 4200, lengthMm: 540, headMm: 370 },
+  ],
 };
 
 test.describe('accessibility smoke', () => {
@@ -42,13 +50,17 @@ test.describe('accessibility smoke', () => {
   });
 
   for (const [name, route] of Object.entries(ROUTES)) {
-    test(`${name}: no unlabeled controls, RTL, exactly one h1, current tab marked`, async ({ page }) => {
+    test(`${name}: no unlabeled controls, RTL, exactly one h1, current tab marked`, async ({
+      page,
+    }) => {
       await seed(page, rich);
       await page.goto(route);
       await expect(page.locator('main.page:not([aria-busy])')).toBeVisible();
       await expect(page.locator('html')).toHaveAttribute('dir', 'rtl');
       await expect(page.locator('h1')).toHaveCount(1);
-      await expect(page.getByRole('navigation', { name: 'ניווט ראשי' }).locator('[aria-current="page"]')).toHaveCount(1);
+      await expect(
+        page.getByRole('navigation', { name: 'ניווט ראשי' }).locator('[aria-current="page"]'),
+      ).toHaveCount(1);
       await expectNoUnlabeledControls(page, name);
     });
   }
@@ -67,7 +79,9 @@ test.describe('accessibility smoke', () => {
     }
   });
 
-  test('keyboard: sheet takes focus, Esc closes it and focus returns to the trigger', async ({ page }) => {
+  test('keyboard: sheet takes focus, Esc closes it and focus returns to the trigger', async ({
+    page,
+  }) => {
     await seed(page, rich);
     await page.goto('/');
     const trigger = page.getByRole('button', { name: 'הוספת בקבוק' });
@@ -98,12 +112,16 @@ test.describe('accessibility smoke', () => {
     const sheet = dialog(page, 'מוצקים');
     for (let i = 0; i < 40; i++) {
       await page.keyboard.press('Tab');
-      const inside = await sheet.evaluate((d) => d.contains(document.activeElement) || document.activeElement === document.body);
+      const inside = await sheet.evaluate(
+        (d) => d.contains(document.activeElement) || document.activeElement === document.body,
+      );
       expect(inside, `tab #${i}`).toBe(true);
     }
   });
 
-  test('keyboard: confirm dialogs focus the safe action and Esc cancels without closing the parent sheet', async ({ page }) => {
+  test('keyboard: confirm dialogs focus the safe action and Esc cancels without closing the parent sheet', async ({
+    page,
+  }) => {
     await seed(page, rich);
     await page.goto('/#/history');
     await page.locator('.timeline-item--bottle').first().click();
@@ -126,13 +144,27 @@ test.describe('accessibility smoke', () => {
     await expect(page.locator('.toast-region').getByRole('button', { name: 'בטל' })).toBeVisible();
   });
 
-  test('timer display is role=timer and not a live region; banner is role=status', async ({ page }) => {
-    await seed(page, { babies: [makeBaby({ id: 'b1' })], activeTimers: { b1: { babyId: 'b1', segments: [{ side: 'right', startedAt: NOW - 5 * MIN }] } } });
-    await page.goto('/');
-    await expect(page.getByRole('status').filter({ has: page.getByRole('button', { name: 'פתיחת טיימר ההנקה', exact: true }) })).toBeVisible();
+  test('timer display is role=timer and not a live region; banner is role=status', async ({
+    page,
+  }) => {
+    await seed(page, {
+      babies: [makeBaby({ id: 'b1' })],
+      activeTimers: {
+        b1: { babyId: 'b1', segments: [{ side: 'right', startedAt: NOW - 5 * MIN }] },
+      },
+    });
+    await page.goto('/#/history');
+    await expect(
+      page
+        .getByRole('status')
+        .filter({ has: page.getByRole('button', { name: 'פתיחת טיימר ההנקה', exact: true }) }),
+    ).toBeVisible();
     await page.getByRole('button', { name: 'פתיחת טיימר ההנקה', exact: true }).click();
     const t = dialog(page, 'הנקה').getByRole('timer');
     await expect(t).toHaveAttribute('aria-live', 'off');
-    await expect(dialog(page, 'הנקה').locator('.side-btn').first()).toHaveAttribute('aria-label', /ימין, 5 דקות, צד פעיל/);
+    await expect(dialog(page, 'הנקה').locator('.side-btn').first()).toHaveAttribute(
+      'aria-label',
+      /ימין, 5 דקות, צד פעיל/,
+    );
   });
 });

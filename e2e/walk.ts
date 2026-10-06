@@ -22,7 +22,9 @@ async function eachSheet(page: Page, check: (name: string) => Promise<void>) {
   await page.getByRole('button', { name: 'התחלת הנקה' }).click();
   await dialog(page, 'הנקה').getByRole('button', { name: 'רישום ידני' }).click();
   await check('timer-manual');
-  await dialog(page, /רישום ידני/).getByRole('button', { name: 'חזרה לטיימר' }).click();
+  await dialog(page, /רישום ידני/)
+    .getByRole('button', { name: 'חזרה לטיימר' })
+    .click();
   await dialog(page, 'הנקה').locator('.side-btn').first().click();
   await check('timer-running');
   await dialog(page, 'הנקה').getByRole('button', { name: 'ביטול הנקה' }).click();
@@ -41,11 +43,17 @@ async function eachSheet(page: Page, check: (name: string) => Promise<void>) {
   await page.getByRole('button', { name: 'הוספת מדידה' }).first().click();
   await check('measurement-new');
   await page.keyboard.press('Escape');
-  await page.getByRole('button', { name: /עריכת מדידה/ }).first().click();
+  await page
+    .getByRole('button', { name: /עריכת מדידה/ })
+    .first()
+    .click();
   await check('measurement-edit');
   await page.keyboard.press('Escape');
   await page.goto(ROUTES.settings);
-  await page.getByRole('button', { name: /עריכת הפרטים של/ }).first().click();
+  await page
+    .getByRole('button', { name: /עריכת הפרטים של/ })
+    .first()
+    .click();
   await check('baby-edit');
   await page.keyboard.press('Escape');
   await page.getByRole('button', { name: 'מחיקת כל הנתונים' }).click();

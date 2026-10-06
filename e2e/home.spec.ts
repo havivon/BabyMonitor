@@ -26,7 +26,10 @@ test.describe('home dashboard', () => {
     await seed(page, {
       babies: [makeBaby({ id: 'b1', birthDate: '2026-08-01' })],
       entries: [
-        breast('b1', at('2026-10-05T06:00'), [['right', 12], ['left', 8]]),
+        breast('b1', at('2026-10-05T06:00'), [
+          ['right', 12],
+          ['left', 8],
+        ]),
         bottle('b1', at('2026-10-05T09:00'), 120, 'formula'),
         breast('b1', at('2026-10-05T11:00'), [['left', 15]]),
         bottle('b1', at('2026-10-05T12:30'), 90, 'breastmilk'),
@@ -74,7 +77,10 @@ test.describe('home dashboard', () => {
 
   test('metrics without data show "—"', async ({ page }) => {
     await freezeClockAt(page);
-    await seed(page, { babies: [makeBaby({ id: 'b1' })], entries: [solid('b1', NOW - 60_000 * 30, ['אורז'])] });
+    await seed(page, {
+      babies: [makeBaby({ id: 'b1' })],
+      entries: [solid('b1', NOW - 60_000 * 30, ['אורז'])],
+    });
     await page.goto('/');
     expect(await compactText(stat(page, 'האכלות').locator('.stat__value'))).toBe('0');
     expect(await compactText(stat(page, 'בקבוק').locator('.stat__value'))).toBe('—');
@@ -84,7 +90,10 @@ test.describe('home dashboard', () => {
 
   test('"since last feed" formats: now / minutes / one day / days', async ({ page }) => {
     await freezeClockAt(page);
-    await seed(page, { babies: [makeBaby({ id: 'b1' })], entries: [bottle('b1', NOW - 20_000, 60, 'formula', { id: 'x' })] });
+    await seed(page, {
+      babies: [makeBaby({ id: 'b1' })],
+      entries: [bottle('b1', NOW - 20_000, 60, 'formula', { id: 'x' })],
+    });
     await page.goto('/');
     expect(await text(page.locator('.since__value'))).toBe('עכשיו');
     await page.clock.fastForward('25:00');
@@ -99,8 +108,12 @@ test.describe('home dashboard', () => {
     await freezeClockAt(page);
     const entries: Entry[] = [];
     for (const day of ['02', '03', '04'])
-      for (const h of ['02', '06', '10', '14', '18', '22']) entries.push(bottle('b1', at(`2026-10-${day}T${h}:00`), 100));
-    entries.push(bottle('b1', at('2026-10-05T08:00'), 120), bottle('b1', at('2026-10-05T12:00'), 130));
+      for (const h of ['02', '06', '10', '14', '18', '22'])
+        entries.push(bottle('b1', at(`2026-10-${day}T${h}:00`), 100));
+    entries.push(
+      bottle('b1', at('2026-10-05T08:00'), 120),
+      bottle('b1', at('2026-10-05T12:00'), 130),
+    );
     await seed(page, {
       babies: [makeBaby({ id: 'b1', birthDate: '2026-08-01', birthWeightG: 3300 })],
       measurements: [{ id: 'm', babyId: 'b1', date: '2026-10-01', weightG: 4000 }],
@@ -120,7 +133,9 @@ test.describe('home dashboard', () => {
 
   // Israel DST ends 25 Oct 2026 (25-hour day). "Yesterday" must be the previous CALENDAR day,
   // not `now − 24 h` (which at 23:30 on the 25th still falls on the 25th).
-  test('"אתמול" count is the previous calendar day on the DST change day (BUG-006)', async ({ page }) => {
+  test('"אתמול" count is the previous calendar day on the DST change day (BUG-006)', async ({
+    page,
+  }) => {
     await freezeClockAt(page, at('2026-10-25T23:30', '+02:00'));
     await seed(page, {
       babies: [makeBaby({ id: 'b1' })],

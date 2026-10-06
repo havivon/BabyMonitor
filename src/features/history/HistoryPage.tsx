@@ -100,11 +100,14 @@ export function HistoryPage() {
     [sheets],
   );
   const showMore = useCallback(() => setDayCount((c) => c + DAYS_PER_PAGE), []);
+  // Infinite scroll starts only after the first explicit "הצגת ימים נוספים": otherwise the button
+  // would load (and jump away) the moment it scrolls near the viewport, swallowing the user's tap.
+  const [autoLoad, setAutoLoad] = useState(false);
 
   // Infinite scroll: load the next batch when the "more" button approaches the viewport.
   useEffect(() => {
     const el = moreRef.current;
-    if (!el || typeof IntersectionObserver === 'undefined') return;
+    if (!autoLoad || !el || typeof IntersectionObserver === 'undefined') return;
     const io = new IntersectionObserver(
       (items) => {
         if (items.some((i) => i.isIntersecting)) showMore();
@@ -113,7 +116,7 @@ export function HistoryPage() {
     );
     io.observe(el);
     return () => io.disconnect();
-  }, [hasMore, dayCount, showMore]);
+  }, [autoLoad, hasMore, dayCount, showMore]);
 
   const jumpTo = (key: string): void => {
     // Newest first: the first day on or before the chosen date (else the oldest day).
@@ -191,6 +194,7 @@ export function HistoryPage() {
               onChange={(v) => {
                 setFilter(v ?? 'all');
                 setDayCount(DAYS_PER_PAGE);
+                setAutoLoad(false);
               }}
             />
             {groups.length === 0 ? (
@@ -230,7 +234,10 @@ export function HistoryPage() {
                 ref={moreRef}
                 type="button"
                 className="btn btn--outline btn--block"
-                onClick={showMore}
+                onClick={() => {
+                  showMore();
+                  setAutoLoad(true);
+                }}
               >
                 {he.history.more}
               </button>

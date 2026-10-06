@@ -41,7 +41,12 @@ test.describe('growth', () => {
     await sheet.getByRole('button', { name: 'שמירה' }).click();
     await expect(sheet).toBeHidden();
     await expect(toast(page)).toContainText('המדידה נשמרה');
-    expect((await readStore(page)).measurements[0]).toMatchObject({ date: '2026-10-05', weightG: 5000, lengthMm: 575, headMm: 390 });
+    expect((await readStore(page)).measurements[0]).toMatchObject({
+      date: '2026-10-05',
+      weightG: 5000,
+      lengthMm: 575,
+      headMm: 390,
+    });
     await expect(page.locator('.percentile__main')).toHaveText(/5\.00\s*ק״ג/);
     // Length / head tabs.
     await page.getByRole('radio', { name: 'אורך' }).click();
@@ -63,7 +68,10 @@ test.describe('growth', () => {
   });
 
   test('lb mode: input in lb, stored as grams, displayed in lb', async ({ page }) => {
-    await seed(page, { babies: [makeBaby({ id: 'b1', birthDate: '2026-08-01' })], settings: { weightUnit: 'lb' } });
+    await seed(page, {
+      babies: [makeBaby({ id: 'b1', birthDate: '2026-08-01' })],
+      settings: { weightUnit: 'lb' },
+    });
     await page.goto('/#/growth');
     const sheet = await openAdd(page);
     await expect(sheet.locator('.input-group__affix').first()).toHaveText('lb');
@@ -88,7 +96,10 @@ test.describe('growth', () => {
     await sheet.getByLabel(/^הערה/).fill('טיפת חלב');
     await sheet.getByRole('button', { name: 'שמירה' }).click();
     await expect(sheet).toBeHidden();
-    expect((await readStore(page)).measurements[0]).toMatchObject({ weightG: 3346, note: 'טיפת חלב' });
+    expect((await readStore(page)).measurements[0]).toMatchObject({
+      weightG: 3346,
+      note: 'טיפת חלב',
+    });
   });
 
   test('validation messages', async ({ page }) => {
@@ -134,18 +145,25 @@ test.describe('growth', () => {
   test('percentile: boy with WHO median birth weight 3.3464 kg is P50', async ({ page }) => {
     // Sanity of the reference table itself.
     expect(whoRow('male', 0).m).toBe(3.3464);
-    await seed(page, { babies: [makeBaby({ id: 'b1', sex: 'male', birthDate: '2026-10-05', birthWeightG: 3346.4 })] });
+    await seed(page, {
+      babies: [makeBaby({ id: 'b1', sex: 'male', birthDate: '2026-10-05', birthWeightG: 3346.4 })],
+    });
     await page.goto('/#/growth');
     await expect(badge(page)).toHaveText('50');
     await expect(page.locator('.percentile')).toContainText('קרוב לחציון לפי WHO');
     await expect(page.getByText('בנים · ')).toBeVisible();
   });
 
-  test('percentile matches the WHO LMS formula for girl, day 65, 5.00 kg and boy, day 30, 3.9 kg', async ({ page }) => {
+  test('percentile matches the WHO LMS formula for girl, day 65, 5.00 kg and boy, day 30, 3.9 kg', async ({
+    page,
+  }) => {
     // Girl born 1 Aug 2026; 5 Oct 2026 = day 65.
     const pGirl = weightPercentile('female', 65, 5.0);
     await seed(page, {
-      babies: [makeBaby({ id: 'g', birthDate: '2026-08-01' }), makeBaby({ id: 'b', name: 'איתי', sex: 'male', birthDate: '2026-09-05' })],
+      babies: [
+        makeBaby({ id: 'g', birthDate: '2026-08-01' }),
+        makeBaby({ id: 'b', name: 'איתי', sex: 'male', birthDate: '2026-09-05' }),
+      ],
       measurements: [
         { id: 'm1', babyId: 'g', date: '2026-10-05', weightG: 5000 },
         { id: 'm2', babyId: 'b', date: '2026-10-05', weightG: 3900 },
@@ -154,17 +172,22 @@ test.describe('growth', () => {
     });
     await page.goto('/#/growth');
     await expect(badge(page)).toHaveText(String(Math.round(pGirl)));
-    await expect(page.locator('.list .badge--growth').first()).toHaveText(String(Math.round(pGirl)));
+    await expect(page.locator('.list .badge--growth').first()).toHaveText(
+      String(Math.round(pGirl)),
+    );
 
     const pBoy = weightPercentile('male', 30, 3.9); // tail: < P3 → one decimal
     await gotoTab(page, 'settings');
     await page.getByRole('button', { name: 'בחירת איתי' }).click();
     await gotoTab(page, 'growth');
-    const expected = pBoy < 3 || pBoy > 97 ? (Math.round(pBoy * 10) / 10).toString() : String(Math.round(pBoy));
+    const expected =
+      pBoy < 3 || pBoy > 97 ? (Math.round(pBoy * 10) / 10).toString() : String(Math.round(pBoy));
     await expect(badge(page)).toHaveText(expected);
     if (pBoy < 3) {
       await expect(page.getByText('המשקל מתחת לאחוזון 3')).toBeVisible();
-      await expect(page.locator('.banner').filter({ hasText: 'מתחת לאחוזון 3' })).toContainText('כדאי להתייעץ עם רופא/ת הילדים');
+      await expect(page.locator('.banner').filter({ hasText: 'מתחת לאחוזון 3' })).toContainText(
+        'כדאי להתייעץ עם רופא/ת הילדים',
+      );
     }
   });
 
@@ -181,7 +204,9 @@ test.describe('growth', () => {
     await expect(banner).toContainText('כדאי להתייעץ עם רופא/ת הילדים');
     await expect(banner).toHaveClass(/banner--(danger|warning)/);
     // "% vs birth weight" in the summary.
-    await expect(page.locator('.kv__item').filter({ hasText: 'ממשקל הלידה' })).toContainText('−11%');
+    await expect(page.locator('.kv__item').filter({ hasText: 'ממשקל הלידה' })).toContainText(
+      '−11%',
+    );
   });
 
   test('gain per day / week between measurements ≥ 7 days apart', async ({ page }) => {
@@ -195,7 +220,9 @@ test.describe('growth', () => {
     await page.goto('/#/growth');
     // 420 g / 14 days = 30 g/day = 210 g/week.
     await expect(page.locator('.kv__item').filter({ hasText: 'עלייה ליום' })).toContainText('+30');
-    await expect(page.locator('.kv__item').filter({ hasText: 'עלייה לשבוע' })).toContainText('+210');
+    await expect(page.locator('.kv__item').filter({ hasText: 'עלייה לשבוע' })).toContainText(
+      '+210',
+    );
   });
 
   test('edit a measurement, delete it and undo', async ({ page }) => {
@@ -218,7 +245,9 @@ test.describe('growth', () => {
     await expect(page.getByText('עוד אין מדידות')).toBeVisible();
     await toast(page).getByRole('button', { name: 'בטל' }).click();
     await expect(page.getByRole('button', { name: /עריכת מדידה מ-1 באוקטובר 2026/ })).toBeVisible();
-    expect((await readStore(page)).measurements).toEqual([{ id: 'm1', babyId: 'b1', date: '2026-10-01', weightG: 4850, note: 'א' }]);
+    expect((await readStore(page)).measurements).toEqual([
+      { id: 'm1', babyId: 'b1', date: '2026-10-01', weightG: 4850, note: 'א' },
+    ]);
   });
 
   test('dirty measurement sheet asks before closing', async ({ page }) => {

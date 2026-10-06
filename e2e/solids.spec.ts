@@ -23,14 +23,17 @@ async function openSolid(page: Page) {
   await expect(sheet).toBeVisible();
   return sheet;
 }
-const foodInput = (sheet: ReturnType<typeof dialog>) => sheet.getByRole('textbox', { name: 'מזון', exact: true });
+const foodInput = (sheet: ReturnType<typeof dialog>) =>
+  sheet.getByRole('textbox', { name: 'מזון', exact: true });
 
 test.describe('solids', () => {
   test.beforeEach(async ({ page }) => {
     await freezeClockAt(page);
   });
 
-  test('multiple foods (Enter and comma), remove a chip, amount, new-food flag, reaction', async ({ page }) => {
+  test('multiple foods (Enter and comma), remove a chip, amount, new-food flag, reaction', async ({
+    page,
+  }) => {
     await seed(page, { babies: [baby] });
     await page.goto('/');
     const sheet = await openSolid(page);
@@ -50,15 +53,27 @@ test.describe('solids', () => {
     // Never logged before → "new food" defaults on.
     await expect(sheet.getByRole('switch', { name: /מזון חדש/ })).toBeChecked();
     await sheet.getByRole('radio', { name: 'כפית', exact: true }).click();
-    await expect(sheet.getByRole('radio', { name: 'כפית', exact: true })).toHaveAttribute('aria-checked', 'true');
-    await expect(sheet.getByRole('radio', { name: 'ללא תגובה' })).toHaveAttribute('aria-checked', 'true');
+    await expect(sheet.getByRole('radio', { name: 'כפית', exact: true })).toHaveAttribute(
+      'aria-checked',
+      'true',
+    );
+    await expect(sheet.getByRole('radio', { name: 'ללא תגובה' })).toHaveAttribute(
+      'aria-checked',
+      'true',
+    );
     await sheet.getByRole('radio', { name: 'פריחה' }).click();
     await sheet.getByRole('button', { name: 'שמירה' }).click();
     await expect(sheet).toBeHidden();
     await expect(toast(page)).toContainText('הרישום נשמר');
 
     const { entries } = await readStore(page);
-    expect(entries[0]).toMatchObject({ type: 'solid', foods: ['בטטה', 'אבוקדו'], amount: 'כפית', isNewFood: true, reaction: 'פריחה' });
+    expect(entries[0]).toMatchObject({
+      type: 'solid',
+      foods: ['בטטה', 'אבוקדו'],
+      amount: 'כפית',
+      isNewFood: true,
+      reaction: 'פריחה',
+    });
 
     await gotoTab(page, 'history');
     const item = timelineItems(page).first();
@@ -100,7 +115,11 @@ test.describe('solids', () => {
     await sheet.getByRole('button', { name: 'שמירה' }).click();
     await expect(sheet).toBeHidden();
     const saved = (await readStore(page)).entries.at(-1);
-    expect(saved).toMatchObject({ foods: ['בטטה', 'תירס'], isNewFood: true, reaction: 'ללא תגובה' });
+    expect(saved).toMatchObject({
+      foods: ['בטטה', 'תירס'],
+      isNewFood: true,
+      reaction: 'ללא תגובה',
+    });
   });
 
   test('"אחר" reaction keeps the free text and edit shows it again', async ({ page }) => {
@@ -113,7 +132,10 @@ test.describe('solids', () => {
     await sheet.getByLabel('מה קרה?').fill('שיעול קל');
     await sheet.getByRole('button', { name: 'שמירה' }).click();
     await expect(sheet).toBeHidden();
-    expect((await readStore(page)).entries[0]).toMatchObject({ foods: ['ביצה'], reaction: 'שיעול קל' });
+    expect((await readStore(page)).entries[0]).toMatchObject({
+      foods: ['ביצה'],
+      reaction: 'שיעול קל',
+    });
 
     await timelineItems(page).first().click();
     const edit = dialog(page, 'עריכת האכלה');

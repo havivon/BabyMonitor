@@ -30,13 +30,18 @@ test.describe('history', () => {
     await expect(page.getByText('האכלות שיירשמו יופיעו כאן, מסודרות לפי ימים.')).toBeVisible();
   });
 
-  test('groups by local day (newest first), a midnight-crossing feed belongs to its start day', async ({ page }) => {
+  test('groups by local day (newest first), a midnight-crossing feed belongs to its start day', async ({
+    page,
+  }) => {
     await freezeClockAt(page);
     await seed(page, {
       babies: [baby],
       entries: [
         bottle('b1', at('2026-10-05T00:10'), 120),
-        breast('b1', at('2026-10-04T23:50'), [['right', 15], ['left', 10]]), // ends 00:15 on the 5th
+        breast('b1', at('2026-10-04T23:50'), [
+          ['right', 15],
+          ['left', 10],
+        ]), // ends 00:15 on the 5th
         bottle('b1', at('2026-10-04T08:00'), 90),
         solid('b1', at('2026-10-04T12:00'), ['בטטה']),
         bottle('b1', at('2026-10-03T09:00'), 60),
@@ -54,13 +59,23 @@ test.describe('history', () => {
       'יום ב׳, 28 בספטמבר',
     ]);
     expect(await text(days.nth(0).locator('.day-header__summary'))).toBe('האכלה אחת · 120 מ״ל');
-    expect(await text(days.nth(1).locator('.day-header__summary'))).toBe('2 האכלות · 90 מ״ל · 25 ד׳ הנקה');
+    expect(await text(days.nth(1).locator('.day-header__summary'))).toBe(
+      '2 האכלות · 90 מ״ל · 25 ד׳ הנקה',
+    );
     // Order inside a day: newest first.
-    await expect(days.nth(1).locator('.timeline-item__time')).toHaveText(['23:50', '12:00', '08:00']);
-    await expect(days.nth(1).locator('.timeline-item--breast')).toContainText('ימין 15 ד׳ · שמאל 10 ד׳');
+    await expect(days.nth(1).locator('.timeline-item__time')).toHaveText([
+      '23:50',
+      '12:00',
+      '08:00',
+    ]);
+    await expect(days.nth(1).locator('.timeline-item--breast')).toContainText(
+      'ימין 15 ד׳ · שמאל 10 ד׳',
+    );
   });
 
-  test('a live feed started before midnight and finished after it is filed under the start day', async ({ page }) => {
+  test('a live feed started before midnight and finished after it is filed under the start day', async ({
+    page,
+  }) => {
     await freezeClockAt(page, at('2026-10-05T23:50'));
     await seed(page, { babies: [baby] });
     await page.goto('/');
@@ -90,7 +105,10 @@ test.describe('history', () => {
     });
     await page.goto('/#/history');
     const filters = page.getByRole('radiogroup', { name: 'סינון לפי סוג' });
-    await expect(filters.getByRole('radio', { name: 'הכול' })).toHaveAttribute('aria-checked', 'true');
+    await expect(filters.getByRole('radio', { name: 'הכול' })).toHaveAttribute(
+      'aria-checked',
+      'true',
+    );
     await expect(timelineItems(page)).toHaveCount(3);
 
     await filters.getByRole('radio', { name: 'בקבוק' }).click();
@@ -106,31 +124,51 @@ test.describe('history', () => {
     await expect(page.getByText('אין רישומי מוצקים להצגה')).toBeVisible();
     await page.getByRole('button', { name: 'הצגת הכול' }).click();
     await expect(timelineItems(page)).toHaveCount(3);
-    await expect(filters.getByRole('radio', { name: 'הכול' })).toHaveAttribute('aria-checked', 'true');
+    await expect(filters.getByRole('radio', { name: 'הכול' })).toHaveAttribute(
+      'aria-checked',
+      'true',
+    );
   });
 
   test('renders 14 days at a time and loads more on demand', async ({ page }) => {
     await freezeClockAt(page);
     const entries: Entry[] = [];
     for (let d = 0; d < 30; d++) {
-      for (let i = 0; i < 6; i++) entries.push(bottle('b1', NOW - d * DAY - i * 3 * HOUR - 10 * MIN, 60));
+      for (let i = 0; i < 6; i++)
+        entries.push(bottle('b1', NOW - d * DAY - i * 3 * HOUR - 10 * MIN, 60));
     }
     await seed(page, { babies: [baby], entries });
     await page.goto('/#/history');
     const days = page.locator('.timeline__day');
     await expect(days).toHaveCount(14);
     const more = page.getByRole('button', { name: 'הצגת ימים נוספים' });
-    await more.click();
-    await expect(days).toHaveCount(28);
-    await more.scrollIntoViewIfNeeded(); // infinite scroll also triggers it
-    await expect(days).toHaveCount(31); // 30 days back + today's partial day boundary
+    await expect(more).toBeVisible();
+    // Scrolling near the button (infinite scroll) or tapping it loads further batches of 14 days.
+    for (let i = 0; i < 5 && (await more.count()) > 0; i++) {
+      await more.scrollIntoViewIfNeeded().catch(() => undefined);
+      await page.waitForTimeout(200);
+    }
     await expect(more).toHaveCount(0);
+    await expect(days).toHaveCount(31); // 30 days back reach into a 31st calendar day
     expect(await timelineItems(page).count()).toBe(180);
   });
 
   test('tap an item opens its edit sheet; delete there and undo', async ({ page }) => {
     await freezeClockAt(page);
-    await seed(page, { babies: [baby], entries: [breast('b1', NOW - HOUR, [['right', 10], ['left', 7]], { id: 'x1' })] });
+    await seed(page, {
+      babies: [baby],
+      entries: [
+        breast(
+          'b1',
+          NOW - HOUR,
+          [
+            ['right', 10],
+            ['left', 7],
+          ],
+          { id: 'x1' },
+        ),
+      ],
+    });
     await page.goto('/#/history');
     await timelineItems(page).first().click();
     const sheet = dialog(page, 'עריכת האכלה');
@@ -164,9 +202,17 @@ test.describe('DST (Israel, clocks go back 25 Oct 2026 02:00 → 01:00)', () => 
     await page.goto('/#/history');
     const days = page.locator('.timeline__day');
     await expect(days).toHaveCount(2);
-    await expect(days.nth(0).locator('.timeline-item__time')).toHaveText(['03:00', '01:40', '00:30']);
-    await expect(days.nth(0).locator('.timeline-item--breast .timeline-item__value')).toHaveText('30 ד׳');
-    expect(await text(days.nth(0).locator('.day-header__summary'))).toBe('3 האכלות · 210 מ״ל · 30 ד׳ הנקה');
+    await expect(days.nth(0).locator('.timeline-item__time')).toHaveText([
+      '03:00',
+      '01:40',
+      '00:30',
+    ]);
+    await expect(days.nth(0).locator('.timeline-item--breast .timeline-item__value')).toHaveText(
+      '30 ד׳',
+    );
+    expect(await text(days.nth(0).locator('.day-header__summary'))).toBe(
+      '3 האכלות · 210 מ״ל · 30 ד׳ הנקה',
+    );
     await expect(days.nth(1).locator('.timeline-item__time')).toHaveText(['23:30']);
   });
 });

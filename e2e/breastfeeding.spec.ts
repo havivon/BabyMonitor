@@ -28,7 +28,9 @@ async function openTimer(page: Page) {
   return sheet;
 }
 const side = (sheet: ReturnType<typeof dialog>, name: 'ימין' | 'שמאל') =>
-  sheet.locator('.side-btn').filter({ has: sheet.page().locator('.side-btn__label', { hasText: name }) });
+  sheet
+    .locator('.side-btn')
+    .filter({ has: sheet.page().locator('.side-btn__label', { hasText: name }) });
 
 test.describe('breastfeeding timer', () => {
   test.beforeEach(async ({ page }) => {
@@ -36,7 +38,9 @@ test.describe('breastfeeding timer', () => {
     await seed(page, { babies: [baby] });
   });
 
-  test('right → left → pause → resume → finish saves exact per-side durations; next side suggested', async ({ page }) => {
+  test('right → left → pause → resume → finish saves exact per-side durations; next side suggested', async ({
+    page,
+  }) => {
     await page.goto('/');
     const sheet = await openTimer(page);
     await expect(sheet.getByText('בחירת צד להתחלה')).toBeVisible();
@@ -90,14 +94,18 @@ test.describe('breastfeeding timer', () => {
     await expect(item.locator('.timeline-item__time')).toHaveText('14:00');
   });
 
-  test('undo after finishing restores the running timer and removes the entry', async ({ page }) => {
+  test('undo after finishing restores the running timer and removes the entry', async ({
+    page,
+  }) => {
     await page.goto('/');
     const sheet = await openTimer(page);
     await side(sheet, 'שמאל').click();
     await page.clock.fastForward(4 * MIN);
     await sheet.getByRole('button', { name: 'סיום ושמירה' }).click();
     await toast(page).getByRole('button', { name: 'בטל' }).click();
-    await expect(page.getByRole('button', { name: 'פתיחת טיימר ההנקה', exact: true })).toBeVisible();
+    await expect(
+      page.getByRole('button', { name: 'פתיחת טיימר ההנקה', exact: true }),
+    ).toBeVisible();
     const { entries, activeTimers } = await readStore(page);
     expect(entries).toHaveLength(0);
     expect(activeTimers.b1?.segments[0]?.side).toBe('left');
@@ -110,7 +118,12 @@ test.describe('breastfeeding timer', () => {
     await side(sheet, 'ימין').click();
     await page.clock.fastForward(3 * MIN);
     await sheet.getByRole('button', { name: /מזעור/ }).click();
-    const banner = page.getByRole('status').filter({ has: page.getByRole('button', { name: 'פתיחת טיימר ההנקה', exact: true }) });
+    // Home shows the live feed in its hero card; the banner is on every other tab (DESIGN §7.2).
+    await expect(page.locator('.since').getByText('הנקה בתהליך')).toBeVisible();
+    await gotoTab(page, 'history');
+    const banner = page
+      .getByRole('status')
+      .filter({ has: page.getByRole('button', { name: 'פתיחת טיימר ההנקה', exact: true }) });
     await expect(banner).toContainText('הנקה · ימין');
     await expect(banner).toContainText(/03:0\d/);
 
@@ -119,13 +132,16 @@ test.describe('breastfeeding timer', () => {
     await expect(banner).toContainText('התחילה ב-14:00');
     await page.clock.fastForward(10 * MIN);
     await expect(banner).toContainText(/13:0\d/);
-    // Banner is on every tab.
     await gotoTab(page, 'stats');
-    await expect(page.getByRole('button', { name: 'פתיחת טיימר ההנקה', exact: true })).toBeVisible();
+    await expect(
+      page.getByRole('button', { name: 'פתיחת טיימר ההנקה', exact: true }),
+    ).toBeVisible();
     await page.getByRole('button', { name: 'פתיחת טיימר ההנקה', exact: true }).click();
     await expect(dialog(page, 'הנקה').getByRole('timer')).toHaveText(mmss(13));
     // Banner hides while the sheet is open.
-    await expect(page.getByRole('button', { name: 'פתיחת טיימר ההנקה', exact: true })).toHaveCount(0);
+    await expect(page.getByRole('button', { name: 'פתיחת טיימר ההנקה', exact: true })).toHaveCount(
+      0,
+    );
   });
 
   test('pause / resume from the banner', async ({ page }) => {
@@ -134,6 +150,7 @@ test.describe('breastfeeding timer', () => {
     await side(sheet, 'ימין').click();
     await page.keyboard.press('Escape'); // minimise
     await expect(sheet).toBeHidden();
+    await gotoTab(page, 'growth');
     await page.clock.fastForward(2 * MIN);
     await page.getByRole('button', { name: 'השהיית ההנקה' }).click();
     await expect(page.getByText('הנקה מושהית · ימין').first()).toBeVisible();
@@ -157,7 +174,9 @@ test.describe('breastfeeding timer', () => {
     await expect(toast(page)).toContainText('ההנקה בוטלה');
     expect((await readStore(page)).activeTimers).toEqual({});
     await toast(page).getByRole('button', { name: 'בטל' }).click();
-    await expect(page.getByRole('button', { name: 'פתיחת טיימר ההנקה', exact: true })).toBeVisible();
+    await expect(
+      page.getByRole('button', { name: 'פתיחת טיימר ההנקה', exact: true }),
+    ).toBeVisible();
     expect((await readStore(page)).entries).toEqual([]);
   });
 
@@ -182,12 +201,21 @@ test.describe('breastfeeding timer', () => {
     await manual.getByRole('button', { name: 'שמירה' }).click();
     await expect(manual.getByText('יש להזין לפחות צד אחד')).toBeVisible();
 
-    await manual.getByRole('group', { name: 'דקות מהירות (ימין)' }).getByRole('button', { name: '10 ד׳', exact: true }).click();
-    await manual.getByRole('group', { name: 'דקות מהירות (שמאל)' }).getByRole('button', { name: '5 ד׳', exact: true }).click();
+    await manual
+      .getByRole('group', { name: 'דקות מהירות (ימין)' })
+      .getByRole('button', { name: '10 ד׳', exact: true })
+      .click();
+    await manual
+      .getByRole('group', { name: 'דקות מהירות (שמאל)' })
+      .getByRole('button', { name: '5 ד׳', exact: true })
+      .click();
     await manual.getByRole('button', { name: 'הוספה של דקה (שמאל)' }).click(); // 6
     await expect(manual.getByLabel('שמאל (דקות)').first()).toHaveValue('6');
     // Default start is 30 minutes ago.
-    await expect(manual.getByRole('button', { name: 'לפני 30 ד׳' })).toHaveAttribute('aria-pressed', 'true');
+    await expect(manual.getByRole('button', { name: 'לפני 30 ד׳' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
     await manual.getByRole('button', { name: 'שמירה' }).click();
     await expect(manual).toBeHidden();
     await expect(toast(page)).toContainText('ההנקה נשמרה · 16 ד׳');
@@ -205,7 +233,10 @@ test.describe('breastfeeding timer', () => {
     await sheet.getByRole('button', { name: 'רישום ידני' }).click();
     const manual = dialog(page, 'הנקה · רישום ידני');
     await manual.getByRole('button', { name: 'עכשיו' }).click();
-    await manual.getByRole('group', { name: 'דקות מהירות (ימין)' }).getByRole('button', { name: '10 ד׳', exact: true }).click();
+    await manual
+      .getByRole('group', { name: 'דקות מהירות (ימין)' })
+      .getByRole('button', { name: '10 ד׳', exact: true })
+      .click();
     await manual.getByRole('button', { name: 'שמירה' }).click();
     await expect(manual.getByText('ההנקה מסתיימת בעתיד — כדאי להקדים את שעת ההתחלה')).toBeVisible();
     expect((await readStore(page)).entries).toEqual([]);
@@ -243,7 +274,9 @@ test.describe('breastfeeding timer', () => {
 });
 
 test.describe('next-side rule', () => {
-  test('after a timer feed ending on left, Home / tile / timer sheet suggest right', async ({ page }) => {
+  test('after a timer feed ending on left, Home / tile / timer sheet suggest right', async ({
+    page,
+  }) => {
     await freezeClockAt(page);
     await seed(page, { babies: [baby] });
     await page.goto('/');
@@ -287,7 +320,15 @@ test.describe('next-side rule', () => {
 
   test('a last segment under 2 minutes suggests the same side again', async ({ page }) => {
     await freezeClockAt(page);
-    await seed(page, { babies: [baby], entries: [breast('b1', NOW - 2 * HOUR, [['right', 10], ['left', 1]])] });
+    await seed(page, {
+      babies: [baby],
+      entries: [
+        breast('b1', NOW - 2 * HOUR, [
+          ['right', 10],
+          ['left', 1],
+        ]),
+      ],
+    });
     await page.goto('/');
     await expect(page.getByText('הצד הבא: שמאל')).toBeVisible();
   });
@@ -305,7 +346,9 @@ test.describe('forgotten (stale) timer', () => {
     await freezeClockAt(page);
     await seed(page, {
       babies: [baby],
-      activeTimers: { b1: { babyId: 'b1', segments: [{ side: 'left', startedAt: NOW - 7 * HOUR }] } },
+      activeTimers: {
+        b1: { babyId: 'b1', segments: [{ side: 'left', startedAt: NOW - 7 * HOUR }] },
+      },
     });
     await page.goto('/');
     await page.getByRole('button', { name: 'פתיחת טיימר ההנקה', exact: true }).click();
@@ -318,14 +361,20 @@ test.describe('forgotten (stale) timer', () => {
     await expect(sheet).toBeHidden();
     const { entries, activeTimers } = await readStore(page);
     expect(activeTimers).toEqual({});
-    expect(entries[0]).toMatchObject({ type: 'breast', startedAt: NOW - 7 * HOUR, endedAt: NOW - 7 * HOUR + 25 * MIN });
+    expect(entries[0]).toMatchObject({
+      type: 'breast',
+      startedAt: NOW - 7 * HOUR,
+      endedAt: NOW - 7 * HOUR + 25 * MIN,
+    });
   });
 
   test('stale end time before the start is rejected', async ({ page }) => {
     await freezeClockAt(page);
     await seed(page, {
       babies: [baby],
-      activeTimers: { b1: { babyId: 'b1', segments: [{ side: 'left', startedAt: NOW - 7 * HOUR }] } },
+      activeTimers: {
+        b1: { babyId: 'b1', segments: [{ side: 'left', startedAt: NOW - 7 * HOUR }] },
+      },
     });
     await page.goto('/');
     await page.getByRole('button', { name: 'פתיחת טיימר ההנקה', exact: true }).click();

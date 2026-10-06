@@ -26,10 +26,15 @@ function dataset(): Entry[] {
   for (let i = 0; i < 14; i++) {
     const date = day(new Date(Date.UTC(2026, 8, 21 + i)));
     const current = i >= 7;
-    for (const h of ['02', '10', '18']) out.push(breast('b1', at(`${date}T${h}:00`), [['right', current ? 10 : 8]]));
-    for (const h of current ? ['06', '14', '22'] : ['06', '14']) out.push(bottle('b1', at(`${date}T${h}:00`), current ? 100 : 120));
+    for (const h of ['02', '10', '18'])
+      out.push(breast('b1', at(`${date}T${h}:00`), [['right', current ? 10 : 8]]));
+    for (const h of current ? ['06', '14', '22'] : ['06', '14'])
+      out.push(bottle('b1', at(`${date}T${h}:00`), current ? 100 : 120));
   }
-  out.push(bottle('b1', at('2026-10-05T06:00'), 240), breast('b1', at('2026-10-05T09:00'), [['left', 50]]));
+  out.push(
+    bottle('b1', at('2026-10-05T06:00'), 240),
+    breast('b1', at('2026-10-05T09:00'), [['left', 50]]),
+  );
   return out;
 }
 
@@ -40,7 +45,10 @@ async function visibleDelta(page: Page, label: string): Promise<string> {
     const c = el.cloneNode(true);
     if (!(c instanceof HTMLElement)) return '';
     c.querySelectorAll('.visually-hidden').forEach((n) => n.remove());
-    return c.textContent.replace(/[\u2066-\u2069]/g, '').replace(/\s+/g, ' ').trim();
+    return c.textContent
+      .replace(/[\u2066-\u2069]/g, '')
+      .replace(/\s+/g, ' ')
+      .trim();
   });
 }
 
@@ -53,17 +61,26 @@ test.describe('stats', () => {
   });
 
   test('empty state with under 2 days of data', async ({ page }) => {
-    await seed(page, { babies: [makeBaby({ id: 'b1' })], entries: [bottle('b1', at('2026-10-05T08:00'), 90)] });
+    await seed(page, {
+      babies: [makeBaby({ id: 'b1' })],
+      entries: [bottle('b1', at('2026-10-05T08:00'), 90)],
+    });
     await page.goto('/#/stats');
     await expect(page.getByText('אין עדיין מספיק נתונים')).toBeVisible();
     await expect(page.getByText('אחרי כמה ימים של רישום יופיעו כאן מגמות.')).toBeVisible();
   });
 
   test('7-day averages (complete days only) and deltas vs the previous week', async ({ page }) => {
-    await seed(page, { babies: [makeBaby({ id: 'b1', birthDate: '2026-08-01' })], entries: dataset() });
+    await seed(page, {
+      babies: [makeBaby({ id: 'b1', birthDate: '2026-08-01' })],
+      entries: dataset(),
+    });
     await page.goto('/#/stats');
     const range = page.getByRole('radiogroup', { name: 'טווח' });
-    await expect(range.getByRole('radio', { name: '7 ימים' })).toHaveAttribute('aria-checked', 'true');
+    await expect(range.getByRole('radio', { name: '7 ימים' })).toHaveAttribute(
+      'aria-checked',
+      'true',
+    );
 
     expect(await compactText(tile(page, 'האכלות ביום').locator('.stat__value'))).toBe('6');
     expect(await compactText(tile(page, 'בקבוק ביום').locator('.stat__value'))).toBe('300מ״ל');
@@ -76,22 +93,36 @@ test.describe('stats', () => {
     // previous: 160 h / 34 gaps = 4:42:21 → current 4:00 is 42 min shorter.
     expect(await visibleDelta(page, 'מרווח ממוצע')).toBe('−42 ד׳');
     // Screen readers hear the period; sighted users get one caption.
-    await expect(tile(page, 'בקבוק ביום').locator('.stat__delta')).toContainText('לעומת 7 הימים הקודמים');
+    await expect(tile(page, 'בקבוק ביום').locator('.stat__delta')).toContainText(
+      'לעומת 7 הימים הקודמים',
+    );
     await expect(page.getByText('ממוצע יומי · השינוי לעומת 7 הימים הקודמים')).toBeVisible();
 
     // Charts, with today's bar labelled.
     await expect(page.getByRole('heading', { name: 'האכלות לפי יום' })).toBeVisible();
     await expect(page.getByRole('heading', { name: 'כמות בקבוק יומית' })).toBeVisible();
     await expect(page.getByRole('heading', { name: 'זמן הנקה יומי' })).toBeVisible();
-    const feedsChart = page.locator('section.card').filter({ has: page.getByRole('heading', { name: 'האכלות לפי יום' }) });
-    await expect(feedsChart.locator('svg text').filter({ hasText: /^היום$/ }).first()).toBeVisible();
+    const feedsChart = page
+      .locator('section.card')
+      .filter({ has: page.getByRole('heading', { name: 'האכלות לפי יום' }) });
+    await expect(
+      feedsChart
+        .locator('svg text')
+        .filter({ hasText: /^היום$/ })
+        .first(),
+    ).toBeVisible();
     await expect(page.getByText('הממוצעים מחושבים על ימים מלאים בלבד, ללא היום.')).toBeVisible();
     // Mixed feeding → no guideline band.
     await expect(page.getByText('טווח מומלץ (בקבוק בלבד)')).toHaveCount(0);
   });
 
-  test('14 and 30 days: averages only over days since the first entry; no delta without a previous period', async ({ page }) => {
-    await seed(page, { babies: [makeBaby({ id: 'b1', birthDate: '2026-08-01' })], entries: dataset() });
+  test('14 and 30 days: averages only over days since the first entry; no delta without a previous period', async ({
+    page,
+  }) => {
+    await seed(page, {
+      babies: [makeBaby({ id: 'b1', birthDate: '2026-08-01' })],
+      entries: dataset(),
+    });
     await page.goto('/#/stats');
     const range = page.getByRole('radiogroup', { name: 'טווח' });
     for (const r of ['14 ימים', '30 ימים']) {
@@ -108,16 +139,24 @@ test.describe('stats', () => {
   });
 
   test('oz unit is used for bottle averages', async ({ page }) => {
-    await seed(page, { babies: [makeBaby({ id: 'b1', birthDate: '2026-08-01' })], entries: dataset(), settings: { volumeUnit: 'oz' } });
+    await seed(page, {
+      babies: [makeBaby({ id: 'b1', birthDate: '2026-08-01' })],
+      entries: dataset(),
+      settings: { volumeUnit: 'oz' },
+    });
     await page.goto('/#/stats');
     // 300 ml = 10.1 oz; previous 240 ml = 8.1 oz.
     expect(await compactText(tile(page, 'בקבוק ביום').locator('.stat__value'))).toBe('10.1oz');
     expect(await visibleDelta(page, 'בקבוק ביום')).toBe('+2 oz');
   });
 
-  test('bottle-only baby with a weight gets the guideline band and disclaimer', async ({ page }) => {
+  test('bottle-only baby with a weight gets the guideline band and disclaimer', async ({
+    page,
+  }) => {
     const entries: Entry[] = [];
-    for (const d of ['01', '02', '03', '04']) for (const h of ['02', '06', '10', '14', '18', '22']) entries.push(bottle('b1', at(`2026-10-${d}T${h}:00`), 110));
+    for (const d of ['01', '02', '03', '04'])
+      for (const h of ['02', '06', '10', '14', '18', '22'])
+        entries.push(bottle('b1', at(`2026-10-${d}T${h}:00`), 110));
     await seed(page, {
       babies: [makeBaby({ id: 'b1', birthDate: '2026-08-01', birthWeightG: 3300 })],
       measurements: [{ id: 'm', babyId: 'b1', date: '2026-10-01', weightG: 4500 }],
@@ -125,7 +164,9 @@ test.describe('stats', () => {
     });
     await page.goto('/#/stats');
     await expect(page.getByText('טווח מומלץ (בקבוק בלבד)')).toBeVisible();
-    await expect(page.locator('section.card').filter({ hasText: 'כמות בקבוק יומית' })).toContainText('אינו תחליף לייעוץ רפואי');
+    await expect(
+      page.locator('section.card').filter({ hasText: 'כמות בקבוק יומית' }),
+    ).toContainText('אינו תחליף לייעוץ רפואי');
     await expect(page.getByRole('heading', { name: 'זמן הנקה יומי' })).toHaveCount(0);
   });
 
