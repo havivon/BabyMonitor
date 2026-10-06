@@ -1,5 +1,5 @@
 import { Suspense } from 'react';
-import { Navigate, Outlet } from 'react-router-dom';
+import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useFeedingSheets } from '../features/feeding/sheetsContext';
 import { useActiveTimer, useAppStore } from '../store';
 import { TabBar } from './TabBar';
@@ -18,6 +18,7 @@ export function AppLayout() {
   const hasBabies = useAppStore((s) => s.babies.length > 0);
   const timer = useActiveTimer();
   const sheets = useFeedingSheets();
+  const { pathname } = useLocation();
   if (!hasBabies) return <Navigate to="/onboarding" replace />;
 
   return (
@@ -25,7 +26,8 @@ export function AppLayout() {
       <Suspense fallback={<PageFallback />}>
         <Outlet />
       </Suspense>
-      {timer && !sheets.timerSheetOpen && (
+      {/* Home's hero already shows the live feed (review P2-1); the banner is for the other tabs. */}
+      {timer && !sheets.timerSheetOpen && pathname !== '/' && (
         <TimerBanner timer={timer} onOpen={() => sheets.open({ kind: 'timer' })} />
       )}
       <TabBar />

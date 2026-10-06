@@ -121,3 +121,18 @@ export function displayVolume(ml: number, unit: VolumeUnit): number {
   const v = volumeFromMl(ml, unit);
   return unit === 'ml' ? Math.round(v) : Math.round(v * 2) / 2;
 }
+
+const LRI = '⁦';
+const PDI = '⁩';
+// A sign only counts at the start of a word (so the maqaf in "ו-1" / "ב-14" stays with the prefix).
+const NUMBER_RUN = /(?:(?<![^\s(])[+−-])?\d+(?:[.,]\d+)?(?:\s*[–-]\s*\d+(?:[.,]\d+)?)?/g;
+
+/**
+ * Wraps numbers, signed numbers and number ranges in LRI…PDI (U+2066/U+2069) so the bidi
+ * algorithm keeps them left-to-right inside Hebrew text: "2–3 כפיות" no longer renders as
+ * "3–2 כפיות" (design review P1-1). For DISPLAY of free / preset text only — never for stored
+ * data or the CSV export. Idempotent.
+ */
+export function isolateNumbers(text: string): string {
+  return text.replace(/⁦([^⁩]*)⁩/g, '$1').replace(NUMBER_RUN, (m) => `${LRI}${m}${PDI}`);
+}

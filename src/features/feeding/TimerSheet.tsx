@@ -124,6 +124,10 @@ export function TimerSheet({ open, onClose }: TimerSheetProps) {
   const side = timer ? currentSide(timer) : null;
   const startedAt = timer ? timerStartedAt(timer) : null;
 
+  /** "—" for a side that was never used in this feed (review P3-5), else mm:ss. */
+  const sideTime = (s: Side, ms: number): string =>
+    timer?.segments.some((seg) => seg.side === s) ? formatTimer(ms) : '—';
+
   // ---------------------------------------------------------------- actions
 
   const tapSide = (target: Side): void => {
@@ -386,7 +390,7 @@ export function TimerSheet({ open, onClose }: TimerSheetProps) {
               <div className="timer__breakdown">
                 {SIDES.map((s) => (
                   <span key={s}>
-                    {SIDE_LABEL[s]} <strong className="ltr num">{formatTimer(elapsed[s])}</strong>
+                    {SIDE_LABEL[s]} <strong className="ltr num">{sideTime(s, elapsed[s])}</strong>
                   </span>
                 ))}
               </div>
@@ -455,7 +459,7 @@ export function TimerSheet({ open, onClose }: TimerSheetProps) {
                     </span>
                   )}
                   <span className="side-btn__label">{SIDE_LABEL[s]}</span>
-                  {timer && <span className="side-btn__time">{formatTimer(time)}</span>}
+                  {timer && <span className="side-btn__time">{sideTime(s, time)}</span>}
                   <span className="side-btn__state">
                     {stateIcon}
                     {stateText}
@@ -527,7 +531,8 @@ export function TimerSheet({ open, onClose }: TimerSheetProps) {
       title={mode === 'manual' ? `${he.timer.title} · ${he.timer.manual}` : he.timer.title}
       icon={<Heart />}
       variant="breast"
-      full
+      // The >6 h prompt holds one field: an auto-height sheet, not a full one (review P3-6).
+      full={!showStale}
       dirty={mode === 'manual' && manual.dirty}
       closeLabel={timer ? he.timer.minimize : he.common.close}
       closeIcon={timer ? <ChevronDown aria-hidden="true" /> : undefined}

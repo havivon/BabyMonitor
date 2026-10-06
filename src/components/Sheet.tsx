@@ -183,7 +183,9 @@ export function Sheet({
       {mounted && (
         <>
           <div className="sheet__handle" aria-hidden="true" />
-          <div className="sheet__header">
+          {/* While the exit animation plays (open=false) the content is inert, so a fast second
+              tap (e.g. double-tap on "שמירה") can never act twice. */}
+          <div className="sheet__header" inert={!open}>
             {icon && (
               <span className="sheet__icon" aria-hidden="true">
                 {icon}
@@ -201,8 +203,14 @@ export function Sheet({
               {closeIcon ?? <X aria-hidden="true" />}
             </button>
           </div>
-          <div className="sheet__body">{children}</div>
-          {footer && <div className="sheet__footer">{footer}</div>}
+          <div className="sheet__body" inert={!open}>
+            {children}
+          </div>
+          {footer && (
+            <div className="sheet__footer" inert={!open}>
+              {footer}
+            </div>
+          )}
           <ConfirmDialog
             open={confirmOpen}
             title={he.common.leaveDirty.title}

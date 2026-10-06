@@ -1,4 +1,4 @@
-import { Calendar, ChevronDown, Trash2, Weight } from 'lucide-react';
+import { Calendar, Check, ChevronDown, Trash2, Weight } from 'lucide-react';
 import { useId, useState, type SyntheticEvent } from 'react';
 import { Field } from '../../components/Field';
 import { Sheet } from '../../components/Sheet';
@@ -157,6 +157,7 @@ export function MeasurementSheet({
             </button>
           )}
           <button type="submit" form={formId} className="btn btn--primary btn--lg">
+            <Check aria-hidden="true" />
             {he.common.save}
           </button>
         </>

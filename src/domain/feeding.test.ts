@@ -7,6 +7,7 @@ import {
   entryEndTime,
   entryTime,
   groupByDay,
+  isMainlyBottleFed,
   lastFeed,
   lastSideOf,
   otherSide,
@@ -274,5 +275,25 @@ describe('groupByDay', () => {
       ['2026-03-28', 1],
       ['2026-03-27', 3],
     ]);
+  });
+});
+
+describe('isMainlyBottleFed', () => {
+  const now = local(2026, 10, 5, 12);
+  it('needs a bottle and no breastfeed in the last 72 h', () => {
+    expect(isMainlyBottleFed([bottle(now - 5 * HOUR, 120)], now)).toBe(true);
+    expect(isMainlyBottleFed([bottle(now - 5 * HOUR, 120), breast(now - 71 * HOUR, [['left', 10]])], now)).toBe(false);
+    expect(isMainlyBottleFed([bottle(now - 5 * HOUR, 120), breast(now - 73 * HOUR, [['left', 10]])], now)).toBe(true);
+    expect(isMainlyBottleFed([solid(now - HOUR, ['גזר'])], now)).toBe(false);
+    expect(isMainlyBottleFed([bottle(now - 80 * HOUR, 120)], now)).toBe(false);
+    expect(isMainlyBottleFed([], now)).toBe(false);
+  });
+
+  it('ignores future entries and is false while a breastfeeding timer runs', () => {
+    expect(isMainlyBottleFed([bottle(now - HOUR, 90), breast(now + HOUR, [['left', 5]])], now)).toBe(true);
+    expect(isMainlyBottleFed([bottle(now - HOUR, 90)], now, { babyId: 'baby1', segments: [{ side: 'left', startedAt: now - 60_000 }] })).toBe(
+      false,
+    );
+    expect(isMainlyBottleFed([bottle(now - HOUR, 90)], now, null)).toBe(true);
   });
 });

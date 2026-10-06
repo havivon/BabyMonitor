@@ -6,6 +6,8 @@ import {
   Line,
   ResponsiveContainer,
   Tooltip,
+  usePlotArea,
+  useYAxisScale,
   XAxis,
   YAxis,
   type TooltipContentProps,
@@ -15,7 +17,15 @@ import { formatPercentile } from '../../domain/growth/percentiles';
 import type { GrowthIndicator } from '../../domain/growth/who';
 import type { WeightUnit } from '../../domain/types';
 import { formatNumber, UNIT_LABELS } from '../../domain/units';
-import { ageLabel, xTicks, yDomain, type ChartRange, type ChartRow } from './chartModel';
+import {
+  ageLabel,
+  spreadLabels,
+  xTicks,
+  yAxis,
+  type ChartRange,
+  type ChartRow,
+  type EdgeLabel,
+} from './chartModel';
 import { metricQuantity } from './metrics';
 import { usePrefersReducedMotion } from './ui/usePrefersReducedMotion';
 
@@ -109,37 +119,57 @@ function BabyDot(props: DotItemDotProps): ReactElement {
   );
 }
 
-/** Percentile number at the right edge of each WHO line. */
-function endLabel(percentile: number, lastIndex: number) {
-  function EndLabel(props: {
-    x?: number | string;
-    y?: number | string;
-    index?: number;
-  }): ReactElement {
-    if (props.index !== lastIndex) return <g />;
-    return (
-      <text
-        x={Number(props.x) + 4}
-        y={Number(props.y) + 3}
-        fontSize={10}
-        fill="var(--color-chart-axis)"
-      >
-        {percentile}
-      </text>
-    );
+const EDGE_PERCENTILES = [3, 15, 50, 85, 97] as const;
+/** Minimum vertical distance between edge labels (px) — design review P1-2. */
+const EDGE_LABEL_GAP = 11;
+
+/**
+ * Percentile numbers at the right edge of the WHO lines, spread ≥ 11 px apart. Rendered as a chart
+ * child so it can read the live y-scale and plot area.
+ */
+function PercentileEdgeLabels({ last }: { last: ChartRow | undefined }) {
+  const yScale = useYAxisScale();
+  const plot = usePlotArea();
+  if (!yScale || !plot || !last) return null;
+  const labels: EdgeLabel[] = [];
+  for (const p of EDGE_PERCENTILES) {
+    const v = last[`p${p}`];
+    const y = v === undefined ? undefined : yScale(v);
+    if (y !== undefined && Number.isFinite(y)) labels.push({ key: String(p), y });
   }
-  return EndLabel;
+  const spread = spreadLabels(labels, EDGE_LABEL_GAP, plot.y + 4, plot.y + plot.height);
+  return (
+    <g aria-hidden="true">
+      {spread.map((l) => (
+        <text
+          key={l.key}
+          x={plot.x + plot.width + 4}
+          y={l.y + 3.5}
+          fontSize={10}
+          fill="var(--color-chart-axis)"
+        >
+          {l.key}
+        </text>
+      ))}
+    </g>
+  );
 }
+
+/** Range-area accessors: [low, high] per row (undefined → gap). */
+const outerBand = (r: ChartRow): [number, number] | null =>
+  r.p3 !== undefined && r.p97 !== undefined ? [r.p3, r.p97] : null;
+const innerBand = (r: ChartRow): [number, number] | null =>
+  r.p15 !== undefined && r.p85 !== undefined ? [r.p15, r.p85] : null;
 
 /** WHO percentile chart (DESIGN §10): P3–P97 / P15–P85 bands, P50 dashed, baby line on top. */
 export function GrowthChart({ metric, rows, range, weightUnit, babyName, ariaLabel }: Props) {
   const reducedMotion = usePrefersReducedMotion();
   const animate = !reducedMotion;
   const data = rows as ChartRow[];
-  const lastIndex = data.length - 1;
+  const edgeRow = [...data].reverse().find((r) => r.p50 !== undefined);
   const unitLabel = metric === 'weight' ? UNIT_LABELS[weightUnit] : UNIT_LABELS.cm;
   const ticks = xTicks(range);
-  const domain = yDomain(rows, metric);
+  const y = yAxis(rows, metric, weightUnit);
   const pline = {
     stroke: 'var(--color-chart-pline)',
     strokeWidth: 1,
@@ -179,9 +209,9 @@ export function GrowthChart({ metric, rows, range, weightUnit, babyName, ariaLab
             width={34}
             tickLine={false}
             axisLine={false}
-            tickCount={6}
-            domain={domain}
-            allowDecimals={false}
+            domain={y.domain}
+            ticks={y.ticks}
+            allowDataOverflow
             label={{
               value: unitLabel,
               position: 'top',
@@ -198,43 +228,27 @@ export function GrowthChart({ metric, rows, range, weightUnit, babyName, ariaLab
             isAnimationActive={false}
           />
           <Area
-            dataKey="outerBase"
-            stackId="outer"
-            stroke="none"
-            fill="transparent"
-            isAnimationActive={false}
-            activeDot={false}
-          />
-          <Area
-            dataKey="outerBand"
-            stackId="outer"
+            dataKey={outerBand}
             stroke="none"
             fill="var(--color-chart-band-outer)"
             fillOpacity={1}
             isAnimationActive={false}
             activeDot={false}
+            connectNulls
           />
           <Area
-            dataKey="innerBase"
-            stackId="inner"
-            stroke="none"
-            fill="transparent"
-            isAnimationActive={false}
-            activeDot={false}
-          />
-          <Area
-            dataKey="innerBand"
-            stackId="inner"
+            dataKey={innerBand}
             stroke="none"
             fill="var(--color-chart-band-inner)"
             fillOpacity={1}
             isAnimationActive={false}
             activeDot={false}
+            connectNulls
           />
-          <Line dataKey="p3" {...pline} label={endLabel(3, lastIndex)} />
-          <Line dataKey="p15" {...pline} label={endLabel(15, lastIndex)} />
-          <Line dataKey="p85" {...pline} label={endLabel(85, lastIndex)} />
-          <Line dataKey="p97" {...pline} label={endLabel(97, lastIndex)} />
+          <Line dataKey="p3" {...pline} />
+          <Line dataKey="p15" {...pline} />
+          <Line dataKey="p85" {...pline} />
+          <Line dataKey="p97" {...pline} />
           <Line
             dataKey="p50"
             stroke="var(--color-chart-median)"
@@ -243,8 +257,8 @@ export function GrowthChart({ metric, rows, range, weightUnit, babyName, ariaLab
             dot={false}
             activeDot={false}
             isAnimationActive={false}
-            label={endLabel(50, lastIndex)}
           />
+          <PercentileEdgeLabels last={edgeRow} />
           <Line
             dataKey="baby"
             name={babyName}

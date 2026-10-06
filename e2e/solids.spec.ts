@@ -23,7 +23,7 @@ async function openSolid(page: Page) {
   await expect(sheet).toBeVisible();
   return sheet;
 }
-const foodInput = (sheet: ReturnType<typeof dialog>) => sheet.getByLabel('מזון', { exact: true });
+const foodInput = (sheet: ReturnType<typeof dialog>) => sheet.getByRole('textbox', { name: 'מזון', exact: true });
 
 test.describe('solids', () => {
   test.beforeEach(async ({ page }) => {
@@ -108,9 +108,10 @@ test.describe('solids', () => {
     await page.goto('/');
     const sheet = await openSolid(page);
     await foodInput(sheet).fill('ביצה');
+    await foodInput(sheet).press('Enter');
     await sheet.getByRole('radio', { name: 'אחר' }).click();
     await sheet.getByLabel('מה קרה?').fill('שיעול קל');
-    await sheet.getByRole('button', { name: 'שמירה' }).click(); // draft text is committed on save
+    await sheet.getByRole('button', { name: 'שמירה' }).click();
     await expect(sheet).toBeHidden();
     expect((await readStore(page)).entries[0]).toMatchObject({ foods: ['ביצה'], reaction: 'שיעול קל' });
 
@@ -126,6 +127,7 @@ test.describe('solids', () => {
     await page.goto('/');
     const sheet = await openSolid(page);
     await foodInput(sheet).fill('אפונה');
+    await foodInput(sheet).press('Enter');
     const chip = sheet.getByRole('radio', { name: 'קערית', exact: true });
     await chip.click();
     await chip.click();
@@ -133,5 +135,21 @@ test.describe('solids', () => {
     await sheet.getByRole('button', { name: 'שמירה' }).click();
     await expect(sheet).toBeHidden();
     expect((await readStore(page)).entries[0]).not.toHaveProperty('amount');
+  });
+
+  // BUG-005: leaving the food field commits the typed text as a chip ABOVE the other controls, so
+  // the layout jumps between pointerdown and pointerup and the user's first tap is lost.
+  test('first tap after typing a food is not lost (BUG-005)', async ({ page }) => {
+    await seed(page, { babies: [baby] });
+    await page.goto('/');
+    const sheet = await openSolid(page);
+    await foodInput(sheet).fill('אפונה');
+    const chip = sheet.getByRole('radio', { name: 'קערית', exact: true });
+    await chip.click();
+    await expect(chip).toHaveAttribute('aria-checked', 'true');
+    const other = sheet.getByRole('radio', { name: 'אחר' });
+    await foodInput(sheet).fill('קישוא');
+    await other.click();
+    await expect(other).toHaveAttribute('aria-checked', 'true');
   });
 });

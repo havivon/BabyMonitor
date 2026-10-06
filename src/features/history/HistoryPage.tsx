@@ -1,5 +1,5 @@
-import { Calendar, History as HistoryIcon } from 'lucide-react';
-import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Apple, Calendar, Heart, History as HistoryIcon, Milk } from 'lucide-react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import { flushSync } from 'react-dom';
 import { AppHeader } from '../../app/AppHeader';
 import { useToast } from '../../components/toast';
@@ -35,6 +35,12 @@ const FILTER_OPTIONS: readonly RadioOption<Filter>[] = [
     ),
   })),
 ];
+
+const TYPE_ICONS = { breast: Heart, bottle: Milk, solid: Apple } as const;
+function FilterIcon({ type }: { type: FeedingType }) {
+  const Icon = TYPE_ICONS[type];
+  return <Icon />;
+}
 
 const Day = memo(function Day({
   group,
@@ -188,11 +194,22 @@ export function HistoryPage() {
               }}
             />
             {groups.length === 0 ? (
-              <div className="empty">
+              <div
+                className="empty"
+                style={
+                  filter === 'all'
+                    ? undefined
+                    : ({
+                        '--empty-color': `var(--color-${filter})`,
+                        '--empty-soft': `var(--color-${filter}-soft)`,
+                      } as CSSProperties)
+                }
+              >
                 <span className="empty__icon" aria-hidden="true">
-                  <HistoryIcon />
+                  {filter === 'all' ? <HistoryIcon /> : <FilterIcon type={filter} />}
                 </span>
                 <h2 className="empty__title">{he.history.emptyFilter(filterName)}</h2>
+                <p className="empty__text">{he.history.emptyFilterText}</p>
                 <button
                   type="button"
                   className="btn btn--ghost empty__action"

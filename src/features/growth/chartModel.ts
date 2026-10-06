@@ -76,11 +76,6 @@ export interface ChartRow {
   p50?: number;
   p85?: number;
   p97?: number;
-  /** Stacked-area helpers: transparent base + band height. */
-  outerBase?: number;
-  outerBand?: number;
-  innerBase?: number;
-  innerBand?: number;
   baby?: number;
   babyPercentile?: number | null;
   /** Original app-unit value (g / mm) for tooltips. */
@@ -106,17 +101,7 @@ function curveRow(
     p85 !== undefined &&
     p97 !== undefined
   ) {
-    Object.assign(row, {
-      p3,
-      p15,
-      p50,
-      p85,
-      p97,
-      outerBase: p3,
-      outerBand: p97 - p3,
-      innerBase: p15,
-      innerBand: p85 - p15,
-    });
+    Object.assign(row, { p3, p15, p50, p85, p97 });
   }
   return row;
 }
@@ -162,8 +147,27 @@ export function buildChartRows(
   return [...rows.values()].sort((a, b) => a.ageDays - b.ageDays);
 }
 
-/** A rounded y-domain that contains the bands and the baby's values. */
-export function yDomain(rows: readonly ChartRow[], metric: GrowthIndicator): [number, number] {
+export interface YAxisSpec {
+  domain: [number, number];
+  ticks: number[];
+}
+
+/** Tick step in chart units: weight 1 or 2 kg (2 or 5 lb) depending on the span; length/head 5 cm. */
+function yStep(metric: GrowthIndicator, weightUnit: WeightUnit, span: number): number {
+  if (metric !== 'weight') return 5;
+  if (weightUnit === 'lb') return span <= 12 ? 2 : 5;
+  return span <= 6 ? 1 : 2;
+}
+
+/**
+ * A "nice" y-axis that hugs the WHO bands and the baby's values (never forced to 0), with explicit
+ * ticks on whole steps (design review P1-2).
+ */
+export function yAxis(
+  rows: readonly ChartRow[],
+  metric: GrowthIndicator,
+  weightUnit: WeightUnit,
+): YAxisSpec {
   let min = Number.POSITIVE_INFINITY;
   let max = Number.NEGATIVE_INFINITY;
   for (const r of rows) {
@@ -173,9 +177,51 @@ export function yDomain(rows: readonly ChartRow[], metric: GrowthIndicator): [nu
       max = Math.max(max, v);
     }
   }
-  if (!Number.isFinite(min)) return [0, 1];
-  const step = metric === 'weight' ? 1 : 5;
-  return [Math.max(0, Math.floor(min / step) * step), Math.ceil(max / step) * step];
+  if (!Number.isFinite(min)) return { domain: [0, 1], ticks: [0, 1] };
+  const step = yStep(metric, weightUnit, max - min);
+  const lo = Math.max(0, Math.floor(min / step) * step);
+  const hi = Math.max(lo + step, Math.ceil(max / step) * step);
+  const ticks: number[] = [];
+  for (let t = lo; t <= hi + 1e-9; t += step) ticks.push(Number(t.toFixed(6)));
+  return { domain: [lo, hi], ticks };
+}
+
+export interface EdgeLabel {
+  key: string;
+  y: number;
+}
+
+/**
+ * Spreads right-edge percentile labels so neighbours are at least `minGap` px apart, keeping the
+ * middle label (P50) in place and pushing the others outward, then shifting the whole set back
+ * inside [top, bottom] if needed (design review P1-2). Input/output y are SVG pixels.
+ */
+export function spreadLabels(
+  labels: readonly EdgeLabel[],
+  minGap: number,
+  top: number,
+  bottom: number,
+): EdgeLabel[] {
+  const sorted = [...labels].sort((a, b) => a.y - b.y).map((l) => ({ ...l }));
+  if (sorted.length === 0) return sorted;
+  const mid = Math.floor(sorted.length / 2);
+  for (let i = mid - 1; i >= 0; i--) {
+    const below = sorted[i + 1];
+    const cur = sorted[i];
+    if (cur && below) cur.y = Math.min(cur.y, below.y - minGap);
+  }
+  for (let i = mid + 1; i < sorted.length; i++) {
+    const above = sorted[i - 1];
+    const cur = sorted[i];
+    if (cur && above) cur.y = Math.max(cur.y, above.y + minGap);
+  }
+  const first = sorted[0];
+  const last = sorted[sorted.length - 1];
+  if (first && last) {
+    const shift = first.y < top ? top - first.y : last.y > bottom ? bottom - last.y : 0;
+    if (shift) for (const l of sorted) l.y += shift;
+  }
+  return sorted;
 }
 
 /** Hebrew age label for a tooltip/table: "12 ימים", "5 שבועות", "4.5 חודשים". */

@@ -27,7 +27,8 @@ export function Root({ children }: { children: ReactNode }) {
     window.scrollTo(0, 0);
   }, [pathname]);
 
-  const hasTimer = Boolean(timer) && pathname !== '/onboarding';
+  // Matches where the timer banner is rendered (every tab except Home, never on onboarding).
+  const hasTimer = Boolean(timer) && pathname !== '/onboarding' && pathname !== '/';
   return (
     <div className={`app${hasTimer ? ' app--has-timer' : ''}`}>
       <ToastProvider>

@@ -9,7 +9,8 @@ import {
   toChartUnit,
   toX,
   xTicks,
-  yDomain,
+  spreadLabels,
+  yAxis,
 } from './chartModel';
 
 let tables: WhoTables;
@@ -75,9 +76,8 @@ describe('buildChartRows', () => {
     expect(babyRows.map((r) => r.baby)).toEqual([3.3, 4.3, 5.5]);
     expect(babyRows.map((r) => r.isLatest)).toEqual([false, false, true]);
     for (const r of rows) {
-      expect(r.outerBase).toBe(r.p3);
-      expect((r.outerBase ?? 0) + (r.outerBand ?? 0)).toBeCloseTo(r.p97 ?? Number.NaN, 10);
-      expect((r.innerBase ?? 0) + (r.innerBand ?? 0)).toBeCloseTo(r.p85 ?? Number.NaN, 10);
+      expect(r.p3).toBeLessThan(r.p15 ?? Number.NaN);
+      expect(r.p85).toBeLessThan(r.p97 ?? Number.NaN);
     }
     // sorted by age, unique ages
     const ages = rows.map((r) => r.ageDays);
@@ -103,29 +103,82 @@ describe('buildChartRows', () => {
     ]);
   });
 
-  it('yDomain rounds to whole kg / 5 cm', () => {
-    const points = assessSeries(
-      growthSeries(baby, [], 'weight'),
-      tables.weight,
-      'weight',
-      'female',
+  it.each([
+    ['weight', 'female', 5, 2, 2, 8, 1],
+    ['weight', 'female', 120, 2, 2, 10, 2],
+    ['weight', 'male', 540, 6, 2, 16, 2],
+    ['length', 'male', 5, 3, 45, 70, 5],
+    ['length', 'female', 120, 3, 45, 75, 5],
+    ['length', 'male', 540, 3, 45, 95, 5],
+    ['head', 'female', 120, 3, 30, 50, 5],
+    ['head', 'male', 540, 3, 30, 55, 5],
+  ] as const)(
+    '%s %s at day %i: axis hugs the bands (not from 0)',
+    (metric, sex, age, _x, lo, hi, step) => {
+      const range = chartRange(age, null);
+      const rows = buildChartRows(tables[metric], metric, sex, range, [], 'kg');
+      const { domain, ticks } = yAxis(rows, metric, 'kg');
+      expect(domain[0]).toBeGreaterThanOrEqual(lo - step);
+      expect(domain[0]).toBeLessThanOrEqual(lo);
+      expect(domain[1]).toBeGreaterThanOrEqual(hi - step);
+      expect(domain[1]).toBeLessThanOrEqual(hi + step);
+      expect(domain[0]).toBeGreaterThan(0);
+      expect(ticks[0]).toBe(domain[0]);
+      expect(ticks[ticks.length - 1]).toBe(domain[1]);
+      ticks.slice(1).forEach((t, i) => {
+        expect(t - (ticks[i] ?? 0)).toBeCloseTo(step, 9);
+      });
+    },
+  );
+
+  it('uses 2/5 lb steps and a sane empty axis', () => {
+    const rows = buildChartRows(tables.weight, 'weight', 'male', chartRange(540, null), [], 'lb');
+    const { ticks } = yAxis(rows, 'weight', 'lb');
+    expect((ticks[1] ?? 0) - (ticks[0] ?? 0)).toBe(5);
+    expect(yAxis([], 'weight', 'kg')).toEqual({ domain: [0, 1], ticks: [0, 1] });
+  });
+});
+
+describe('spreadLabels', () => {
+  it('keeps the middle label and pushes neighbours ≥ gap apart, inside bounds', () => {
+    const out = spreadLabels(
+      [
+        { key: '97', y: 100 },
+        { key: '85', y: 104 },
+        { key: '50', y: 110 },
+        { key: '15', y: 114 },
+        { key: '3', y: 118 },
+      ],
+      11,
+      0,
+      300,
     );
-    const rows = buildChartRows(
-      tables.weight,
-      'weight',
-      'female',
-      chartRange(30, null),
-      points,
-      'kg',
+    expect(out.map((l) => [l.key, l.y])).toEqual([
+      ['97', 88],
+      ['85', 99],
+      ['50', 110],
+      ['15', 121],
+      ['3', 132],
+    ]);
+  });
+
+  it('leaves well-spaced labels alone and shifts a crowded set back into the plot', () => {
+    const spaced = [
+      { key: 'a', y: 10 },
+      { key: 'b', y: 40 },
+    ];
+    expect(spreadLabels(spaced, 11, 0, 100)).toEqual(spaced);
+    const crowded = spreadLabels(
+      [
+        { key: 'a', y: 2 },
+        { key: 'b', y: 3 },
+        { key: 'c', y: 4 },
+      ],
+      11,
+      0,
+      100,
     );
-    const [lo, hi] = yDomain(rows, 'weight');
-    expect(Number.isInteger(lo) && Number.isInteger(hi)).toBe(true);
-    expect(lo).toBeLessThanOrEqual(2.4);
-    expect(hi).toBeGreaterThanOrEqual(6);
-    const len = buildChartRows(tables.length, 'length', 'female', chartRange(30, null), [], 'kg');
-    const [l1, l2] = yDomain(len, 'length');
-    expect(l1 % 5).toBe(0);
-    expect(l2 % 5).toBe(0);
-    expect(yDomain([], 'weight')).toEqual([0, 1]);
+    expect(crowded.map((l) => l.y)).toEqual([0, 11, 22]);
+    expect(spreadLabels([], 11, 0, 100)).toEqual([]);
   });
 });

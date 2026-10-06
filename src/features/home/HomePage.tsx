@@ -156,7 +156,7 @@ function ActiveFeedCard({ timer, onOpen }: { timer: ActiveTimer; onOpen: () => v
     <button
       type="button"
       className="card since card--interactive"
-      aria-label={`${label} · ${side}, ${he.home.active.open}`}
+      aria-label={he.banner.open}
       onClick={onOpen}
     >
       <span className="since__top">
@@ -255,11 +255,11 @@ function SinceCard({
 // ---------------------------------------------------------------- quick add
 
 function ActiveTimerMeta({ timer }: { timer: ActiveTimer }) {
-  const now = useNow(1000);
+  // Side, not time: the hero above already shows the live time (review P2-1).
   return (
     <>
       {he.home.tile.breastActive}
-      <span className="ltr num">{formatTimer(timerElapsed(timer, now).total)}</span>
+      {SIDE_LABEL[currentSide(timer) ?? 'right']}
     </>
   );
 }

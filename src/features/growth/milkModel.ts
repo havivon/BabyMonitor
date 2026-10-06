@@ -14,6 +14,8 @@ import type { EpochMs, FeedingEntry } from '../../domain/types';
 const HISTORY_DAYS = 7;
 const MIN_DAYS_WITH_FEEDS = 3;
 
+const roundTo10 = (ml: number): number => Math.round(ml / 10) * 10;
+
 export interface MilkGuide {
   range: DailyMilkRange;
   feedsPerDay: number;
@@ -40,9 +42,15 @@ export function milkGuide(
     ? Math.max(1, Math.round(days.reduce((sum, d) => sum + d.feedCount, 0) / days.length))
     : typicalFeedsPerDay(ageDays);
   return {
-    range,
+    // Shown rounded to 10 ml — the guideline is approximate (design review P3-3).
+    range: {
+      ...range,
+      minMl: roundTo10(range.minMl),
+      typicalMl: roundTo10(range.typicalMl),
+      maxMl: roundTo10(range.maxMl),
+    },
     feedsPerDay,
     feedsSource: fromHistory ? 'history' : 'typical',
-    perFeedMl: suggestedPerFeedMl(range.typicalMl, feedsPerDay),
+    perFeedMl: suggestedPerFeedMl(range.typicalMl, feedsPerDay), // 5 ml steps
   };
 }

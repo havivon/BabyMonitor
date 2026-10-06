@@ -15,10 +15,13 @@ export function MilkGuideline({ entries, now }: { entries: FeedingEntry[]; now: 
   const timer = useActiveTimer();
   const { volumeUnit } = useSettings();
   if (!baby) return null;
-  const guide = milkGuide({ baby, entries, measurements, hasActiveTimer: Boolean(timer), now });
+  const guide = milkGuide({ baby, entries, measurements, activeTimer: timer, now });
   if (!guide) return null;
 
-  const { range, todayMl } = guide;
+  const { todayMl } = guide;
+  // Round the guideline to 10 ml so it doesn't look falsely precise (review P3-3).
+  const round10 = (ml: number): number => Math.round(ml / 10) * 10;
+  const range = { minMl: round10(guide.range.minMl), maxMl: round10(guide.range.maxMl) };
   const scale = Math.max(range.maxMl * 1.2, todayMl * 1.05);
   const unit = volumeUnitLabel(volumeUnit);
   const v = (ml: number): string => volumeNumber(ml, volumeUnit);

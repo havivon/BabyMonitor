@@ -235,7 +235,6 @@ export function BabyForm({ initial, submitLabel, onSubmit, onCancel, footerNote 
               type="text"
               inputMode="decimal"
               autoComplete="off"
-              placeholder={weightUnit === 'kg' ? '3.30' : '7.3'}
               value={values.weight}
               aria-invalid={Boolean(shown('weight')) || undefined}
               aria-describedby={shown('weight') ? ids.weightErr : ids.weightHint}

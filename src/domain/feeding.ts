@@ -11,6 +11,7 @@
 import { addDays, startOfDay } from 'date-fns';
 import { toDateKey } from './dates';
 import type {
+  ActiveTimer,
   BottleContent,
   BreastEntry,
   BreastSegment,
@@ -305,4 +306,32 @@ export function groupByDay<T extends FeedingEntry>(entries: readonly T[]): DayGr
     else groups.push({ date, entries: [e] });
   }
   return groups;
+}
+
+// ---------------------------------------------------------------- feeding mode
+
+/** Window for the "mainly bottle-fed" rule: no breastfeed within the last 72 h. */
+export const MAINLY_BOTTLE_FED_WINDOW_MS = 72 * 60 * 60 * 1000;
+
+/**
+ * "Mainly bottle-fed" (DESIGN §6.20 / §14.3, Team Lead decision 3): at least one bottle and NO
+ * breastfeed started within the last 72 h, and no breastfeeding timer running. Only then is an
+ * ml/kg/day guideline shown — mixed feeding never gets an ml target.
+ * Entries after `now` (clock skew, future-dated) are ignored.
+ */
+export function isMainlyBottleFed(
+  entries: readonly FeedingEntry[],
+  now: EpochMs,
+  activeTimer?: ActiveTimer | null,
+): boolean {
+  if (activeTimer) return false;
+  const since = now - MAINLY_BOTTLE_FED_WINDOW_MS;
+  let bottle = false;
+  for (const e of entries) {
+    const t = entryTime(e);
+    if (t < since || t > now) continue;
+    if (e.type === 'breast') return false;
+    if (e.type === 'bottle') bottle = true;
+  }
+  return bottle;
 }

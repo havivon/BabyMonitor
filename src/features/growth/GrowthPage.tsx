@@ -4,6 +4,7 @@ import { AppHeader } from '../../app/AppHeader';
 import { useToast } from '../../components/toast';
 import { ageInDays } from '../../domain/age';
 import { toDateKey } from '../../domain/dates';
+import { isMainlyBottleFed } from '../../domain/feeding';
 import { growthInsights } from '../../domain/growth/insights';
 import { formatPercentile } from '../../domain/growth/percentiles';
 import { assessSeries, growthSeries } from '../../domain/growth/series';
@@ -16,6 +17,7 @@ import {
   useActiveBaby,
   useActiveEntries,
   useActiveMeasurements,
+  useActiveTimer,
   useSettings,
 } from '../../store';
 import { ageLabel, buildChartRows, chartRange } from './chartModel';
@@ -86,9 +88,14 @@ export function GrowthPage() {
     if (!baby) return undefined;
     return growthSeries(baby, measurements, 'weight').at(-1)?.value;
   }, [baby, measurements]);
+  const timer = useActiveTimer();
+  // Same "mainly bottle-fed" rule as Home and Stats: mixed feeding never gets an ml target.
   const guide = useMemo(
-    () => milkGuide(latestWeight, todayAge, entries, now),
-    [latestWeight, todayAge, entries, now],
+    () =>
+      isMainlyBottleFed(entries, now, timer)
+        ? milkGuide(latestWeight, todayAge, entries, now)
+        : null,
+    [latestWeight, todayAge, entries, now, timer],
   );
 
   if (!baby) return null;

@@ -15,14 +15,20 @@ import { expectedDailyMilk } from '../../domain/growth/milk';
 import { growthSeries } from '../../domain/growth/series';
 import { formatHoursMinutes, formatNumber, mlToOz, UNIT_LABELS } from '../../domain/units';
 import { useNow } from '../../hooks/useNow';
-import { useActiveBaby, useActiveEntries, useActiveMeasurements, useSettings } from '../../store';
+import { isMainlyBottleFed } from '../../domain/feeding';
+import {
+  useActiveBaby,
+  useActiveEntries,
+  useActiveMeasurements,
+  useActiveTimer,
+  useSettings,
+} from '../../store';
 import { signed } from '../growth/ui/format';
 import { Segmented } from '../growth/ui/Segmented';
 import { DayBars } from './StatsCharts';
 import { volumeConverter, volumeUnitLabel } from './volume';
 import {
   chartDays,
-  isMainlyBottleFed,
   daysWithData,
   delta,
   RANGE_OPTIONS,
@@ -43,6 +49,7 @@ interface StatTileProps {
   unit?: string;
   /** Signed text of the change vs the previous period, or null. */
   change: { text: string; direction: number; unit?: string } | null;
+  /** Screen-reader context for the delta, e.g. "לעומת 7 הימים הקודמים". */
   vsLabel: string;
 }
 
@@ -58,14 +65,22 @@ function StatTile({ modifier, icon, label, value, unit, change, vsLabel }: StatT
         {unit && <span className="stat__unit">{unit}</span>}
       </span>
       {change ? (
-        <span className="stat__delta">
-          {change.direction >= 0 ? (
-            <TrendingUp aria-hidden="true" />
+        // Value + unit only, on one line; the comparison period is captioned once under the grid.
+        <span className="stat__delta" style={{ whiteSpace: 'nowrap' }}>
+          {change.text === '0' ? (
+            'ללא שינוי'
           ) : (
-            <TrendingDown aria-hidden="true" />
+            <>
+              {change.direction > 0 ? (
+                <TrendingUp aria-hidden="true" />
+              ) : (
+                <TrendingDown aria-hidden="true" />
+              )}
+              <span className="ltr">{change.text}</span>
+              {change.unit ? ` ${change.unit}` : ''}
+            </>
           )}
-          <span className="ltr">{change.text}</span>
-          {change.unit ? ` ${change.unit}` : ''} {vsLabel}
+          <span className="visually-hidden"> {vsLabel}</span>
         </span>
       ) : (
         <span className="stat__sub">ממוצע יומי</span>
@@ -76,12 +91,16 @@ function StatTile({ modifier, icon, label, value, unit, change, vsLabel }: StatT
 
 const DASH = '—';
 
+/** Left-side breast series: a solid tint that keeps ≥ 3:1 contrast (design review P2-5). */
+const LEFT_BREAST_COLOR = 'color-mix(in srgb, var(--color-breast) 70%, var(--color-surface))';
+
 /** Stats screen (DESIGN §7.8): daily averages vs the previous period, and per-day charts. */
 export function StatsPage() {
   const baby = useActiveBaby();
   const entries = useActiveEntries();
   const measurements = useActiveMeasurements();
   const { volumeUnit } = useSettings();
+  const timer = useActiveTimer();
   const now = useNow(60_000);
   const [range, setRange] = useState<RangeDays>(7);
 
@@ -90,19 +109,23 @@ export function StatsPage() {
   const enoughData = useMemo(() => daysWithData(entries) >= 2, [entries]);
 
   const guideBand = useMemo(() => {
-    if (!baby || !isMainlyBottleFed(entries, now)) return null;
+    if (!baby || !isMainlyBottleFed(entries, now, timer)) return null;
     const weight = growthSeries(baby, measurements, 'weight').at(-1)?.value;
     const r =
       weight === undefined ? null : expectedDailyMilk(weight, ageInDays(baby.birthDate, now));
     if (!r) return null;
-    const conv = (ml: number) => (volumeUnit === 'oz' ? Math.round(mlToOz(ml) * 10) / 10 : ml);
+    // Guideline shown rounded to 10 ml (design review P3-3).
+    const conv = (raw: number) => {
+      const ml = Math.round(raw / 10) * 10;
+      return volumeUnit === 'oz' ? Math.round(mlToOz(ml) * 10) / 10 : ml;
+    };
     return { min: conv(r.minMl), max: conv(r.maxMl) };
-  }, [baby, entries, measurements, now, volumeUnit]);
+  }, [baby, entries, measurements, now, volumeUnit, timer]);
 
   if (!baby) return null;
 
   const { current, previous } = summary;
-  const vsLabel = range === 7 ? 'מהשבוע הקודם' : 'מהתקופה הקודמת';
+  const vsLabel = `לעומת ${range} הימים הקודמים`;
   /** Change vs the previous period, always carrying the metric's unit (except plain counts). */
   const change = (d: number | null, digits: number, unit?: string) =>
     d === null || current.activeDays === 0 || previous.activeDays === 0
@@ -121,14 +144,16 @@ export function StatsPage() {
     <>
       <AppHeader title="סטטיסטיקה" />
       <main className="page" style={{ gap: 'var(--space-4)' }}>
-        <Segmented
-          label="טווח"
-          options={RANGE_SEG}
-          value={String(range) as `${RangeDays}`}
-          onChange={(v) => {
-            setRange(Number(v) as RangeDays);
-          }}
-        />
+        {enoughData && (
+          <Segmented
+            label="טווח"
+            options={RANGE_SEG}
+            value={String(range) as `${RangeDays}`}
+            onChange={(v) => {
+              setRange(Number(v) as RangeDays);
+            }}
+          />
+        )}
         {!enoughData ? (
           <div className="empty">
             <span className="empty__icon">
@@ -216,6 +241,12 @@ export function StatsPage() {
                 vsLabel={vsLabel}
               />
             </div>
+            <p
+              className="text-sm text-muted"
+              style={{ marginBlockStart: 'calc(var(--space-2) * -1)' }}
+            >
+              ממוצע יומי · השינוי לעומת {range} הימים הקודמים
+            </p>
 
             {hasFeeds && (
               <section className="card" aria-labelledby="stats-feeds-title">
@@ -308,7 +339,7 @@ export function StatsPage() {
                   unit={UNIT_LABELS.minutesShort}
                   series={[
                     { key: 'rightMin', label: 'ימין', color: 'var(--color-breast)' },
-                    { key: 'leftMin', label: 'שמאל', color: 'var(--color-breast)', opacity: 0.5 },
+                    { key: 'leftMin', label: 'שמאל', color: LEFT_BREAST_COLOR },
                   ]}
                 />
                 <div className="chart-legend">
@@ -319,7 +350,7 @@ export function StatsPage() {
                   <span className="legend-item">
                     <span
                       className="legend-swatch legend-swatch--breast"
-                      style={{ opacity: 0.5 }}
+                      style={{ background: LEFT_BREAST_COLOR }}
                     />
                     שמאל
                   </span>

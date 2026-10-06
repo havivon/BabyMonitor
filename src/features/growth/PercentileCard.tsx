@@ -102,7 +102,10 @@ export function PercentileCard({ baby, metric, points, weightUnit, tablesReady }
             <Qty q={metricQuantity(metric, latest.value, weightUnit)} />
           </span>
           <span className="text-sm text-muted">
-            {description} · בגיל {formatAge(baby.birthDate, parseDateKey(latest.date)) || 'הלידה'}
+            {description} ·{' '}
+            {latest.ageDays === 0
+              ? 'ביום הלידה'
+              : `בגיל ${formatAge(baby.birthDate, parseDateKey(latest.date))}`}
           </span>
         </div>
       </div>

@@ -9,6 +9,7 @@ Owner: Design · Status: v1, ready for build · Language: Hebrew (RTL) · Compan
 | `src/styles/components.css` | Production CSS for all components. Engineers compose these classes; no per-component CSS needed for v1. |
 | `docs/design/mockup.html` | Static mockup that uses the three CSS files above. Open it in a browser. |
 | `docs/design/mockup-light.png`, `mockup-dark.png` | Screenshots of the mockup (12 screens per theme). |
+| `docs/design/DESIGN-REVIEW.md`, `docs/design/review/` | Design QA of the built app (P1/P2/P3 findings with evidence). |
 
 **Import order** in `main.tsx`: `@fontsource/rubik/400.css`, `500.css`, `600.css`, `700.css`, then `tokens.css`, `global.css`, `components.css`.
 Set `<html lang="he" dir="rtl">` in `index.html`. Set `data-theme="light" | "dark"` on `<html>` when the user picks a theme. Remove the attribute for "auto".
@@ -40,10 +41,11 @@ All colors are tokens. Never write a hex value in a component. The CSS name is a
 |---|---|---|---|
 | `bg` | `#f8f5ef` | `#141211` | App background |
 | `surface` | `#ffffff` | `#1e1b19` | Cards, inputs, lists, tab bar |
-| `surface-2` | `#f2ede4` | `#272320` | Sunken: segmented track, stepper well, hover rows |
+| `surface-2` | `#f2ede4` | `#2e2925` | Sunken: segmented track, stepper well, hover rows |
 | `surface-3` | `#eae4d9` | `#302b27` | Pressed / hover on surface-2, switch track (off) |
 | `surface-raised` | `#ffffff` | `#25211e` | Sheets, dialogs |
 | `thumb` | `#ffffff` | `#3a3530` | Selected segment, stepper buttons |
+| `switch-thumb` | `#ffffff` | `#d9d1c5` | Switch knob when off (on: `on-primary`) |
 | `border` | `#e4dccf` | `#38322d` | Hairlines, card outlines, dividers |
 | `border-strong` | `#8c8276` | `#7d746b` | Input outlines (≥ 3:1) |
 | `text` | `#1f2b29` | `#eae3d8` | Primary text |
@@ -205,7 +207,11 @@ A surface with a 1px border, `shadow-1`, radius 20 and 16px padding (`--card-pad
   - 1 h to 24 h: `<h> שע׳ <m> ד׳`
   - 24 h or more: `<d> ימים` (or `יום אחד` for 1)
   - under 1 min: `עכשיו`
-- While a timer runs, the hero keeps showing the previous feed. The banner owns the live state.
+- **Active-feed variant** (amended after design QA): while a breastfeeding timer exists, the hero becomes the live surface.
+  - Label "הנקה בתהליך", a `badge--breast badge--live` "פעילה" (or neutral "מושהה"), the value `mm:ss` (tabular, LTR), and meta "צד ימין · התחילה ב-06:52".
+  - The whole card is a `button.card.card--interactive.since` with `aria-label="פתיחת טיימר ההנקה"`; it opens the timer sheet.
+  - On Home, **do not render `.timer-banner`** and do not set `.app--has-timer`; the banner stays on every other tab.
+  - The breast tile meta shows "פעילה · ימין" (side, not time), so the live time appears only once on screen.
 
 ### 6.5 Action tile — `.tile` in `.tile-grid`
 A grid of 3 equal columns, 12px gap. Each tile is at least 124px tall, with radius 20, `--tile-soft` background and a 16% tinted border. It contains:
@@ -230,6 +236,7 @@ A sunken track (`surface-2`, radius 14, 4px padding). The selected option gets t
 A pill (40px visual, 48px hit area) with `surface` background, 1px border and a 14px medium label. It is a toggle: `aria-pressed="true"` (or `aria-checked` inside a radiogroup) selects it, giving it `primary-soft` fill, a teal border and semibold text.
 - `__dot` + `--breast/--bottle/--solid/--growth`: category dot, used on filter chips.
 - `--lg`: 48px, radius 14, 16px text, for quick amounts.
+- `--removable`: a value the user added (solids foods). It uses a category-tinted fill (12% of `--dot`), a 45% tinted border, a semibold label, a `__dot` first and an `X` icon last. Combine it with a category modifier: `chip chip--removable chip--solid`, `aria-label="הסרת בטטה"`. Suggestion chips stay plain `chip` with a `Plus` icon.
 
 Containers:
 - `.chip-row`: a horizontal scroller that bleeds to the screen edges; use it for filters, quick times and suggestions.
@@ -241,12 +248,13 @@ Quick-amount behavior: a chip is pressed when its value equals the stepper value
 ### 6.8 Stepper — `.stepper`
 A sunken well (radius 20, 8px padding). DOM order is `[−] value [+]`, which renders as **+ on the left and − on the right** in RTL (increment toward the inline end).
 - `__btn`: 56×56, `thumb` fill, radius 14.
-- `__value`: holds either `__input` (an editable `<input inputmode="numeric">`, 40px semibold, LTR) or a static `__number`, plus `__unit`.
+- `__value`: holds either `__input` (an editable `<input inputmode="numeric">`, 40px semibold, LTR, 3.6ch wide) or a static `__number`, plus `__unit` (8px gap). Pressing ± or a chip keeps focus on that button; never move focus into the input.
 - Step: 10 ml (1 oz in oz mode). Long-press repeats every 120 ms after 400 ms.
 - Range: 0–400 ml. At the bounds the button is disabled.
 
 ### 6.9 Fields — `.field`, `.input`, `.select`, `.textarea`, `.input-group`, `.input--picker`, `.switch`
 - **`.field`** is a column with 8px gap: `__label` (14px semibold, optional `__optional` "(לא חובה)") → control → `__hint` (13px muted) **or** `__error` (13px danger, with a `circle-alert` icon).
+  - Non-blocking warnings (e.g. bottle > 400 ml "כמות גבוהה מהרגיל — לבדוק שוב?") use `<p class="field__hint field__hint--warning" role="status"><TriangleAlert/>…</p>` (warning color, medium weight, 16px icon).
   - Invalid: add `.field--invalid` (or `aria-invalid="true"` on the control) and link the error with `aria-describedby`.
   - Validate on blur and on submit, never while the user is typing.
 - **Inputs** are 48px tall, `surface` background, 1px `border-strong`, radius 10, 17px text.
@@ -260,7 +268,7 @@ A sunken well (radius 20, 8px padding). DOM order is `[−] value [+]`, which re
   - Default: now.
   - `max` = now (no future times).
   - Add quick chips under the field: עכשיו · לפני 15 ד׳ · לפני 30 ד׳ · לפני שעה.
-- **Switch:** `<input type="checkbox" role="switch" class="switch">`, 52×32. When on, the track is teal and the thumb moves to the inline end. Put it inside a `<label class="switch-row">` with `__text`, `__title` and `__hint`.
+- **Switch:** `<input type="checkbox" role="switch" class="switch">`, 52×32. Off: `surface-3` track, `switch-thumb` knob. On: teal track, `on-primary` knob, moved to the inline end. Put it inside a `<label class="switch-row">` with `__text`, `__title` and `__hint`.
 
 ### 6.10 Bottom sheet / modal — `.sheet`, `.scrim`, `.dialog`
 Use native `<dialog class="sheet">` + `showModal()`. This gives you a focus trap, Esc to close and an inert background; `::backdrop` is styled as the scrim. If you use a `div` instead, add `.scrim` and `role="dialog" aria-modal="true"`.
@@ -270,7 +278,8 @@ Use native `<dialog class="sheet">` + `showModal()`. This gives you a focus trap
   - `__header`: `__icon` (36px category bubble from `.sheet--breast/--bottle/--solid/--growth`) + `__title` (22px) + close `.icon-btn` (`x`, aria-label "סגירה").
   - `__body`: scrolls; 24px gap between fields.
   - `__footer`: sticky, hairline on top, safe-area padding. Buttons stretch equally. A `--ghost-danger` button or an icon button keeps its natural width.
-- **Variants:** default height fits the content, up to the viewport minus 24px. `--full` is for the timer.
+- **Variants:** default height fits the content, up to the viewport minus 24px. `--full` is for the timer (not for the one-field stale-timer prompt, which uses the default height).
+- **Sunken controls in sheets:** `.sheet .seg` and `.sheet .stepper` get an inset 1px `border` hairline, so they stay visible on `surface-raised` in dark mode.
 - **Motion:** slides up in 320ms decelerate. Closing slides down in 220ms. Under reduced motion it appears instantly.
 - **Closing:** tap the scrim, press Esc, use the close button, or swipe down on the handle area (optional, ≥ 80px).
   - If the form is dirty, ask "לצאת בלי לשמור?" first. Buttons: "יציאה" (danger) and "המשך עריכה".
@@ -304,6 +313,8 @@ Category modifiers: `--breast/--bottle/--solid/--growth/--primary`. Leave the mo
 
 ### 6.14 Timeline — `.timeline` > `.timeline__day` > `.day-header` + `.timeline__list` > `li` > `.timeline-item`
 - **`.day-header`** is sticky under the app header. `__title` is "היום · יום ב׳, 5 באוקטובר" and `__summary` is "5 האכלות · 360 מ״ל".
+  - It is full-bleed (negative gutter margin), so cards scrolling under it never show at its sides.
+  - Below 560px the summary always sits on its own line under the title; from 560px they share one baseline row.
 - **`.timeline__list`** is a card containing the items.
 - **`.timeline-item`** is a `<button>` that opens the edit sheet. It is a 4-column grid: `__time` (48px, LTR, tabular) · `__icon` (36px soft bubble) · `__body` (`__title` with an optional badge, `__meta`, optional `__note` quote) · `__value` (semibold amount or duration).
   - A 2px rail connects consecutive icons.
@@ -442,10 +453,11 @@ Shared rules:
 Header: `.baby-switch`. Page, in order:
 1. **Hero** `.card.since`:
    - "מאז ההאכלה האחרונה", the value, and the meta (type badge + summary + time).
+   - While a timer exists: the active-feed variant (§6.4), and no timer banner on Home.
    - Next-side `badge--accent badge--lg` with `arrow-left-right`: "הצד הבא: שמאל". Shown only if a breastfeeding exists.
    - Empty: `.empty--compact` with `clock`, "עוד לא נרשמו האכלות" and "בחירה באחד מסוגי ההאכלה כאן למטה תתחיל את הרישום. כל רישום אפשר לערוך אחר כך."
 2. **Quick add** `.tile-grid` (visually hidden h2 "הוספת האכלה"):
-   - הנקה: opens the timer sheet. Meta: "הבא: שמאל", or "פעילה · 12:34" with `--active` when a timer exists.
+   - הנקה: opens the timer sheet. Meta: "הבא: שמאל", or "פעילה · ימין" with `--active` when a timer exists.
    - בקבוק: opens the bottle sheet. Meta: "אחרון: 120 מ״ל".
    - מוצקים: opens the solids sheet. Meta: "אחרון: אתמול" / "אחרון: 12:30".
    - Empty meta: "טיימר ימין/שמאל" / "חלב אם או תמ״ל" / "מזון וכמות".
@@ -559,7 +571,15 @@ Validation: "יש להזין לפחות מזון אחד".
 - Chart cards (each `.card` + `.chart` + `.chart-legend`):
   1. **האכלות לפי יום**: stacked bars by type.
   2. **כמות בקבוק יומית**: bars plus a guideline band (only when a weight exists). Legend "טווח מומלץ (בקבוק בלבד)".
-  3. **זמן הנקה יומי**: bars in breast color.
+  3. **זמן הנקה יומי**: bars stacked by side.
+     - ימין: `var(--color-breast)`.
+     - שמאל: `color-mix(in srgb, var(--color-breast) 70%, var(--color-surface))`, which gives 3.1:1 in light and 4.4:1 in dark. Do not use opacity.
+     - A 2px `--color-surface` separator goes between the segments.
+     - Legend: ימין · שמאל.
+     - Today's partial bar: `fillOpacity={0.45}` on both segments.
+  - **Deltas:** `.stat__delta` holds only the signed value and unit ("+43 מ״ל", "−0.1"), with no wrapping.
+    - One caption under the grid reads "השינוי לעומת {7/14/30} הימים הקודמים".
+    - A zero change reads "ללא שינוי" with no trend icon.
   - Hide a chart when its series has no data. Today's bar is drawn at 45% opacity and labeled "היום".
 - Empty (under 2 days of data): `chart-column` icon, "אין עדיין מספיק נתונים", "אחרי כמה ימים של רישום יופיעו כאן מגמות."
 - Disclaimer under the guideline chart.
@@ -567,7 +587,9 @@ Validation: "יש להזין לפחות מזון אחד".
 ### 7.9 Settings (הגדרות)
 Sections use `.section__eyebrow` + `.list`:
 1. **ילדים**:
-   - A row per baby: avatar, name, "תאריך לידה: 1.7.2026". The active baby gets `badge--primary` "נבחר"; tapping a row selects that baby, and the chevron opens the edit sheet (name, birth date, sex, birth weight, delete with confirm).
+   - A row per baby: avatar, name, "תאריך לידה: 1.7.2026".
+     - The row's end shows `badge--primary` "נבחר" for the active baby. For the others it shows a ghost text button "בחירה" (`aria-label="בחירת {name}"`).
+     - Next to it is an `icon-btn icon-btn--sm` with `Pencil` (`aria-label="עריכת הפרטים של {name}"`). It opens the edit sheet: name, birth date, sex, birth weight, and delete with confirm.
    - `row--primary` "הוספת ילד/ה".
 2. **יחידות ותצוגה**:
    - נפח `seg--inline` מ״ל | oz
@@ -889,10 +911,13 @@ Voice: warm, calm, short, gender-neutral. Use nouns and infinitives for actions 
   - gains: grams with a sign (`+27 גר׳`)
   - cm: 1 decimal
 - **Number before unit**, separated by a space: `120 מ״ל`. Signs and percentages go inside `.ltr`: `<span class="ltr">+76%</span>`.
-- **Age:**
-  - under 1 month: "N ימים"
-  - under 2 years: "N חודשים ו-M ימים"
-  - after that: "N שנים ו-M חודשים"
+- **Age** (`domain/age.ts` `formatAge`; standalone dual forms):
+  - day 0: "היום הראשון"
+  - 1–13 days: "יום אחד", "יומיים", "5 ימים"
+  - 14 days to 2 months: weeks (+ days), e.g. "שבועיים ויום", "3 שבועות ו-2 ימים"
+  - 2–11 months: "חודשיים", "4 חודשים"
+  - from 1 year: "שנה", "שנה ו-2 חודשים", "שנתיים וחודש"
+  - Growth summary at age 0: "ביום הלידה" (not "בגיל היום הראשון").
   - In settings and lists, avoid gendered verbs ("נולדה"); use "תאריך לידה:".
 
 ---
@@ -998,7 +1023,7 @@ Use the outline style, `strokeWidth={2}` (1.75 at ≥ 28px). The size comes from
 | `text` on `surface` | Body text on card | 14.63 | 13.44 |
 | `text-muted` on `bg` | Secondary text | 5.83 | 8.05 |
 | `text-muted` on `surface` | Secondary text on card | 6.35 | 7.39 |
-| `text-muted` on `surface-2` | Secondary text on sunken | 5.44 | 6.72 |
+| `text-muted` on `surface-2` | Secondary text on sunken | 5.44 | 6.20 |
 | `text-muted` on `surface-raised` | Muted text in sheets | 6.35 | 6.89 |
 | `text-subtle` on `surface` | Placeholder/tertiary | 5.43 | 5.52 |
 | `text-subtle` on `bg` | Tertiary on bg | 4.99 | 6.02 |
@@ -1034,10 +1059,15 @@ Use the outline style, `strokeWidth={2}` (1.75 at ≥ 28px). The size comes from
 | `toast-text` on `toast-bg` | Toast text | 11.94 | 9.51 |
 | `toast-action` on `toast-bg` | Toast "בטל" action | 8.79 | 7.11 |
 | `border-strong` on `surface` | Input outline (UI ≥ 3) | 3.77 | 3.74 |
+| `switch-thumb` on `surface-3` | Switch knob (off) on track ¹ | 1.27 | 9.25 |
+| `on-primary` on `primary` | Switch knob (on) on track | 5.51 | 8.19 |
+| `warning` on `surface-raised` | Warning hint in sheets | 5.93 | 8.96 |
 | `focus-ring` on `bg` | Focus ring (UI ≥ 3) | 5.06 | 9.43 |
 | `focus-ring` on `surface` | Focus ring on card (UI ≥ 3) | 5.51 | 8.65 |
 | `chart-axis` on `surface` | Axis ticks | 6.35 | 7.39 |
 | `growth` on `chart-band-inner` | Baby line over band (graphic ≥ 3) | 4.64 | 6.16 |
+
+  ¹ Light off-state: the white knob carries `shadow-1`, and the control boundary is `border-strong` (3.77:1). This matches platform switches; state is also conveyed by knob position and `aria-checked`.
 
   `accent` (apricot) is decorative only. It is used for the dashed next-side border, which always comes with the "הבא בתור" text pill.
 
@@ -1075,9 +1105,9 @@ Use the outline style, `strokeWidth={2}` (1.75 at ≥ 28px). The size comes from
 
 **Tiles:** `tile-grid` `tile` `tile--breast` `tile--bottle` `tile--solid` `tile--growth` `tile--active` `tile__icon` `tile__label` `tile__meta`
 
-**Selection controls:** `seg` `seg--lg` `seg--inline` `seg__option` `chip` `chip--lg` `chip--breast` `chip--bottle` `chip--solid` `chip--growth` `chip__dot` `chip-row` `chip-grid` `stepper` `stepper__btn` `stepper__value` `stepper__input` `stepper__number` `stepper__unit` `switch` `switch-row` `switch-row__text` `switch-row__title` `switch-row__hint`
+**Selection controls:** `seg` `seg--lg` `seg--inline` `seg__option` `chip` `chip--lg` `chip--removable` `chip--breast` `chip--bottle` `chip--solid` `chip--growth` `chip__dot` `chip-row` `chip-grid` `stepper` `stepper__btn` `stepper__value` `stepper__input` `stepper__number` `stepper__unit` `switch` `switch-row` `switch-row__text` `switch-row__title` `switch-row__hint`
 
-**Fields:** `field` `field--invalid` `field__label` `field__optional` `field__hint` `field__error` `input` `input--num` `input--picker` `input__value` `input__native` `select` `select-wrap` `textarea` `input-group` `input-group__affix`
+**Fields:** `field` `field--invalid` `field__label` `field__optional` `field__hint` `field__hint--warning` `field__error` `input` `input--num` `input--picker` `input__value` `input__native` `select` `select-wrap` `textarea` `input-group` `input-group__affix`
 
 **Overlays:** `scrim` `sheet` `sheet--full` `sheet--breast` `sheet--bottle` `sheet--solid` `sheet--growth` `sheet__handle` `sheet__header` `sheet__icon` `sheet__title` `sheet__body` `sheet__footer` `dialog` `dialog__icon` `dialog__title` `dialog__text` `dialog__actions` `toast-region` `toast` `toast--error` `toast__icon` `toast__text` `toast__action`
 
@@ -1110,3 +1140,13 @@ Use the outline style, `strokeWidth={2}` (1.75 at ≥ 28px). The size comes from
 5. **Timer max:** to keep a forgotten timer from saving a 6-hour feed, auto-pause after 90 min. Then show the banner "הטיימר פועל כבר שעה וחצי — לסיים?" (proposal; needs Team Lead sign-off).
 6. **Icons for the PWA** (192/512/maskable) are not designed in this pass. The proposal is the `brand-mark`: teal gradient rounded square with a white `droplet`. Design can export SVG/PNG on request.
 7. **Fonts:** the mockup loads Rubik from Google Fonts. The app must use `@fontsource/rubik` (offline). No other font weights are needed.
+
+---
+
+## 15. Changelog
+- **v1.1 (after design QA, see DESIGN-REVIEW.md):**
+  - Dark `surface-2` changed to `#2e2925`. New `switch-thumb` token. Sheet seg/stepper hairline.
+  - Stepper input is 3.6ch with an 8px gap.
+  - Full-bleed sticky `.day-header`.
+  - New classes `.chip--removable` and `.field__hint--warning`.
+  - Spec amendments: age wording, the active-feed hero on Home (no banner on Home), Settings baby-row actions, the breastfeeding chart split by side, and Stats delta format.

@@ -21,6 +21,7 @@
   --color-surface-3: #eae4d9;       /* hover/pressed fill on surface-2 */
   --color-surface-raised: #ffffff;  /* sheets, dialogs, menus */
   --color-thumb: #ffffff;           /* selected segment / stepper buttons */
+  --color-switch-thumb: #ffffff;    /* switch knob when off; on = --color-on-primary */
   --color-border: #e4dccf;          /* hairlines, card outlines, dividers */
   --color-border-strong: #8c8276;   /* input outlines (≥3:1 vs surface) */
 
@@ -103,10 +104,11 @@
 
   --color-bg: #141211;
   --color-surface: #1e1b19;
-  --color-surface-2: #272320;
+  --color-surface-2: #2e2925;       /* ≥ 1.1:1 vs surface-raised so tracks show in sheets */
   --color-surface-3: #302b27;
   --color-surface-raised: #25211e;
   --color-thumb: #3a3530;
+  --color-switch-thumb: #d9d1c5;    /* 9.25:1 on the off track */
   --color-border: #38322d;
   --color-border-strong: #7d746b;
 
@@ -183,10 +185,11 @@
 
     --color-bg: #141211;
     --color-surface: #1e1b19;
-    --color-surface-2: #272320;
+    --color-surface-2: #2e2925;
     --color-surface-3: #302b27;
     --color-surface-raised: #25211e;
     --color-thumb: #3a3530;
+    --color-switch-thumb: #d9d1c5;
     --color-border: #38322d;
     --color-border-strong: #7d746b;
 

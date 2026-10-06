@@ -734,6 +734,24 @@
   font-weight: var(--fw-semibold);
 }
 
+/* User-added value with a remove ✕ (solids foods) — distinct from suggestion chips:
+   category-tinted fill + dot + ✕ at the inline end.
+   <button class="chip chip--removable chip--solid" aria-label="הסרת בטטה">
+     <span class="chip__dot"></span>בטטה<X/></button> */
+.chip--removable {
+  background: color-mix(in srgb, var(--dot) 12%, var(--color-surface));
+  border-color: color-mix(in srgb, var(--dot) 45%, transparent);
+  color: var(--color-text);
+  font-weight: var(--fw-semibold);
+  padding-inline-end: var(--space-3);
+}
+.chip--removable:hover {
+  background: color-mix(in srgb, var(--dot) 20%, var(--color-surface));
+}
+.chip--removable svg {
+  color: var(--color-text-muted);
+}
+
 .chip__dot {
   inline-size: 8px;
   block-size: 8px;
@@ -812,13 +830,13 @@
   display: flex;
   align-items: baseline;
   justify-content: center;
-  gap: var(--space-1);
+  gap: var(--space-2);
   min-inline-size: 0;
 }
 
 .stepper__input,
 .stepper__number {
-  inline-size: 4.2ch;
+  inline-size: 3.6ch;
   padding: 0;
   border: 0;
   background: transparent;
@@ -830,11 +848,11 @@
   direction: ltr;
   unicode-bidi: isolate;
   color: var(--color-text);
-  border-radius: var(--radius-xs);
+  border-radius: var(--radius-sm);
 }
 .stepper__number { inline-size: auto; }
 
-.stepper__input:focus-visible { outline-offset: 4px; }
+.stepper__input:focus-visible { outline-offset: 2px; }
 
 .stepper__unit {
   font-size: var(--fs-body);
@@ -875,6 +893,15 @@
   line-height: var(--lh-caption);
   color: var(--color-text-muted);
 }
+
+.field__hint--warning {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-1);
+  font-weight: var(--fw-medium);
+  color: var(--color-warning);
+}
+.field__hint--warning svg { inline-size: 16px; block-size: 16px; margin-block-start: 1px; }
 
 .field__error {
   display: flex;
@@ -1060,9 +1087,11 @@
   inline-size: 24px;
   block-size: 24px;
   border-radius: var(--radius-pill);
-  background: var(--color-surface);
+  background: var(--color-switch-thumb);
   box-shadow: var(--shadow-1);
-  transition: transform var(--dur-base) var(--ease-standard);
+  transition:
+    transform var(--dur-base) var(--ease-standard),
+    background-color var(--dur-base) var(--ease-standard);
 }
 
 .switch::after { content: ""; position: absolute; inset: -8px -4px; }
@@ -1071,6 +1100,8 @@
   background: var(--color-primary);
   border-color: var(--color-primary);
 }
+
+.switch:checked::before { background: var(--color-on-primary); }
 
 /* Thumb travels toward inline-end (left in RTL) */
 .switch:checked::before { transform: translateX(-20px); }
@@ -1137,6 +1168,12 @@
   box-shadow: var(--shadow-sheet), var(--shadow-inset-hl);
   overflow: hidden;
   animation: bm-sheet-in var(--dur-slow) var(--ease-decelerate);
+}
+
+/* Sunken controls inside a sheet get a hairline so they read on --surface-raised (dark) */
+.sheet .seg,
+.sheet .stepper {
+  box-shadow: inset 0 0 0 1px var(--color-border);
 }
 
 /* Author `display` would otherwise override the UA rule that hides closed dialogs */
@@ -1508,12 +1545,23 @@ dialog.dialog:not([open]) {
   inset-block-start: calc(var(--header-h) + var(--safe-top));
   z-index: var(--z-sticky);
   display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: var(--space-3);
-  padding-block: var(--space-3) var(--space-1);
-  padding-inline: var(--space-1);
+  flex-direction: column;          /* phones: summary always under the title */
+  align-items: flex-start;
+  gap: 0;
+  /* full-bleed, so cards scrolling underneath never peek out at the sides */
+  margin-inline: calc(var(--gutter) * -1);
+  padding-block: var(--space-3) var(--space-2);
+  padding-inline: calc(var(--gutter) + var(--space-1));
   background: var(--color-bg);
+}
+
+@media (min-width: 560px) {
+  .day-header {
+    flex-direction: row;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--space-3);
+  }
 }
 
 .day-header__title {
@@ -1526,7 +1574,6 @@ dialog.dialog:not([open]) {
   font-size: var(--fs-caption);
   line-height: var(--lh-caption);
   color: var(--color-text-muted);
-  text-align: end;
 }
 
 .timeline-item {

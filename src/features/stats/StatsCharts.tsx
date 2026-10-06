@@ -46,7 +46,6 @@ interface Series {
   key: keyof ChartDay;
   label: string;
   color: string;
-  opacity?: number;
 }
 
 function DayTooltip({
@@ -71,10 +70,7 @@ function DayTooltip({
         const raw = Number(day[s.key]);
         return (
           <span key={s.key} className="chart-tooltip__row">
-            <span
-              className="legend-swatch"
-              style={{ background: s.color, opacity: s.opacity ?? 1 }}
-            />
+            <span className="legend-swatch" style={{ background: s.color }} />
             {s.label}
             <strong>
               <span className="ltr num">{convert ? convert(raw) : formatNumber(raw)}</span>
@@ -172,7 +168,6 @@ export function DayBars({
               name={s.label}
               stackId={series.length > 1 ? 'stack' : undefined}
               fill={s.color}
-              fillOpacity={s.opacity ?? 1}
               stroke={series.length > 1 ? 'var(--color-surface)' : undefined}
               strokeWidth={series.length > 1 ? 2 : 0}
               barSize={barSize}
@@ -182,7 +177,7 @@ export function DayBars({
               shape={(props: BarShapeProps) => (
                 <Rectangle
                   {...props}
-                  fillOpacity={(s.opacity ?? 1) * (days[props.index]?.isToday ? TODAY_OPACITY : 1)}
+                  fillOpacity={days[props.index]?.isToday ? TODAY_OPACITY : 1}
                 />
               )}
             />

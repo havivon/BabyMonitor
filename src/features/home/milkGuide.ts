@@ -3,18 +3,14 @@
  * Pure: all medical-adjacent numbers come from `domain/growth/milk`.
  */
 import { ageInDays } from '../../domain/age';
-import { MS_PER_HOUR } from '../../domain/dates';
-import { dailyAggregates, entryTime, todayTotals } from '../../domain/feeding';
+import { dailyAggregates, isMainlyBottleFed, todayTotals } from '../../domain/feeding';
 import {
   expectedDailyMilk,
   suggestedPerFeedMl,
   typicalFeedsPerDay,
   type DailyMilkRange,
 } from '../../domain/growth/milk';
-import type { Baby, EpochMs, FeedingEntry, Measurement } from '../../domain/types';
-
-/** "Mainly bottle-fed" = no breastfeed logged within this window (and at least one bottle). */
-export const BOTTLE_ONLY_WINDOW_MS = 72 * MS_PER_HOUR;
+import type { ActiveTimer, Baby, EpochMs, FeedingEntry, Measurement } from '../../domain/types';
 
 export interface MilkGuide {
   range: DailyMilkRange;
@@ -34,34 +30,24 @@ export function latestWeightG(baby: Baby, measurements: readonly Measurement[]):
 }
 
 /**
- * The guideline applies only to a mainly bottle-fed baby (no breastfeed in 72 h, ≥ 1 bottle in
- * 72 h, no running breastfeeding timer) under ~6 months with a known weight. Returns `null`
+ * The guideline applies only to a mainly bottle-fed baby (shared domain rule `isMainlyBottleFed`:
+ * no breastfeed in 72 h, ≥ 1 bottle, no running timer) under ~6 months with a known weight. Returns `null`
  * otherwise, so mixed feeding never gets an ml target (DESIGN §14.3).
  */
 export function milkGuide(input: {
   baby: Baby;
   entries: readonly FeedingEntry[];
   measurements: readonly Measurement[];
-  hasActiveTimer: boolean;
+  activeTimer: ActiveTimer | null;
   now: EpochMs;
 }): MilkGuide | null {
-  const { baby, entries, measurements, hasActiveTimer, now } = input;
-  if (hasActiveTimer) return null;
+  const { baby, entries, measurements, activeTimer, now } = input;
+  if (!isMainlyBottleFed(entries, now, activeTimer)) return null;
   const weightG = latestWeightG(baby, measurements);
   if (weightG === null) return null;
   const ageDays = ageInDays(baby.birthDate, now);
   const range = expectedDailyMilk(weightG, ageDays);
   if (!range) return null;
-
-  const since = now - BOTTLE_ONLY_WINDOW_MS;
-  let bottle = false;
-  for (const e of entries) {
-    const t = entryTime(e);
-    if (t < since || t > now) continue;
-    if (e.type === 'breast') return null;
-    if (e.type === 'bottle') bottle = true;
-  }
-  if (!bottle) return null;
 
   // Feeds per day: the baby's own bottle count over the last 3 complete days, else the age norm.
   const days = dailyAggregates(entries, 4, now)

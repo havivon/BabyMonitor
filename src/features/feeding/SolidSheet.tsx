@@ -1,4 +1,4 @@
-import { Apple, Check, Plus, Trash2, X } from 'lucide-react';
+import { Apple, Check, CircleAlert, Plus, Trash2, X } from 'lucide-react';
 import { useId, useRef, useState, type SyntheticEvent, type KeyboardEvent } from 'react';
 import { Field } from '../../components/Field';
 import { describedBy } from '../../components/dom';
@@ -6,13 +6,19 @@ import { RadioGroup, type RadioOption } from '../../components/RadioGroup';
 import { Sheet } from '../../components/Sheet';
 import type { SolidEntry } from '../../domain/types';
 import { useNow } from '../../hooks/useNow';
+import { isolateNumbers } from '../../i18n/format';
 import { he } from '../../i18n/he';
 import { selectActiveRecentFoods, useAppStore, useActiveBaby } from '../../store';
 import { TimeField } from './TimeField';
 import { isFuture, nowChoice, resolveTime, type TimeChoice } from './timeChoice';
 import { useEntryActions } from './useEntryActions';
 
-const toOption = (label: string): RadioOption<string> => ({ value: label, label });
+// Labels keep number ranges LTR ("2–3 כפיות", design review P1-1); the accessible name stays plain.
+const toOption = (label: string): RadioOption<string> => ({
+  value: label,
+  label: isolateNumbers(label),
+  ariaLabel: label,
+});
 const AMOUNT_OPTIONS = he.solid.amounts.map(toOption);
 const REACTION_OPTIONS = he.solid.reactions.map(toOption);
 const MAX_FOOD_LENGTH = 40;
@@ -201,28 +207,22 @@ export function SolidSheet({ open, onClose, entry }: SolidSheetProps) {
       }
     >
       <form id={ids.form} className="stack stack--6" noValidate onSubmit={submit}>
-        <Field
-          label={he.solid.food}
-          htmlFor={ids.food}
-          hint={he.solid.foodHint}
-          hintId={ids.foodHint}
-          error={showFoodError || null}
-          errorId={ids.foodErr}
-        >
+        <Field label={he.solid.food} htmlFor={ids.food}>
           {foods.length > 0 && (
             <ul className="cluster" role="list" aria-label={he.solid.food}>
               {foods.map((food) => (
                 <li key={norm(food)}>
                   <button
                     type="button"
-                    className="chip is-selected"
+                    className="chip chip--solid"
                     aria-label={he.solid.removeFood(food)}
                     onClick={() => {
                       setFoods((f) => f.filter((x) => x !== food));
                       foodInput.current?.focus();
                     }}
                   >
-                    {food}
+                    <span className="chip__dot" aria-hidden="true" />
+                    {isolateNumbers(food)}
                     <X aria-hidden="true" />
                   </button>
                 </li>
@@ -252,6 +252,17 @@ export function SolidSheet({ open, onClose, entry }: SolidSheetProps) {
             onKeyDown={onFoodKeyDown}
             onBlur={commitDraft}
           />
+          {/* Hint / error directly under the input, above the suggestions (review P3-7). */}
+          {showFoodError ? (
+            <span className="field__error" id={ids.foodErr}>
+              <CircleAlert aria-hidden="true" />
+              {foodError}
+            </span>
+          ) : (
+            <span className="field__hint" id={ids.foodHint}>
+              {he.solid.foodHint}
+            </span>
+          )}
           {suggestions.length > 0 && (
             <div className="chip-row" role="group" aria-label={he.solid.recent}>
               {suggestions.map((food) => (
@@ -263,7 +274,7 @@ export function SolidSheet({ open, onClose, entry }: SolidSheetProps) {
                   onClick={() => setFoods((f) => addUnique(f, [food]))}
                 >
                   <Plus aria-hidden="true" />
-                  {food}
+                  {isolateNumbers(food)}
                 </button>
               ))}
             </div>

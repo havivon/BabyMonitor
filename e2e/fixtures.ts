@@ -297,6 +297,11 @@ export function timelineItems(scope: Page | Locator): Locator {
   return scope.locator('.timeline-item');
 }
 
+/** Text with ALL whitespace removed (for values whose parts are separated only by CSS gaps). */
+export async function compactText(locator: Locator): Promise<string> {
+  return (await text(locator)).replace(/\s+/g, '');
+}
+
 /** Normalised text (collapses whitespace, strips bidi isolation marks). */
 export async function text(locator: Locator): Promise<string> {
   const t = (await locator.textContent()) ?? '';

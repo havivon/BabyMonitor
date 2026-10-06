@@ -37,7 +37,11 @@ describe('HomePage hero', () => {
     act(() => {
       vi.advanceTimersByTime(4 * MIN + 5000);
     });
-    const hero = screen.getByRole('button', { name: /^הנקה בתהליך · ימין/ });
+    const hero = screen.getByRole('button', { name: 'פתיחת טיימר ההנקה' });
+    expect(hero).toHaveTextContent('הנקה בתהליך');
+    expect(screen.getByRole('button', { name: 'הנקה פעילה, פתיחת הטיימר' })).toHaveTextContent(
+      'פעילה · ימין',
+    );
     expect(hero).toHaveTextContent('04:05');
     expect(hero).toHaveTextContent('צד ימין · התחילה ב-14:00');
     expect(screen.queryByText('מאז ההאכלה האחרונה')).not.toBeInTheDocument();
@@ -53,6 +57,8 @@ describe('HomePage hero', () => {
       appStore.getState().pauseTimer(baby.id);
     });
     renderInShell(<HomePage />);
-    expect(screen.getByRole('button', { name: /^הנקה מושהית · שמאל/ })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'פתיחת טיימר ההנקה' })).toHaveTextContent(
+      'הנקה מושהית',
+    );
   });
 });

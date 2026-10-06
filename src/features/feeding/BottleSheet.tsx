@@ -1,4 +1,4 @@
-import { Check, Droplet, Milk, Trash2 } from 'lucide-react';
+import { Check, Droplet, Milk, Trash2, TriangleAlert } from 'lucide-react';
 import { useId, useState, type SyntheticEvent } from 'react';
 import { Field } from '../../components/Field';
 import { describedBy } from '../../components/dom';
@@ -232,9 +232,16 @@ export function BottleSheet({ open, onClose, entry }: BottleSheetProps) {
             ))}
           </div>
           {showWarning && (
-            <span className="field__hint" id={amountWarnId} role="status">
+            // Warning tone (review P3-4): allowed, but should not be missed.
+            <p
+              className="field__error"
+              style={{ color: 'var(--color-warning)' }}
+              id={amountWarnId}
+              role="status"
+            >
+              <TriangleAlert aria-hidden="true" />
               {he.bottle.warnHigh}
-            </span>
+            </p>
           )}
         </Field>
 

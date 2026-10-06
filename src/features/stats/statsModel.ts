@@ -137,19 +137,3 @@ export function chartDays(
 export function daysWithData(entries: readonly FeedingEntry[]): number {
   return new Set(entries.map((e) => toDateKey(entryTime(e)))).size;
 }
-
-/** No breastfeeding in this window → bottle is the main milk source (DESIGN §6.20 / §14.3). */
-export const MAINLY_BOTTLE_WINDOW_MS = 72 * 60 * 60 * 1000;
-
-/**
- * True when bottle feeds are the main source: at least one bottle and no breastfeed in the last
- * 72 h. Only then is an ml/kg guideline band meaningful (mixed feeding gets no ml target).
- */
-export function isMainlyBottleFed(entries: readonly FeedingEntry[], now: EpochMs): boolean {
-  const from = now - MAINLY_BOTTLE_WINDOW_MS;
-  const recent = entries.filter((e) => {
-    const t = entryTime(e);
-    return t >= from && t <= now;
-  });
-  return recent.some((e) => e.type === 'bottle') && !recent.some((e) => e.type === 'breast');
-}

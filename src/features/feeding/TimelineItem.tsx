@@ -4,7 +4,7 @@ import { formatClock } from '../../domain/dates';
 import { breastDurations, entryTime } from '../../domain/feeding';
 import type { FeedingEntry, VolumeUnit } from '../../domain/types';
 import { formatDuration } from '../../domain/units';
-import { volumeNumber, volumeUnitLabel } from '../../i18n/format';
+import { isolateNumbers, volumeNumber, volumeUnitLabel } from '../../i18n/format';
 import { CONTENT_LABEL, he, TYPE_LABEL } from '../../i18n/he';
 import { Parts } from '../../components/Parts';
 import { breastMeta } from './breastEntry';
@@ -46,10 +46,16 @@ export const TimelineItem = memo(function TimelineItem({ entry, unit, onOpen }: 
       icon = <Apple aria-hidden="true" />;
       isNew = Boolean(entry.isNewFood);
       // Foods may wrap between each other; each food and the amount stay whole.
+      // isolateNumbers keeps "2–3 כפיות" from rendering as "3–2" (review P1-1).
       const items = entry.foods.map((f, i) =>
-        i < entry.foods.length - 1 ? `${f},` : entry.amount ? `${f} ·` : f,
+        isolateNumbers(i < entry.foods.length - 1 ? `${f},` : entry.amount ? `${f} ·` : f),
       );
-      meta = <Parts items={entry.amount ? [...items, entry.amount] : items} separator="" />;
+      meta = (
+        <Parts
+          items={entry.amount ? [...items, isolateNumbers(entry.amount)] : items}
+          separator=""
+        />
+      );
       const reaction = entry.reaction?.trim();
       if (reaction && reaction !== he.solid.reactionNone) notes.push(reaction);
       break;
@@ -73,7 +79,7 @@ export const TimelineItem = memo(function TimelineItem({ entry, unit, onOpen }: 
         {meta && <span className="timeline-item__meta">{meta}</span>}
         {notes.map((n, i) => (
           <span key={i} className="timeline-item__note">
-            {n}
+            {isolateNumbers(n)}
           </span>
         ))}
       </span>

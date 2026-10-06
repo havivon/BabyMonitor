@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { bottle, breast, HOUR, local, solid } from '../../test/helpers';
-import { chartDays, daysWithData, delta, isMainlyBottleFed, statsSummary } from './statsModel';
+import { chartDays, daysWithData, delta, statsSummary } from './statsModel';
 
 const NOW = local(2026, 10, 5, 12); // Monday
 
@@ -82,18 +82,5 @@ describe('chartDays', () => {
   it('counts days with data', () => {
     expect(daysWithData([...day(0, 2, 90), ...day(3, 1, 90)])).toBe(2);
     expect(daysWithData([])).toBe(0);
-  });
-});
-
-describe('isMainlyBottleFed', () => {
-  it('requires bottles and no breastfeeding in the last 72 h', () => {
-    expect(isMainlyBottleFed(day(1, 6, 120), NOW)).toBe(true);
-    expect(
-      isMainlyBottleFed([...day(1, 6, 120), breast(NOW - 70 * HOUR, [['left', 10]])], NOW),
-    ).toBe(false);
-    expect(
-      isMainlyBottleFed([...day(1, 6, 120), breast(NOW - 80 * HOUR, [['left', 10]])], NOW),
-    ).toBe(true);
-    expect(isMainlyBottleFed([], NOW)).toBe(false);
   });
 });

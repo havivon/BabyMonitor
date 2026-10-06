@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { Baby } from '../../domain/types';
-import { bottle, breast, DAY, HOUR, local, measurement } from '../../test/helpers';
+import { bottle, breast, DAY, HOUR, local, measurement, MIN } from '../../test/helpers';
 import { milkGuide } from './milkGuide';
 
 const NOW = local(2026, 10, 5, 18, 0);
@@ -21,7 +21,7 @@ describe('milkGuide', () => {
       baby,
       entries: bottles,
       measurements: weights,
-      hasActiveTimer: false,
+      activeTimer: null,
       now: NOW,
     });
     expect(g).toMatchObject({
@@ -38,7 +38,7 @@ describe('milkGuide', () => {
       baby,
       entries: [bottle(NOW - HOUR, 90)],
       measurements: [],
-      hasActiveTimer: false,
+      activeTimer: null,
       now: NOW,
     });
     expect(g?.weightG).toBe(3300);
@@ -46,11 +46,17 @@ describe('milkGuide', () => {
   });
 
   it('is hidden with breastfeeding in the last 72 h, a running timer, no bottles, or after 6 months', () => {
-    const base = { baby, measurements: weights, hasActiveTimer: false, now: NOW };
+    const base = { baby, measurements: weights, activeTimer: null, now: NOW };
     expect(
       milkGuide({ ...base, entries: [...bottles, breast(NOW - 2 * DAY, [['left', 10]])] }),
     ).toBeNull();
-    expect(milkGuide({ ...base, entries: bottles, hasActiveTimer: true })).toBeNull();
+    expect(
+      milkGuide({
+        ...base,
+        entries: bottles,
+        activeTimer: { babyId: 'baby1', segments: [{ side: 'left', startedAt: NOW - MIN }] },
+      }),
+    ).toBeNull();
     expect(milkGuide({ ...base, entries: [] })).toBeNull();
     expect(
       milkGuide({ ...base, entries: bottles, baby: { ...baby, birthDate: '2026-01-01' } }),

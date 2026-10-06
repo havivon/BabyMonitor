@@ -101,17 +101,22 @@ export function MeasurementList({ baby, measurements, metric, weightUnit, tables
               </span>
               <span className="row__body">
                 <span className="row__title">{formatDateLong(m.date)}</span>
-                {(others.length > 0 || m.note) && (
-                  <span className="row__sub">
-                    {others.map((node, i) => (
-                      <span key={i}>
-                        {i > 0 && ' · '}
-                        {node}
-                      </span>
-                    ))}
-                    {m.note && `${others.length > 0 ? ' · ' : ''}${m.note}`}
-                  </span>
-                )}
+                {(() => {
+                  const parts: React.ReactNode[] = [];
+                  if (m.date === baby.birthDate) parts.push('משקל לידה');
+                  parts.push(...others);
+                  if (m.note) parts.push(m.note);
+                  return parts.length > 0 ? (
+                    <span className="row__sub">
+                      {parts.map((node, i) => (
+                        <span key={i}>
+                          {i > 0 && ' · '}
+                          {node}
+                        </span>
+                      ))}
+                    </span>
+                  ) : null;
+                })()}
               </span>
               <EndValue
                 baby={baby}
