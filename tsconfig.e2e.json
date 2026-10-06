@@ -1,8 +1,9 @@
 {
   "compilerOptions": {
-    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.node.tsbuildinfo",
+    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.e2e.tsbuildinfo",
     "target": "ES2023",
-    "lib": ["ES2023"],
+    // DOM: callbacks passed to page.evaluate()/locator.evaluate() run in the browser.
+    "lib": ["ES2023", "DOM", "DOM.Iterable"],
     "module": "ESNext",
     "types": ["node"],
     "skipLibCheck": true,
@@ -21,5 +22,5 @@
     "erasableSyntaxOnly": true,
     "resolveJsonModule": true
   },
-  "include": ["vite.config.ts", "vitest.config.ts", "package.json"]
+  "include": ["e2e/**/*.ts", "playwright.config.ts"]
 }
