@@ -17,6 +17,7 @@ import { ConfirmDialog } from '../../components/ConfirmDialog';
 import { Field } from '../../components/Field';
 import { describedBy } from '../../components/dom';
 import { DateTimePicker } from '../../components/Pickers';
+import { Parts } from '../../components/Parts';
 import { Sheet } from '../../components/Sheet';
 import { useToast } from '../../components/toast';
 import { formatClock, MS_PER_MINUTE } from '../../domain/dates';
@@ -394,16 +395,18 @@ export function TimerSheet({ open, onClose }: TimerSheetProps) {
                 <div className="timer__breakdown">
                   <span>
                     {he.timer.previous}
-                    {lastSideOf(previous) && (
-                      <strong>{SIDE_LABEL[lastSideOf(previous) ?? 'right']}</strong>
-                    )}
-                    {' · '}
-                    <span className="ltr num">
-                      {roundMinutes(breastDurations(previous).total)}
-                    </span>{' '}
-                    {he.units.min}
-                    {' · '}
-                    <span className="ltr num">{formatClock(previous.startedAt)}</span>
+                    <Parts
+                      items={[
+                        <strong key="side">{SIDE_LABEL[lastSideOf(previous) ?? 'right']}</strong>,
+                        <>
+                          <span className="ltr num">
+                            {roundMinutes(breastDurations(previous).total)}
+                          </span>{' '}
+                          {he.units.min}
+                        </>,
+                        <span className="ltr num">{formatClock(previous.startedAt)}</span>,
+                      ]}
+                    />
                   </span>
                 </div>
               )

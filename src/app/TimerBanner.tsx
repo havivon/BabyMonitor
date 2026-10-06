@@ -43,7 +43,7 @@ export function TimerBanner({ timer, onOpen }: TimerBannerProps) {
           <span className="timer-banner__title">
             {paused ? he.banner.titlePaused(side) : he.banner.title(side)}
           </span>
-          <span className="timer-banner__meta">
+          <span className="timer-banner__meta nowrap">
             {he.banner.meta}
             <span className="ltr num">{formatClock(startedAt)}</span>
           </span>

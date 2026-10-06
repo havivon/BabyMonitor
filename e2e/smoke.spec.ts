@@ -34,7 +34,7 @@ test('serves a valid Hebrew web app manifest', async ({ request }) => {
   expect(res.ok()).toBe(true);
   const manifest = (await res.json()) as Record<string, unknown>;
   expect(manifest).toMatchObject({
-    name: 'מעקב האכלה לתינוק',
+    name: 'BabyMonitor — מעקב האכלה וגדילה',
     short_name: 'מעקב האכלה',
     lang: 'he',
     dir: 'rtl',

@@ -80,7 +80,8 @@ function validate(v: Values, unit: WeightUnit, today: string): Errors {
  * for WHO percentiles) and optional birth weight in the user's weight unit. Validates on blur and
  * on submit (never while typing) and focuses the first invalid field on a failed submit.
  *
- * Note: saving the birth weight as a Measurement on the birth date is the caller's job.
+ * The birth weight is returned as `birthWeightG` only — it is the single source of truth (growth
+ * plots it as the birth point); callers must NOT also create a Measurement for it.
  */
 export function BabyForm({ initial, submitLabel, onSubmit, onCancel, footerNote }: BabyFormProps) {
   const { weightUnit } = useSettings();

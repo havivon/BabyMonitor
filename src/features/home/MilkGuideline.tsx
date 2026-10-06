@@ -35,10 +35,16 @@ export function MilkGuideline({ entries, now }: { entries: FeedingEntry[]; now: 
       <div className="meter">
         <div className="meter__head">
           <span className="meter__value">
-            <span className="ltr num">{v(todayMl)}</span> {unit} {he.home.guide.today}
+            <span className="nowrap">
+              <span className="ltr num">{v(todayMl)}</span> {unit}
+            </span>{' '}
+            {he.home.guide.today}
           </span>
           <span className="text-sm text-muted">
-            {he.home.guide.recommended} <span className="ltr num">{rangeText}</span> {unit}
+            {he.home.guide.recommended}{' '}
+            <span className="nowrap">
+              <span className="ltr num">{rangeText}</span> {unit}
+            </span>
           </span>
         </div>
         <div
@@ -66,7 +72,13 @@ export function MilkGuideline({ entries, now }: { entries: FeedingEntry[]; now: 
         </div>
       </div>
       <p className="text-sm">
-        {he.home.guide.perFeed(`${v(guide.perFeedMl)} ${unit}`, guide.feedsPerDay)}
+        {he.home.guide.perFeedPrefix}
+        <span className="nowrap">
+          <span className="ltr num">{v(guide.perFeedMl)}</span> {unit}
+        </span>{' '}
+        {he.home.guide.perFeedMid}{' '}
+        <span className="nowrap">{he.home.guide.perFeedFeeds(guide.feedsPerDay)}</span>{' '}
+        {he.home.guide.perFeedSuffix}
       </p>
       <p className="disclaimer">
         <Info aria-hidden="true" />

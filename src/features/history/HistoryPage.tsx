@@ -8,7 +8,8 @@ import { toDateKey } from '../../domain/dates';
 import { groupByDay, type DayGroup } from '../../domain/feeding';
 import type { EpochMs, FeedingEntry, FeedingType, VolumeUnit } from '../../domain/types';
 import { useNow } from '../../hooks/useNow';
-import { dayTitle } from '../../i18n/format';
+import { Parts } from '../../components/Parts';
+import { dayTitleParts } from '../../i18n/format';
 import { he, TYPE_LABEL } from '../../i18n/he';
 import { useActiveEntries, useSettings } from '../../store';
 import { useFeedingSheets } from '../feeding/sheetsContext';
@@ -47,11 +48,15 @@ const Day = memo(function Day({
   onOpen: (entry: FeedingEntry) => void;
 }) {
   const headingId = `day-${group.date}-title`;
+  const { relative, date } = dayTitleParts(group.date, now);
+  const title = <Parts items={relative ? [relative, date] : [date]} />;
   return (
     <li className="timeline__day" id={`day-${group.date}`} aria-labelledby={headingId}>
       <h2 className="day-header" id={headingId}>
-        <span className="day-header__title">{dayTitle(group.date, now)}</span>
-        <span className="day-header__summary">{daySummary(group.entries, unit)}</span>
+        <span className="day-header__title">{title}</span>
+        <span className="day-header__summary">
+          <Parts items={daySummary(group.entries, unit)} />
+        </span>
       </h2>
       <ol className="timeline__list" role="list">
         {group.entries.map((e) => (

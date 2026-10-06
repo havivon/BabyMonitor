@@ -102,6 +102,12 @@ export const he = {
   },
   home: {
     since: 'מאז ההאכלה האחרונה',
+    active: {
+      title: 'הנקה בתהליך',
+      paused: 'הנקה מושהית',
+      live: 'פעילה',
+      side: (side: string) => `צד ${side}`,
+    },
     nextSide: (side: string) => `הצד הבא: ${side}`,
     addHeading: 'הוספת האכלה',
     tile: {
@@ -138,7 +144,11 @@ export const he = {
       title: 'כמות בקבוק יומית',
       today: 'היום',
       recommended: 'מומלץ',
-      perFeed: (n: string, k: number) => `כ-${n} להאכלה (לפי ${k} האכלות ביום)`,
+      // "כ-145 מ״ל להאכלה (לפי 6 האכלות ביום)" — composed in the UI so numbers stay with units.
+      perFeedPrefix: 'כ-',
+      perFeedMid: 'להאכלה (לפי',
+      perFeedFeeds: (k: number) => `${k} האכלות`,
+      perFeedSuffix: 'ביום)',
       disclaimer: 'לפי כ-150 מ״ל לק״ג ליום עבור תינוקות הניזונים מבקבוק. אינו תחליף לייעוץ רפואי.',
       ariaMeter: 'כמות הבקבוק היום ביחס לטווח המומלץ',
     },

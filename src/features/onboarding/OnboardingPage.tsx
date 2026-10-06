@@ -9,8 +9,7 @@ import { BabyForm } from './BabyForm';
 
 /**
  * First run (DESIGN §7.1) — and the "add a child" flow from the baby switcher once a baby exists.
- * Saving makes the new baby active and, when a birth weight is given, also records it as a
- * measurement on the birth date (so growth starts from the birth weight).
+ * Saving makes the new baby active; the optional birth weight lives only on `Baby.birthWeightG`.
  */
 export function OnboardingPage() {
   const navigate = useNavigate();
@@ -19,11 +18,9 @@ export function OnboardingPage() {
   const fileInput = useRef<HTMLInputElement>(null);
 
   const submit = (data: NewBaby): void => {
-    const store = appStore.getState();
-    const baby = store.addBaby(data);
-    if (data.birthWeightG !== undefined) {
-      store.addMeasurement({ babyId: baby.id, date: data.birthDate, weightG: data.birthWeightG });
-    }
+    // `baby.birthWeightG` is the single source of the birth weight (growthSeries plots it as
+    // the birth point) — no duplicate Measurement is created.
+    appStore.getState().addBaby(data);
     if (!isFirstRun) toast.show({ text: he.entry.saved });
     void navigate('/', { replace: true });
   };

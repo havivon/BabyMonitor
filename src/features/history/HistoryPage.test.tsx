@@ -96,7 +96,9 @@ describe('HistoryPage', () => {
 
 describe('daySummary', () => {
   it('omits zero parts and reads solids-only days', () => {
-    expect(daySummary([solid(NOW, ['תפוח']), solid(NOW, ['אגס'])], 'ml')).toBe('מוצקים 2 פעמים');
-    expect(daySummary([bottle(NOW, 120), bottle(NOW, 30)], 'oz')).toBe('2 האכלות · 5.1 oz');
+    expect(daySummary([solid(NOW, ['תפוח']), solid(NOW, ['אגס'])], 'ml')).toEqual([
+      'מוצקים 2 פעמים',
+    ]);
+    expect(daySummary([bottle(NOW, 120), bottle(NOW, 30)], 'oz')).toEqual(['2 האכלות', '5.1 oz']);
   });
 });

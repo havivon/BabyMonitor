@@ -62,13 +62,13 @@ describe('breastMeta', () => {
       ['right', 12],
       ['left', 9],
     ]);
-    expect(breastMeta(e)).toBe('ימין 12 ד׳ · שמאל 9 ד׳');
+    expect(breastMeta(e)).toEqual(['ימין 12 ד׳', 'שמאל 9 ד׳']);
     const paused = {
       segments: [
         { side: 'left' as const, startedAt: T, endedAt: T + 5 * MIN },
         { side: 'left' as const, startedAt: T + 8 * MIN, endedAt: T + 10 * MIN },
       ],
     };
-    expect(breastMeta(paused)).toBe('שמאל 7 ד׳');
+    expect(breastMeta(paused)).toEqual(['שמאל 7 ד׳']);
   });
 });

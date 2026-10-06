@@ -30,7 +30,7 @@ describe('App shell', () => {
     expect(babies).toMatchObject([
       { name: 'נועה', birthDate: '2026-07-01', sex: 'female', birthWeightG: 3300 },
     ]);
-    expect(measurements).toMatchObject([{ date: '2026-07-01', weightG: 3300 }]);
+    expect(measurements).toEqual([]); // birth weight lives only on the baby (single source)
   });
 
   it('onboarding validation shows Hebrew errors and focuses the first invalid field', async () => {

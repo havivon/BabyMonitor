@@ -75,8 +75,11 @@ export function applyBreastEdit(entry: BreastEntry, edit: BreastEdit): BreastEnt
   return next;
 }
 
-/** Consecutive same-side segments (split by a pause) are shown as one: "ימין 12 ד׳ · שמאל 9 ד׳". */
-export function breastMeta(entry: Pick<BreastEntry, 'segments'>): string {
+/**
+ * Per-side parts for display, in order: ["ימין 12 ד׳", "שמאל 9 ד׳"]. Consecutive same-side
+ * segments (split by a pause) are shown as one.
+ */
+export function breastMeta(entry: Pick<BreastEntry, 'segments'>): string[] {
   const runs: { side: Side; ms: number }[] = [];
   for (const seg of [...entry.segments].sort((a, b) => a.startedAt - b.startedAt)) {
     const ms = Math.max(0, seg.endedAt - seg.startedAt);
@@ -84,5 +87,5 @@ export function breastMeta(entry: Pick<BreastEntry, 'segments'>): string {
     if (last?.side === seg.side) last.ms += ms;
     else runs.push({ side: seg.side, ms });
   }
-  return runs.map((r) => `${SIDE_LABEL[r.side]} ${formatDuration(r.ms)}`).join(' · ');
+  return runs.map((r) => `${SIDE_LABEL[r.side]} ${formatDuration(r.ms)}`);
 }

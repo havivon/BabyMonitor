@@ -1,4 +1,13 @@
-import { Apple, ArrowLeftRight, ChevronLeft, Clock, Heart, Milk, Repeat2 } from 'lucide-react';
+import {
+  Apple,
+  ArrowLeftRight,
+  ChevronLeft,
+  Clock,
+  Heart,
+  Milk,
+  Pause,
+  Repeat2,
+} from 'lucide-react';
 import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { AppHeader } from '../../app/AppHeader';
@@ -12,7 +21,7 @@ import {
   suggestNextSide,
   todayTotals,
 } from '../../domain/feeding';
-import { timerElapsed } from '../../domain/timer';
+import { currentSide, isPaused, timerElapsed, timerStartedAt } from '../../domain/timer';
 import type { ActiveTimer, BottleEntry, FeedingEntry, SolidEntry } from '../../domain/types';
 import { formatDuration, formatHoursMinutes, formatTimer } from '../../domain/units';
 import { useNow } from '../../hooks/useNow';
@@ -26,6 +35,7 @@ import {
 } from '../../i18n/format';
 import { CONTENT_LABEL, he, SIDE_LABEL, TYPE_LABEL } from '../../i18n/he';
 import { useActiveEntries, useActiveTimer, useSettings } from '../../store';
+import { Parts } from '../../components/Parts';
 import { useFeedingSheets } from '../feeding/sheetsContext';
 import { TimelineItem } from '../feeding/TimelineItem';
 import { MilkGuideline } from './MilkGuideline';
@@ -49,11 +59,15 @@ export function HomePage() {
       <AppHeader start={<BabySwitcher />} />
       <main className="page">
         <h1 className="visually-hidden">{he.tab.home}</h1>
-        <SinceCard
-          last={last}
-          nextSide={suggestion ? SIDE_LABEL[suggestion.side] : null}
-          now={now}
-        />
+        {timer ? (
+          <ActiveFeedCard timer={timer} onOpen={() => sheets.open({ kind: 'timer' })} />
+        ) : (
+          <SinceCard
+            last={last}
+            nextSide={suggestion ? SIDE_LABEL[suggestion.side] : null}
+            now={now}
+          />
+        )}
 
         <section className="section" aria-labelledby="home-add">
           <h2 className="visually-hidden" id="home-add">
@@ -106,17 +120,19 @@ export function HomePage() {
 function LastFeedMeta({ entry }: { entry: FeedingEntry }) {
   const { volumeUnit } = useSettings();
   const Icon = TYPE_ICON[entry.type];
-  let summary: ReactNode = null;
+  const items: ReactNode[] = [];
   if (entry.type === 'bottle') {
-    summary = (
+    items.push(
       <>
         <span className="ltr num">{volumeNumber(entry.amountMl, volumeUnit)}</span>{' '}
-        {volumeUnitLabel(volumeUnit)} {CONTENT_LABEL[entry.content]}
-      </>
+        {volumeUnitLabel(volumeUnit)}
+      </>,
+      CONTENT_LABEL[entry.content],
     );
   } else if (entry.type === 'breast') {
-    summary = formatDuration(breastDurations(entry).total);
+    items.push(formatDuration(breastDurations(entry).total));
   }
+  items.push(<span className="ltr num">{formatClock(entryTime(entry))}</span>);
   return (
     <div className="since__meta">
       <span className={`badge badge--${entry.type}`}>
@@ -124,11 +140,62 @@ function LastFeedMeta({ entry }: { entry: FeedingEntry }) {
         {TYPE_LABEL[entry.type]}
       </span>
       <span>
-        {summary}
-        {summary && ' · '}
-        <span className="ltr num">{formatClock(entryTime(entry))}</span>
+        <Parts items={items} />
       </span>
     </div>
+  );
+}
+
+/** Hero while the active baby is breastfeeding: live elapsed + side; tapping opens the timer. */
+function ActiveFeedCard({ timer, onOpen }: { timer: ActiveTimer; onOpen: () => void }) {
+  const now = useNow(1000);
+  const paused = isPaused(timer);
+  const side = SIDE_LABEL[currentSide(timer) ?? 'right'];
+  const label = paused ? he.home.active.paused : he.home.active.title;
+  return (
+    <button
+      type="button"
+      className="card since card--interactive"
+      aria-label={`${label} · ${side} — ${he.banner.open}`}
+      onClick={onOpen}
+    >
+      <span className="since__top">
+        <span className="since__label">{label}</span>
+        {paused ? (
+          <span className="badge badge--lg">
+            <Pause aria-hidden="true" />
+            {he.timer.paused}
+          </span>
+        ) : (
+          <span className="badge badge--breast badge--lg badge--live">
+            <span className="badge__dot" />
+            {he.home.active.live}
+          </span>
+        )}
+      </span>
+      <span className="since__value">
+        <span className="since__part">
+          <span className="ltr num">{formatTimer(timerElapsed(timer, now).total)}</span>
+        </span>
+      </span>
+      <span className="since__meta">
+        <span className="badge badge--breast">
+          <Heart aria-hidden="true" />
+          {TYPE_LABEL.breast}
+        </span>
+        <span>
+          <Parts
+            items={[
+              he.home.active.side(side),
+              <>
+                {he.banner.meta}
+                <span className="ltr num">{formatClock(timerStartedAt(timer) ?? now)}</span>
+              </>,
+            ]}
+          />
+        </span>
+      </span>
+    </button>
   );
 }
 
@@ -256,8 +323,10 @@ function QuickAdd({
           {lastBottle ? (
             <>
               {he.home.tile.last}
-              <span className="ltr num">{volumeNumber(lastBottle.amountMl, volumeUnit)}</span>{' '}
-              {volumeUnitLabel(volumeUnit)}
+              <span className="nowrap">
+                <span className="ltr num">{volumeNumber(lastBottle.amountMl, volumeUnit)}</span>{' '}
+                {volumeUnitLabel(volumeUnit)}
+              </span>
             </>
           ) : (
             he.home.tile.bottleEmpty

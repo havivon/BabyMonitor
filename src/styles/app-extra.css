@@ -33,3 +33,9 @@
     animation-name: bm-dialog-out;
   }
 }
+
+/* 3. Unbreakable text unit (number + unit, "ב-14:02", day-summary items). Used by <Parts> and
+      wherever a number must never be separated from its unit (team-lead review). */
+.nowrap {
+  white-space: nowrap;
+}

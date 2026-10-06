@@ -1,4 +1,4 @@
-import { useId } from 'react';
+import { useId, type CSSProperties } from 'react';
 import { Field } from '../../components/Field';
 import { describedBy } from '../../components/dom';
 import { DateTimePicker } from '../../components/Pickers';
@@ -34,7 +34,13 @@ export function TimeField({ label, value, onChange, now, error, min }: TimeField
         ariaDescribedby={describedBy(error && errorId)}
         onChange={(at) => onChange({ kind: 'at', at })}
       />
-      <div className="chip-row" role="group" aria-label={he.time.quick}>
+      {/* Equal 4-column grid (not a scrolling row): all four fit at 360px, nothing is clipped. */}
+      <div
+        className="chip-grid"
+        style={{ '--chip-cols': QUICK_AGO_MINUTES.length } as CSSProperties}
+        role="group"
+        aria-label={he.time.quick}
+      >
         {QUICK_AGO_MINUTES.map((m) => (
           <button
             key={m}

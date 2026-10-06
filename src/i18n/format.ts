@@ -43,12 +43,16 @@ export function relativeDayName(key: IsoDate, now: EpochMs): string | null {
   return null;
 }
 
-/** Timeline day header: "היום · יום ב׳, 5 באוקטובר" / "יום ד׳, 1 באוקטובר". */
-export function dayTitle(key: IsoDate, now: EpochMs): string {
+/** Timeline day header parts: { relative: "היום", date: "יום ב׳, 5 באוקטובר" } (relative may be null). */
+export function dayTitleParts(
+  key: IsoDate,
+  now: EpochMs,
+): { relative: string | null; date: string } {
   const date = parseDateKey(key);
-  const base = `${weekdayShort(date)}, ${dayMonth(date, now)}`;
-  const rel = relativeDayName(key, now);
-  return rel ? `${rel} · ${base}` : base;
+  return {
+    relative: relativeDayName(key, now),
+    date: `${weekdayShort(date)}, ${dayMonth(date, now)}`,
+  };
 }
 
 /**
