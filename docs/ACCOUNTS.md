@@ -81,9 +81,15 @@ Device-local only (never synced): `settings` (units, theme), `activeBabyId`, dis
 
 ## 6. UX (designer to finalize copy & visuals in DESIGN.md)
 
-- **Not signed in**: a calm, dismissible note on Home (after the first logged feed) and a persistent
-  card at the top of Settings: "התחברות שומרת גיבוי של הנתונים בענן, מאפשרת לשני ההורים לעדכן יחד,
-  ומשחזרת הכול בטלפון חדש." — CTA "התחברות".
+- **Not signed in** (product owner, 6 Oct): the user must be told plainly that **the data is not
+  backed up** — e.g. "הנתונים שמורים רק בטלפון הזה ואינם מגובים. התחברות שומרת גיבוי בענן, מאפשרת
+  לשני ההורים לעדכן יחד, ומשחזרת הכול בטלפון חדש." A calm, dismissible note on Home (after the first
+  logged feed; re-shown after ~2 weeks if still signed out) and a persistent card at the top of
+  Settings. CTA "התחברות".
+- **Security posture** (product owner asked): the app never handles Google passwords (OAuth via
+  Google's own screen); email/password credentials are held only by Firebase Auth (hashed). The app
+  stores no secrets; the device keeps only Firebase's session token. Family data is protected by the
+  Firestore rules (§5), which must be covered by automated tests.
 - **Onboarding**: secondary action "כבר יש לנו חשבון — התחברות" (new phone / second parent).
 - **Sign-in sheet**: "המשך עם Google" + email/password (sign in / create account / forgot password),
   Hebrew error messages for every Firebase error code.
