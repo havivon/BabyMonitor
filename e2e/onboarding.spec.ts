@@ -1,4 +1,4 @@
-import { expect, freezeClockAt, onboard, test } from './fixtures';
+import { expect, freezeClockAt, onboard, readStore, test } from './fixtures';
 
 test.describe('first run / onboarding', () => {
   test.beforeEach(async ({ page }) => {
@@ -74,8 +74,8 @@ test.describe('first run / onboarding', () => {
     await expect(page.getByText('עוד לא נרשמו האכלות')).toBeVisible();
     await expect(page.getByRole('navigation', { name: 'ניווט ראשי' })).toBeVisible();
     // Visiting onboarding again with a baby keeps "add child" semantics, not first run.
-    const stored = await page.evaluate(() => JSON.parse(localStorage.getItem('babymonitor:v1') ?? '{}'));
-    expect(stored.state.babies).toHaveLength(1);
-    expect(stored.state.babies[0]).toMatchObject({ name: 'נועה', birthDate: '2026-08-01', sex: 'female', birthWeightG: 3300 });
+    const stored = await readStore(page);
+    expect(stored.babies).toHaveLength(1);
+    expect(stored.babies[0]).toMatchObject({ name: 'נועה', birthDate: '2026-08-01', sex: 'female', birthWeightG: 3300 });
   });
 });

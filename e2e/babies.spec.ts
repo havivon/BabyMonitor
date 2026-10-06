@@ -9,6 +9,7 @@ import {
   NOW,
   MIN,
   onboard,
+  readStore,
   seed,
   test,
   timelineItems,
@@ -106,9 +107,9 @@ test.describe('multiple babies', () => {
     await expect(sheet.getByText('בחירת צד להתחלה')).toBeVisible();
     await sheet.getByRole('button', { name: /^שמאל/ }).click();
     await sheet.getByRole('button', { name: /מזעור/ }).click();
-    const stored = await page.evaluate(() => JSON.parse(localStorage.getItem('babymonitor:v1') ?? '{}'));
-    expect(Object.keys(stored.state.activeTimers).sort()).toEqual(['a', 'b']);
-    expect(stored.state.activeTimers.a.segments).toEqual([{ side: 'right', startedAt: NOW - 5 * MIN }]);
+    const stored = await readStore(page);
+    expect(Object.keys(stored.activeTimers).sort()).toEqual(['a', 'b']);
+    expect(stored.activeTimers.a?.segments).toEqual([{ side: 'right', startedAt: NOW - 5 * MIN }]);
   });
 
   test('deleting a baby (with confirmation) removes only its data', async ({ page }) => {
@@ -126,9 +127,9 @@ test.describe('multiple babies', () => {
     await expect(confirm.getByRole('button', { name: 'ביטול' })).toBeFocused();
     await confirm.getByRole('button', { name: 'מחיקת איתי' }).click();
     await expect(page.getByRole('button', { name: 'עריכת הפרטים של איתי' })).toHaveCount(0);
-    const stored = await page.evaluate(() => JSON.parse(localStorage.getItem('babymonitor:v1') ?? '{}'));
-    expect(stored.state.babies.map((x: { id: string }) => x.id)).toEqual(['a']);
-    expect(stored.state.entries.map((x: { babyId: string }) => x.babyId)).toEqual(['a']);
-    expect(stored.state.settings.activeBabyId).toBe('a');
+    const stored = await readStore(page);
+    expect(stored.babies.map((x) => x.id)).toEqual(['a']);
+    expect(stored.entries.map((x) => x.babyId)).toEqual(['a']);
+    expect(stored.settings.activeBabyId).toBe('a');
   });
 });

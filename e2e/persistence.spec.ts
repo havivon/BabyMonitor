@@ -6,7 +6,9 @@ import {
   gotoTab,
   makeBaby,
   NOW,
-  persistedValue,
+  persistedState,
+  readEnvelope,
+  readRaw,
   readStore,
   seed,
   STORAGE_KEY,
@@ -44,8 +46,7 @@ test.describe('persistence', () => {
     await page.getByLabel('תאריך לידה').fill('2026-08-01');
     await page.getByRole('button', { name: 'התחלה' }).click();
     await expect(page).toHaveURL(/#\/$/);
-    const raw = await page.evaluate((k) => localStorage.getItem(k), STORAGE_KEY);
-    expect(JSON.parse(raw ?? 'null')).toEqual({
+    expect(await readEnvelope(page)).toEqual({
       state: {
         babies: [{ id: expect.any(String), name: 'נועה', birthDate: '2026-08-01', sex: 'female', createdAt: expect.any(Number) }],
         entries: [],
@@ -63,15 +64,15 @@ test.describe('corrupt storage', () => {
 
   test('schema-invalid data: app recovers to onboarding and keeps a :corrupt copy', async ({ page }) => {
     await freezeClockAt(page);
-    const bad = JSON.parse(persistedValue({ babies: [makeBaby({ id: 'b1' })], entries: [bottle('b1', NOW - 1000, 90)] }));
-    bad.state.entries[0].amountMl = 'lots';
+    const state = persistedState({ babies: [makeBaby({ id: 'b1' })], entries: [bottle('b1', NOW - 1000, 90)] });
+    // amountMl must be a number — corrupt it.
+    const bad = { state: { ...state, entries: state.entries.map((e) => ({ ...e, amountMl: 'lots' })) }, version: 1 };
     const raw = JSON.stringify(bad);
     await seed(page, raw);
     await page.goto('/');
     await expect(page.getByRole('heading', { name: 'ברוכים הבאים ל-BabyMonitor' })).toBeVisible();
-    const corrupt = await page.evaluate((k) => localStorage.getItem(`${k}:corrupt`), STORAGE_KEY);
-    expect(corrupt).not.toBeNull();
-    expect(JSON.parse(corrupt ?? '{}')).toEqual(bad.state);
+    const corrupt = await readRaw(page, `${STORAGE_KEY}:corrupt`);
+    expect(corrupt).toBe(JSON.stringify(bad.state));
   });
 
   // BUG-008: a NON-JSON value never reaches the store's `merge` (zustand's JSON storage throws while
@@ -106,8 +107,7 @@ test.describe('corrupt storage', () => {
 
   test('a future store version is not silently discarded', async ({ page }) => {
     await freezeClockAt(page);
-    const v2 = JSON.parse(persistedValue({ babies: [makeBaby({ id: 'b1', name: 'נועה' })] }));
-    v2.version = 2;
+    const v2 = { state: persistedState({ babies: [makeBaby({ id: 'b1', name: 'נועה' })] }), version: 2 };
     await seed(page, JSON.stringify(v2));
     await page.goto('/');
     // Either it loads the (compatible) data or it preserves it in :corrupt — never loses it.
@@ -115,7 +115,7 @@ test.describe('corrupt storage', () => {
     const welcome = page.getByRole('heading', { name: 'ברוכים הבאים ל-BabyMonitor' });
     await expect(switcher.or(welcome)).toBeVisible();
     const loaded = await switcher.isVisible();
-    const corrupt = await page.evaluate((k) => localStorage.getItem(`${k}:corrupt`), STORAGE_KEY);
+    const corrupt = await readRaw(page, `${STORAGE_KEY}:corrupt`);
     expect(loaded || corrupt !== null).toBe(true);
   });
 });

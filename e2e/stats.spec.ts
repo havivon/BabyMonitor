@@ -37,9 +37,10 @@ function dataset(): Entry[] {
 async function visibleDelta(page: Page, label: string): Promise<string> {
   const d = tile(page, label).locator('.stat__delta');
   return d.evaluate((el) => {
-    const c = el.cloneNode(true) as HTMLElement;
+    const c = el.cloneNode(true);
+    if (!(c instanceof HTMLElement)) return '';
     c.querySelectorAll('.visually-hidden').forEach((n) => n.remove());
-    return (c.textContent ?? '').replace(/[\u2066-\u2069]/g, '').replace(/\s+/g, ' ').trim();
+    return c.textContent.replace(/[\u2066-\u2069]/g, '').replace(/\s+/g, ' ').trim();
   });
 }
 

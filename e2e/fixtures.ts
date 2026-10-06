@@ -169,25 +169,53 @@ export function solid(
 
 export const STORAGE_KEY = 'babymonitor:v1';
 
+/** The persisted `state` (same shape as a backup file's `data`). */
+export interface PersistedState {
+  babies: Baby[];
+  entries: Entry[];
+  measurements: Measurement[];
+  activeTimers: Record<string, ActiveTimer>;
+  settings: Settings;
+}
+
+/** zustand `persist` envelope stored under `babymonitor:v1`. */
+export interface PersistedEnvelope {
+  state: PersistedState;
+  version: number;
+}
+
+/** Full persisted state for seed data (defaults filled in). */
+export function persistedState(data: SeedData): PersistedState {
+  const babies = data.babies ?? [];
+  return {
+    babies,
+    entries: data.entries ?? [],
+    measurements: data.measurements ?? [],
+    activeTimers: data.activeTimers ?? {},
+    settings: {
+      volumeUnit: 'ml',
+      weightUnit: 'kg',
+      theme: 'auto',
+      activeBabyId: babies[0]?.id ?? null,
+      ...data.settings,
+    },
+  };
+}
+
 /** The exact value the app persists under `babymonitor:v1` (zustand `persist` envelope, v1). */
 export function persistedValue(data: SeedData): string {
-  const babies = data.babies ?? [];
-  return JSON.stringify({
-    state: {
-      babies,
-      entries: data.entries ?? [],
-      measurements: data.measurements ?? [],
-      activeTimers: data.activeTimers ?? {},
-      settings: {
-        volumeUnit: 'ml',
-        weightUnit: 'kg',
-        theme: 'auto',
-        activeBabyId: babies[0]?.id ?? null,
-        ...data.settings,
-      },
-    },
-    version: 1,
-  });
+  const envelope: PersistedEnvelope = { state: persistedState(data), version: 1 };
+  return JSON.stringify(envelope);
+}
+
+/** A backup file (as exported by Settings) containing `data`. */
+export function backupFile(state: PersistedState, exportedAt = NOW): string {
+  return JSON.stringify({ format: 'babymonitor-backup', version: 1, exportedAt, data: state });
+}
+
+/** Raw localStorage value of `key` (default: the store key). */
+export async function readRaw(page: Page, key: string = STORAGE_KEY): Promise<string | null> {
+  return page.evaluate((k) => localStorage.getItem(k), key);
 }
 
 /**
@@ -206,11 +234,16 @@ export async function seed(page: Page, data: SeedData | string): Promise<void> {
   );
 }
 
-/** Reads the app's persisted state (parsed `state` of the zustand envelope). */
-export async function readStore(page: Page): Promise<Required<SeedData> & { settings: Settings }> {
-  const raw = await page.evaluate((key) => localStorage.getItem(key), STORAGE_KEY);
+/** Reads the app's persisted envelope `{ state, version }`. */
+export async function readEnvelope(page: Page): Promise<PersistedEnvelope> {
+  const raw = await readRaw(page);
   if (!raw) throw new Error('store not persisted');
-  return (JSON.parse(raw) as { state: Required<SeedData> & { settings: Settings } }).state;
+  return JSON.parse(raw) as PersistedEnvelope;
+}
+
+/** Reads the app's persisted state (parsed `state` of the zustand envelope). */
+export async function readStore(page: Page): Promise<PersistedState> {
+  return (await readEnvelope(page)).state;
 }
 
 /**

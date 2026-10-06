@@ -9,7 +9,9 @@ import {
   makeBaby,
   NOW,
   MIN,
-  persistedValue,
+  backupFile,
+  persistedState,
+  type PersistedState,
   readStore,
   seed,
   solid,
@@ -31,10 +33,17 @@ const data: SeedData = {
   settings: { volumeUnit: 'ml', weightUnit: 'kg', theme: 'dark', activeBabyId: 'b1' },
 };
 
-async function exportBackup(page: Page): Promise<{ name: string; json: Record<string, unknown>; raw: string }> {
+interface BackupJson {
+  format: string;
+  version: number;
+  exportedAt: number;
+  data: PersistedState;
+}
+
+async function exportBackup(page: Page): Promise<{ name: string; json: BackupJson; raw: string }> {
   const [download] = await Promise.all([page.waitForEvent('download'), page.getByRole('button', { name: /ייצוא גיבוי/ }).click()]);
-  const raw = readFileSync((await download.path()) as string, 'utf8');
-  return { name: download.suggestedFilename(), json: JSON.parse(raw) as Record<string, unknown>, raw };
+  const raw = readFileSync(await download.path(), 'utf8');
+  return { name: download.suggestedFilename(), json: JSON.parse(raw) as BackupJson, raw };
 }
 
 async function chooseFile(page: Page, trigger: () => Promise<void>, name: string, content: string) {
@@ -97,7 +106,7 @@ test.describe('settings', () => {
     expect(json).toMatchObject({ format: 'babymonitor-backup', version: 1 });
     expect(typeof json.exportedAt).toBe('number');
     expect(json.data).toEqual(await readStore(page));
-    expect(json.data).toEqual(JSON.parse(persistedValue(data)).state);
+    expect(json.data).toEqual(persistedState(data));
     await expect(toast(page)).toContainText('קובץ הגיבוי נשמר');
   });
 
@@ -122,14 +131,14 @@ test.describe('settings', () => {
   test('import from Settings asks to confirm and replaces all data', async ({ page }) => {
     await seed(page, { babies: [makeBaby({ id: 'old', name: 'ישן' })], entries: [bottle('old', NOW - 10 * MIN, 30)] });
     await page.goto('/#/settings');
-    const backup = JSON.stringify({ format: 'babymonitor-backup', version: 1, exportedAt: NOW, data: JSON.parse(persistedValue(data)).state });
+    const backup = backupFile(persistedState(data));
     await chooseFile(page, () => page.getByRole('button', { name: /ייבוא מגיבוי/ }).click(), 'b.json', backup);
     const confirm = alertDialog(page, 'לייבא את הגיבוי?');
     await expect(confirm).toContainText('2 ילדים, 4 רישומי האכלה, 1 מדידות');
     await expect(confirm.getByRole('button', { name: 'ביטול' })).toBeFocused();
     await confirm.getByRole('button', { name: 'ייבוא והחלפה' }).click();
     await expect(toast(page)).toContainText('הגיבוי יובא בהצלחה');
-    expect(await readStore(page)).toEqual(JSON.parse(persistedValue(data)).state);
+    expect(await readStore(page)).toEqual(persistedState(data));
     await expect(page.getByRole('button', { name: 'עריכת הפרטים של ישן' })).toHaveCount(0);
   });
 
@@ -149,9 +158,9 @@ test.describe('settings', () => {
     await chooseFile(page, importRow, 'x.json', JSON.stringify({ format: 'babymonitor-backup', version: 99, data: {} }));
     await expect(toast(page)).toContainText('הגיבוי נוצר בגרסה חדשה יותר של האפליקציה');
 
-    const broken = JSON.parse(persistedValue(data)).state;
-    broken.entries[1].amountMl = -5;
-    await chooseFile(page, importRow, 'x.json', JSON.stringify({ format: 'babymonitor-backup', version: 1, data: broken }));
+    const valid = persistedState(data);
+    const broken = { ...valid, entries: valid.entries.map((e) => (e.type === 'bottle' ? { ...e, amountMl: -5 } : e)) };
+    await chooseFile(page, importRow, 'x.json', backupFile(broken));
     await expect(toast(page)).toContainText('חלק מהנתונים בקובץ פגומים, ולכן לא יובא דבר.');
 
     await expect(alertDialog(page, 'לייבא את הגיבוי?')).toHaveCount(0);
@@ -165,7 +174,7 @@ test.describe('settings', () => {
     });
     await page.goto('/#/settings');
     await expect(page.getByRole('button', { name: 'פתיחת טיימר ההנקה', exact: true })).toBeVisible();
-    const backup = JSON.stringify({ format: 'babymonitor-backup', version: 1, exportedAt: NOW, data: JSON.parse(persistedValue(data)).state });
+    const backup = backupFile(persistedState(data));
     await chooseFile(page, () => page.getByRole('button', { name: /ייבוא מגיבוי/ }).click(), 'b.json', backup);
     await alertDialog(page, 'לייבא את הגיבוי?').getByRole('button', { name: 'ייבוא והחלפה' }).click();
     await expect(page.getByRole('button', { name: 'פתיחת טיימר ההנקה', exact: true })).toHaveCount(0);
@@ -180,7 +189,7 @@ test.describe('settings', () => {
       page.getByRole('button', { name: /ייצוא האכלות לגיליון/ }).click(),
     ]);
     expect(download.suggestedFilename()).toBe('babymonitor-feedings-2026-10-05.csv');
-    const buf = readFileSync((await download.path()) as string);
+    const buf = readFileSync(await download.path());
     expect([...buf.subarray(0, 3)]).toEqual([0xef, 0xbb, 0xbf]);
     const lines = buf.toString('utf8').replace(/^﻿/, '').split('\r\n').filter(Boolean);
     expect(lines[0]).toBe(
@@ -193,7 +202,7 @@ test.describe('settings', () => {
     expect(lines).toContain("איתי,בקבוק,2026-10-05,10:00,,,,,,חלב אם,60,,,,,'=SUM(A1)");
 
     const [m] = await Promise.all([page.waitForEvent('download'), page.getByRole('button', { name: /ייצוא מדידות לגיליון/ }).click()]);
-    const mText = readFileSync((await m.path()) as string, 'utf8');
+    const mText = readFileSync(await m.path(), 'utf8');
     expect(mText.startsWith('﻿תינוק,תאריך,משקל (גרם),אורך (ס״מ),היקף ראש (ס״מ),הערה\r\n')).toBe(true);
     expect(mText).toContain('נועה,2026-10-01,4800,56,,טיפת חלב');
   });

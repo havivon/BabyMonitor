@@ -11,7 +11,7 @@ test.describe('PWA', () => {
     expect(m).toMatchObject({ lang: 'he', dir: 'rtl', display: 'standalone' });
     expect(typeof m.name).toBe('string');
     expect(typeof m.short_name).toBe('string');
-    expect((m.short_name as string).length).toBeLessThanOrEqual(12);
+    expect(String(m.short_name).length).toBeLessThanOrEqual(12);
     expect(m.start_url).toBeTruthy();
     expect(m.theme_color).toMatch(/^#[0-9a-f]{6}$/i);
     expect(m.background_color).toMatch(/^#[0-9a-f]{6}$/i);
