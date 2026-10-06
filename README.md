@@ -24,6 +24,19 @@ npm run build      # בנייה לפרודקשן (dist/)
 npm run preview    # הגשת גרסת הבנייה
 ```
 
+## אנדרואיד (APK)
+
+האפליקציה עטופה כאפליקציית אנדרואיד באמצעות Capacitor (`android/`). קובצי האתר נארזים בתוך ה-APK, כך שהיא עובדת לגמרי בלי אינטרנט.
+
+- **הורדה:** כל push מריץ את ה-workflow ‏`Android APK` ב-GitHub Actions. הוא מפרסם קובץ APK בדף ה-Releases של המאגר (pre-release בשם `android-build-N`), וגם כ-artifact של ההרצה.
+- **התקנה:** מורידים את הקובץ בטלפון, פותחים אותו ומאשרים "התקנה ממקורות לא ידועים". זו גרסת debug חתומה.
+- **בנייה מקומית** (דורשת Android SDK ו-JDK 21):
+
+```bash
+npm run build:android                 # בניית האתר במצב android + cap sync
+cd android && ./gradlew assembleDebug  # הקובץ נוצר ב-android/app/build/outputs/apk/debug/
+```
+
 ## בדיקות ואיכות
 
 ```bash
