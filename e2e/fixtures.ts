@@ -2,7 +2,7 @@
  * Shared E2E fixtures & helpers (QA-owned).
  *
  * - `test` fails any test that logs a console error / warning or throws an uncaught page error
- *   (allow-list specific messages with `test.use({ consoleAllow: [/regex/] })`).
+ *   (allow-list specific messages with `test.use({ consoleAllow: /regex/ })`).
  * - `seed()` writes the persisted store (`babymonitor:v1`, zustand `persist` envelope) BEFORE the
  *   app boots, once per tab (reloads keep whatever the app wrote since).
  * - Data builders produce records in the exact persisted shape of `src/store/persistence.ts`.
@@ -400,18 +400,18 @@ export async function expectNoHorizontalOverflow(page: Page, context = ''): Prom
 // ---------------------------------------------------------------------------------- test
 
 interface Fixtures {
-  /** Console messages (error/warning) that are expected in this test. */
-  consoleAllow: RegExp[];
+  /** Console messages (error/warning) that are expected in this test (one regex; use `|`). */
+  consoleAllow: RegExp | null;
   /** Auto fixture: fails the test on console errors / warnings / uncaught page errors. */
   consoleGuard: string[];
 }
 
 export const test = base.extend<Fixtures>({
-  consoleAllow: [[], { option: true }],
+  consoleAllow: [null, { option: true }],
   consoleGuard: [
     async ({ page, consoleAllow }, use) => {
       const problems: string[] = [];
-      const allowed = (t: string) => consoleAllow.some((re) => re.test(t));
+      const allowed = (t: string) => consoleAllow?.test(t) ?? false;
       page.on('console', (msg) => {
         const type = msg.type();
         if (type !== 'error' && type !== 'warning') return;

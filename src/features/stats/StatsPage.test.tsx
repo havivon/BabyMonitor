@@ -44,6 +44,7 @@ describe('StatsPage', () => {
     appStore.getState().addBaby({ name: 'נועה', birthDate: '2026-07-01', sex: 'female' });
     render(<StatsPage />);
     expect(screen.getByText('אין עדיין מספיק נתונים')).toBeInTheDocument();
+    expect(screen.queryByRole('radiogroup', { name: 'טווח' })).not.toBeInTheDocument();
   });
 
   it('shows daily averages with the change vs the previous period', () => {
@@ -51,14 +52,25 @@ describe('StatsPage', () => {
     render(<StatsPage />);
     expect(within(tile('האכלות ביום')).getByText('8')).toBeInTheDocument();
     expect(within(tile('האכלות ביום')).getByText('+2')).toBeInTheDocument();
-    expect(within(tile('האכלות ביום')).getByText(/מהשבוע הקודם/)).toBeInTheDocument();
+    expect(screen.getByText('ממוצע יומי · השינוי לעומת 7 הימים הקודמים')).toBeInTheDocument();
     expect(within(tile('בקבוק ביום')).getByText('800')).toBeInTheDocument();
-    // Every delta carries its unit (counts excepted).
+    // Delta = signed value + unit only (counts have no unit); the period is in one caption.
+    const visibleDelta = (label: string) => {
+      const el = tile(label).querySelector('.stat__delta')?.cloneNode(true) as
+        HTMLElement | undefined;
+      el?.querySelector('.visually-hidden')?.remove();
+      return el?.textContent.trim();
+    };
+    expect(visibleDelta('בקבוק ביום')).toBe('+200 מ״ל');
+    expect(visibleDelta('האכלות ביום')).toBe('+2');
+    // Zero change → "ללא שינוי" with no trend icon.
+    expect(visibleDelta('הנקה ביום')).toBe('ללא שינוי');
+    expect(tile('הנקה ביום').querySelector('.stat__delta svg')).toBeNull();
+    expect(tile('בקבוק ביום').querySelector('.stat__delta svg')).not.toBeNull();
+    // Screen readers still hear the comparison.
     expect(tile('בקבוק ביום').querySelector('.stat__delta')).toHaveTextContent(
-      '+200 מ״ל מהשבוע הקודם',
+      'לעומת 7 הימים הקודמים',
     );
-    expect(tile('הנקה ביום').querySelector('.stat__delta')).toHaveTextContent('0 ד׳ מהשבוע הקודם');
-    expect(tile('מרווח ממוצע').querySelector('.stat__delta')).toHaveTextContent(/ד׳ מהשבוע הקודם$/);
     expect(tile('הנקה ביום').querySelector('.stat__value')).toHaveTextContent('0ד׳');
     expect(screen.getByRole('heading', { name: 'האכלות לפי יום' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'כמות בקבוק יומית' })).toBeInTheDocument();
@@ -78,15 +90,13 @@ describe('StatsPage', () => {
     expect(within(tile('בקבוק ביום')).getByText('700')).toBeInTheDocument();
   });
 
-  it('words the comparison per range ("מהתקופה הקודמת" for 14/30 days)', async () => {
+  it('captions the comparison period once, per range', async () => {
     seed(28, 14);
     const user = userEvent.setup();
     render(<StatsPage />);
     await user.click(screen.getByRole('radio', { name: '14 ימים' }));
-    expect(tile('בקבוק ביום').querySelector('.stat__delta')).toHaveTextContent(
-      '+200 מ״ל מהתקופה הקודמת',
-    );
-    expect(screen.queryByText(/מהשבוע הקודם/)).not.toBeInTheDocument();
+    expect(tile('בקבוק ביום').querySelector('.stat__delta')).toHaveTextContent(/^\+200 מ״ל/);
+    expect(screen.getByText('ממוצע יומי · השינוי לעומת 14 הימים הקודמים')).toBeInTheDocument();
   });
 
   it('shows the bottle guideline band only for a mainly bottle-fed baby', () => {
@@ -115,8 +125,6 @@ describe('StatsPage', () => {
     render(<StatsPage />);
     expect(within(tile('בקבוק ביום')).getByText('27.1')).toBeInTheDocument();
     expect(tile('בקבוק ביום').querySelector('.stat__unit')).toHaveTextContent('oz');
-    expect(tile('בקבוק ביום').querySelector('.stat__delta')).toHaveTextContent(
-      '+6.8 oz מהשבוע הקודם',
-    );
+    expect(tile('בקבוק ביום').querySelector('.stat__delta')).toHaveTextContent(/^\+6.8 oz/);
   });
 });

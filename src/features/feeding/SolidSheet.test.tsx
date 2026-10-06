@@ -94,6 +94,17 @@ describe('SolidSheet', () => {
     expect(appStore.getState().entries[0]).toMatchObject({ amount: '50 גר׳' });
   });
 
+  it('keeps typed text in the field on blur (no layout jump) and still saves it (BUG-005)', () => {
+    seedStore();
+    renderInShell(<SolidSheet open onClose={() => undefined} />);
+    fireEvent.change(foodInput(), { target: { value: 'אפונה' } });
+    fireEvent.blur(foodInput());
+    expect(screen.queryByRole('button', { name: 'הסרת אפונה' })).not.toBeInTheDocument();
+    expect(foodInput()).toHaveValue('אפונה');
+    fireEvent.click(screen.getByRole('button', { name: 'שמירה' }));
+    expect(appStore.getState().entries[0]).toMatchObject({ foods: ['אפונה'] });
+  });
+
   it('requires at least one food', () => {
     seedStore();
     renderInShell(<SolidSheet open onClose={() => undefined} />);

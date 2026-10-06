@@ -129,6 +129,8 @@ export function SolidSheet({ open, onClose, entry }: SolidSheetProps) {
     note !== initial.note ||
     JSON.stringify(time) !== JSON.stringify(initial.time);
 
+  // Text left in the input is NOT turned into a chip on blur: that would insert a chip row and
+  // shift the controls under the user's next tap (BUG-005). Pending text is still saved (allFoods).
   const commitDraft = (): void => {
     if (!pending.length) return;
     setFoods((f) => addUnique(f, pending));
@@ -214,7 +216,7 @@ export function SolidSheet({ open, onClose, entry }: SolidSheetProps) {
                 <li key={norm(food)}>
                   <button
                     type="button"
-                    className="chip chip--solid"
+                    className="chip chip--removable chip--solid"
                     aria-label={he.solid.removeFood(food)}
                     onClick={() => {
                       setFoods((f) => f.filter((x) => x !== food));
@@ -250,7 +252,6 @@ export function SolidSheet({ open, onClose, entry }: SolidSheetProps) {
               }
             }}
             onKeyDown={onFoodKeyDown}
-            onBlur={commitDraft}
           />
           {/* Hint / error directly under the input, above the suggestions (review P3-7). */}
           {showFoodError ? (

@@ -3,14 +3,7 @@
    Imported last in main.tsx. Every rule here is listed in the hand-off report.
    ========================================================================== */
 
-/* 1. Day header (DESIGN §6.14): when "היום · יום ב׳, 5 באוקטובר" and the day summary do not fit on
-      one line (≤ 390px), drop the summary to its own line instead of both breaking mid-phrase. */
-.day-header {
-  flex-wrap: wrap;
-  row-gap: 0;
-}
-
-/* 2. Sheet exit (DESIGN §4 / §6.10: "Closing slides down in 220ms"). components.css only ships the
+/* 1. Sheet exit (DESIGN §4 / §6.10: "Closing slides down in 220ms"). components.css only ships the
       enter keyframes; Sheet.tsx sets [data-closing] and waits for animationend before close().
       Reduced motion: global.css shortens every animation to ~0, so the exit is instant. */
 @keyframes bm-sheet-out {
@@ -34,7 +27,7 @@
   }
 }
 
-/* 3. Unbreakable text unit (number + unit, "ב-14:02", day-summary items). Used by <Parts> and
+/* 2. Unbreakable text unit (number + unit, "ב-14:02", day-summary items). Used by <Parts> and
       wherever a number must never be separated from its unit (team-lead review). */
 .nowrap {
   white-space: nowrap;

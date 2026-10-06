@@ -12,10 +12,11 @@ import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { AppHeader } from '../../app/AppHeader';
 import { BabySwitcher } from '../../app/BabySwitcher';
-import { formatClock, MS_PER_DAY, toDateKey } from '../../domain/dates';
+import { formatClock, startOfLocalDay, toDateKey } from '../../domain/dates';
 import {
   breastDurations,
   dailyAggregates,
+  dayTotals,
   entryTime,
   lastFeed,
   suggestNextSide,
@@ -363,7 +364,9 @@ function QuickAdd({
 function TodaySection({ entries, now }: { entries: FeedingEntry[]; now: number }) {
   const { volumeUnit } = useSettings();
   const today = todayTotals(entries, now);
-  const yesterday = todayTotals(entries, now - MS_PER_DAY);
+  // Previous LOCAL calendar day (not now − 24 h, which stays on the same day across a 25-hour
+  // DST day — BUG-006).
+  const yesterday = dayTotals(entries, startOfLocalDay(now) - 1);
   const interval = dailyAggregates(entries, 1, now)[0]?.avgIntervalMs ?? null;
   const dash = '—';
 

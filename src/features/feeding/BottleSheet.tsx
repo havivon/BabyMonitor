@@ -232,13 +232,7 @@ export function BottleSheet({ open, onClose, entry }: BottleSheetProps) {
             ))}
           </div>
           {showWarning && (
-            // Warning tone (review P3-4): allowed, but should not be missed.
-            <p
-              className="field__error"
-              style={{ color: 'var(--color-warning)' }}
-              id={amountWarnId}
-              role="status"
-            >
+            <p className="field__hint field__hint--warning" id={amountWarnId} role="status">
               <TriangleAlert aria-hidden="true" />
               {he.bottle.warnHigh}
             </p>

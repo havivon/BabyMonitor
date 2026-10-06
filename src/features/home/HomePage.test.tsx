@@ -14,6 +14,23 @@ afterEach(() => {
   vi.useRealTimers();
 });
 
+describe('HomePage today stats', () => {
+  it('"אתמול" is the previous calendar day even on the 25-hour DST day (BUG-006)', () => {
+    vi.setSystemTime(local(2026, 10, 25, 23, 30)); // Israel DST ends on 2026-10-25
+    seedStore({
+      entries: [
+        bottle(local(2026, 10, 25, 10, 0), 100),
+        bottle(local(2026, 10, 24, 9, 0), 100),
+        bottle(local(2026, 10, 24, 15, 0), 100),
+      ],
+    });
+    renderInShell(<HomePage />);
+    const feeds = screen.getByText('האכלות').closest('.stat')!;
+    expect(feeds.querySelector('.stat__value')).toHaveTextContent('1');
+    expect(feeds.querySelector('.stat__sub')).toHaveTextContent('אתמול: 2');
+  });
+});
+
 describe('HomePage hero', () => {
   it('shows time since the last feed, its details and the next side', () => {
     seedStore({

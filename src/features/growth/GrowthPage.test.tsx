@@ -1,4 +1,4 @@
-import { render, screen, waitFor, within } from '@testing-library/react';
+import { act, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ToastProvider } from '../../components/toast';
@@ -125,10 +125,37 @@ describe('GrowthPage', () => {
     expect(screen.getByRole('heading', { name: 'היקף ראש לגיל' })).toBeInTheDocument();
   });
 
-  it('shows the milk guideline card for a young baby with a weight', async () => {
+  it('shows the milk guideline card only for a mainly bottle-fed baby', async () => {
     const { baby } = setup(3300);
-    appStore.getState().addMeasurement({ babyId: baby.id, date: '2026-10-01', weightG: 5000 });
+    const s = appStore.getState();
+    s.addMeasurement({ babyId: baby.id, date: '2026-10-01', weightG: 5120 });
+    s.addEntry({
+      babyId: baby.id,
+      type: 'bottle',
+      at: NOW - 3_600_000,
+      content: 'formula',
+      amountMl: 120,
+    });
     expect(await screen.findByText('כמות חלב יומית משוערת')).toBeInTheDocument();
-    expect(screen.getByText('600–900')).toBeInTheDocument();
+    // 5.12 kg × 120/180 ml ≈ 614/922 ml → shown rounded to 10 ml.
+    expect(screen.getByText('610–920')).toBeInTheDocument();
+    // A breastfeed in the last 72 h (mixed feeding) → no ml target.
+    act(() => {
+      appStore.getState().addEntry({
+        babyId: baby.id,
+        type: 'breast',
+        startedAt: NOW - 7_200_000,
+        endedAt: NOW - 6_600_000,
+        segments: [{ side: 'left', startedAt: NOW - 7_200_000, endedAt: NOW - 6_600_000 }],
+      });
+    });
+    expect(screen.queryByText('כמות חלב יומית משוערת')).not.toBeInTheDocument();
+  });
+
+  it('says "ביום הלידה" for a birth-only summary and labels the birth row', async () => {
+    setup(3300);
+    expect(await screen.findByText(/ביום הלידה/)).toBeInTheDocument();
+    expect(screen.queryByText(/בגיל היום הראשון/)).not.toBeInTheDocument();
+    expect(screen.getByText('משקל לידה', { selector: '.row__sub' })).toBeInTheDocument();
   });
 });
