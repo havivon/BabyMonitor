@@ -13,6 +13,7 @@ export default defineConfig([
     'test-results',
     'playwright-report',
     'src/domain/growth/data',
+    'android',
   ]),
   {
     files: ['**/*.{ts,tsx}'],

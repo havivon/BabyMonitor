@@ -1,0 +1,73 @@
+name: Android APK
+
+# Builds the Capacitor Android app (web build bundled in the APK) and publishes the APK
+# as a workflow artifact and as a GitHub pre-release asset that can be downloaded on a phone.
+on:
+  push:
+    branches: [main, ccr-c3f89a1f-qrcn5w]
+    paths-ignore: ['docs/**', '**/*.md']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: android-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - uses: android-actions/setup-android@v3
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Unit tests
+        run: npm test
+
+      - name: Build web assets and sync Android project
+        run: npm run build:android
+
+      - name: Build debug APK
+        working-directory: android
+        run: ./gradlew --no-daemon assembleDebug
+
+      - name: Rename APK
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          mkdir -p out
+          cp android/app/build/outputs/apk/debug/app-debug.apk "out/BabyMonitor-${VERSION}-build${{ github.run_number }}.apk"
+          ls -l out
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: BabyMonitor-apk
+          path: out/*.apk
+          if-no-files-found: error
+
+      - name: Publish pre-release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: android-build-${{ github.run_number }}
+          target_commitish: ${{ github.sha }}
+          name: BabyMonitor Android (build ${{ github.run_number }})
+          prerelease: true
+          files: out/*.apk
+          body: |
+            קובץ APK להתקנה ישירה על אנדרואיד (גרסת debug חתומה).
+            בטלפון: להוריד את הקובץ, לפתוח אותו ולאשר "התקנה ממקורות לא ידועים".

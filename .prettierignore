@@ -8,6 +8,7 @@ playwright-report
 package-lock.json
 public
 src/domain/growth/data
+android
 
 # owned by others — never reformat
 data
