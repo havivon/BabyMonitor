@@ -7,8 +7,9 @@ android {
         applicationId "com.havivon.babymonitor"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 1
-        versionName "1.0"
+        // CI sets GITHUB_RUN_NUMBER, so each published APK is a newer version than the last.
+        versionCode((System.getenv("GITHUB_RUN_NUMBER") ?: "1") as Integer)
+        versionName "1.0.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
@@ -16,8 +17,27 @@ android {
             ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
+    // A fixed signing key (from CI secrets) keeps every APK installable over the previous one
+    // (preserving the app's data) and keeps the SHA-1 registered in Firebase valid. Without it,
+    // builds fall back to the machine's debug key.
+    def keystorePath = System.getenv("ANDROID_KEYSTORE_PATH")
+    def hasStableKey = keystorePath != null && file(keystorePath).exists()
+    signingConfigs {
+        if (hasStableKey) {
+            stable {
+                storeFile file(keystorePath)
+                storePassword System.getenv("ANDROID_KEYSTORE_PASSWORD")
+                keyAlias System.getenv("ANDROID_KEY_ALIAS")
+                keyPassword System.getenv("ANDROID_KEYSTORE_PASSWORD")
+            }
+        }
+    }
     buildTypes {
+        debug {
+            if (hasStableKey) signingConfig signingConfigs.stable
+        }
         release {
+            if (hasStableKey) signingConfig signingConfigs.stable
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
