@@ -84,8 +84,13 @@ export const he = {
     sexHint: 'משמש לחישוב אחוזוני הגדילה לפי טבלאות WHO',
     birthWeight: 'משקל לידה',
     birthWeightHint: 'מומלץ — כך אפשר לעקוב אחרי החזרה למשקל הלידה',
+    birthLength: 'אורך לידה',
+    birthHead: 'היקף ראש בלידה',
+    birthMeasureHint: 'מופיע בסיכום מבית החולים',
     start: 'התחלה',
     privacy: 'בלי הרשמה ובלי שרת — הכול נשמר במכשיר שלך',
+    /** When accounts are available (DESIGN §15): sign-in is optional. */
+    privacyOptionalAccount: 'החשבון אינו חובה — בלעדיו הכול נשמר רק במכשיר הזה',
     import: 'יש לי קובץ גיבוי',
     imported: 'הגיבוי יובא בהצלחה',
     importErr: 'הקובץ אינו גיבוי תקין של BabyMonitor',
@@ -98,6 +103,8 @@ export const he = {
       sex: 'יש לבחור מין לחישוב האחוזונים',
       weight: (min: string, max: string, unit: string) =>
         `משקל הלידה צריך להיות בין ${min} ל-${max} ${unit}`,
+      length: (min: number, max: number) => `אורך הלידה צריך להיות בין ${min} ל-${max} ס״מ`,
+      head: (min: number, max: number) => `היקף הראש בלידה צריך להיות בין ${min} ל-${max} ס״מ`,
     },
   },
   home: {
@@ -109,7 +116,7 @@ export const he = {
       side: (side: string) => `צד ${side}`,
     },
     nextSide: (side: string) => `הצד הבא: ${side}`,
-    addHeading: 'הוספת האכלה',
+    addHeading: 'הוספה מהירה',
     tile: {
       breastAria: 'התחלת הנקה',
       breastActiveAria: 'הנקה פעילה, פתיחת הטיימר',
@@ -121,7 +128,11 @@ export const he = {
       breastEmpty: 'טיימר ימין/שמאל',
       bottleEmpty: 'חלב אם או תמ״ל',
       solidEmpty: 'מזון וכמות',
+      measurement: 'מדידה',
+      measurementAria: 'הוספת מדידה',
+      measurementEmpty: 'משקל, אורך, ראש',
     },
+    measurementSaved: 'המדידה נשמרה',
     today: 'היום',
     toStats: 'לסטטיסטיקה',
     stat: {

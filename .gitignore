@@ -24,3 +24,10 @@ npm-debug.log*
 # signing keys — never commit
 *.keystore
 *.jks
+
+# Firebase: emulator logs/state and the Android config (delivered via CI secret)
+.firebase/
+firebase-debug.log*
+firestore-debug.log*
+ui-debug.log*
+android/app/google-services.json

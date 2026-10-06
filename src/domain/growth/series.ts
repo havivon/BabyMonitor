@@ -12,7 +12,7 @@ export interface GrowthPoint {
   ageDays: number;
   /** Grams for weight, millimetres for length / head circumference. */
   value: number;
-  /** 'birth' = synthesized from `Baby.birthWeightG`. */
+  /** 'birth' = synthesized from the baby's birth measures (`birthWeightG` / `birthLengthMm` / `birthHeadMm`). */
   source: 'birth' | 'measurement';
   measurementId?: string;
 }
@@ -28,22 +28,37 @@ export function measurementValue(m: Measurement, indicator: GrowthIndicator): nu
   return m[FIELD[indicator]];
 }
 
+/** The birth value of an indicator stored on the baby (weight g, length/head mm), if any. */
+export function birthValue(
+  baby: Pick<Baby, 'birthWeightG' | 'birthLengthMm' | 'birthHeadMm'>,
+  indicator: GrowthIndicator,
+): number | undefined {
+  const v =
+    indicator === 'weight'
+      ? baby.birthWeightG
+      : indicator === 'length'
+        ? baby.birthLengthMm
+        : baby.birthHeadMm;
+  return v !== undefined && v > 0 ? v : undefined;
+}
+
 /**
- * Chronological series for one indicator. For weight, the birth weight is included as a day-0
- * point unless a weight was measured on the birth date. When several measurements share a date,
+ * Chronological series for one indicator. The baby's birth measure (weight, length or head) is
+ * included as a day-0 point unless that value was also measured on the birth date. When several measurements share a date,
  * the LAST one in input order wins. Measurements dated before birth are ignored.
  */
 export function growthSeries(
-  baby: Pick<Baby, 'birthDate' | 'birthWeightG'>,
+  baby: Pick<Baby, 'birthDate' | 'birthWeightG' | 'birthLengthMm' | 'birthHeadMm'>,
   measurements: readonly Measurement[],
   indicator: GrowthIndicator,
 ): GrowthPoint[] {
   const byDate = new Map<IsoDate, GrowthPoint>();
-  if (indicator === 'weight' && baby.birthWeightG !== undefined && baby.birthWeightG > 0) {
+  const atBirth = birthValue(baby, indicator);
+  if (atBirth !== undefined) {
     byDate.set(baby.birthDate, {
       date: baby.birthDate,
       ageDays: 0,
-      value: baby.birthWeightG,
+      value: atBirth,
       source: 'birth',
     });
   }

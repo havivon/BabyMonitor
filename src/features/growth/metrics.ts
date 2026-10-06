@@ -8,6 +8,13 @@ export const METRIC_LABEL: Record<GrowthIndicator, string> = {
   head: 'היקף ראש',
 };
 
+/** Row/summary label for a value taken from the baby's profile at birth. */
+export const BIRTH_LABEL: Record<GrowthIndicator, string> = {
+  weight: 'משקל לידה',
+  length: 'אורך לידה',
+  head: 'היקף ראש בלידה',
+};
+
 export const CHART_TITLE: Record<GrowthIndicator, string> = {
   weight: 'משקל לגיל',
   length: 'אורך לגיל',

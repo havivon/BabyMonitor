@@ -101,7 +101,14 @@ const syncDoc = (uid: string, data: Record<string, unknown> | null) => ({
 
 describe('users/{uid}', () => {
   it('only the owner can read and write their profile', async () => {
-    await assertSucceeds(setDoc(doc(as('dad'), 'users', 'dad'), { displayName: 'אבא', email: 'd@x.y', familyId: null, createdAt: serverTimestamp() }));
+    await assertSucceeds(
+      setDoc(doc(as('dad'), 'users', 'dad'), {
+        displayName: 'אבא',
+        email: 'd@x.y',
+        familyId: null,
+        createdAt: serverTimestamp(),
+      }),
+    );
     await assertSucceeds(getDoc(doc(as('dad'), 'users', 'dad')));
     await assertFails(getDoc(doc(as('mom'), 'users', 'dad')));
     await assertFails(setDoc(doc(as('mom'), 'users', 'dad'), { displayName: 'x' }));
@@ -110,7 +117,9 @@ describe('users/{uid}', () => {
   });
 
   it('rejects unknown fields', async () => {
-    await assertFails(setDoc(doc(as('dad'), 'users', 'dad'), { displayName: 'אבא', isAdmin: true }));
+    await assertFails(
+      setDoc(doc(as('dad'), 'users', 'dad'), { displayName: 'אבא', isAdmin: true }),
+    );
   });
 });
 
@@ -120,7 +129,9 @@ describe('families and their data', () => {
     await assertFails(getDoc(doc(db, 'families', FID)));
     await assertFails(getDocs(collection(db, 'families', FID, 'entries')));
     await assertFails(getDoc(doc(db, 'families', FID, 'entries', 'e1')));
-    await assertFails(setDoc(doc(db, 'families', FID, 'entries', 'e2'), syncDoc('dad', { id: 'e2' })));
+    await assertFails(
+      setDoc(doc(db, 'families', FID, 'entries', 'e2'), syncDoc('dad', { id: 'e2' })),
+    );
     await assertFails(getDocs(collection(db, 'families')));
     await assertFails(getDoc(doc(as(null), 'families', FID)));
   });
@@ -129,9 +140,19 @@ describe('families and their data', () => {
     const db = as('mom');
     await assertSucceeds(getDoc(doc(db, 'families', FID)));
     await assertSucceeds(getDocs(collection(db, 'families', FID, 'entries')));
-    await assertSucceeds(setDoc(doc(db, 'families', FID, 'entries', 'e2'), syncDoc('mom', { id: 'e2', type: 'bottle' })));
+    await assertSucceeds(
+      setDoc(
+        doc(db, 'families', FID, 'entries', 'e2'),
+        syncDoc('mom', { id: 'e2', type: 'bottle' }),
+      ),
+    );
     await assertSucceeds(setDoc(doc(db, 'families', FID, 'entries', 'e2'), syncDoc('mom', null))); // tombstone
-    await assertSucceeds(setDoc(doc(db, 'families', FID, 'timers', 'b1'), { ...syncDoc('mom', { babyId: 'b1', segments: [] }), startedBy: 'mom' }));
+    await assertSucceeds(
+      setDoc(doc(db, 'families', FID, 'timers', 'b1'), {
+        ...syncDoc('mom', { babyId: 'b1', segments: [] }),
+        startedBy: 'mom',
+      }),
+    );
   });
 
   it('rejects malformed synced records', async () => {
@@ -139,12 +160,18 @@ describe('families and their data', () => {
     const ref = doc(db, 'families', FID, 'entries', 'e3');
     await assertFails(setDoc(ref, syncDoc('dad', { id: 'e3' }))); // updatedBy must be the caller
     await assertFails(setDoc(ref, syncDoc('mom', { id: 'other' }))); // id must match the doc id
-    await assertFails(setDoc(ref, { ...syncDoc('mom', { id: 'e3' }), updatedAt: Timestamp.fromMillis(0) }));
+    await assertFails(
+      setDoc(ref, { ...syncDoc('mom', { id: 'e3' }), updatedAt: Timestamp.fromMillis(0) }),
+    );
     await assertFails(setDoc(ref, { ...syncDoc('mom', { id: 'e3' }), extra: 1 }));
     await assertFails(setDoc(ref, { ...syncDoc('mom', { id: 'e3' }), deleted: true })); // tombstone with data
     await assertFails(setDoc(ref, { ...syncDoc('mom', { id: 'e3' }), startedBy: 'mom' })); // startedBy only on timers
-    await assertFails(setDoc(doc(db, 'families', FID, 'secrets', 'x'), syncDoc('mom', { id: 'x' })));
-    await assertFails(setDoc(doc(db, 'families', FID, 'timers', 'b1'), syncDoc('mom', { babyId: 'b2' })));
+    await assertFails(
+      setDoc(doc(db, 'families', FID, 'secrets', 'x'), syncDoc('mom', { id: 'x' })),
+    );
+    await assertFails(
+      setDoc(doc(db, 'families', FID, 'timers', 'b1'), syncDoc('mom', { babyId: 'b2' })),
+    );
   });
 
   it('only tombstones may be hard-deleted', async () => {
@@ -156,18 +183,38 @@ describe('families and their data', () => {
 
   it('create: the creator must be the only member', async () => {
     const db = as('dad');
-    const fam = (members: Record<string, unknown>) => ({ name: 'שלנו', createdBy: 'dad', createdAt: serverTimestamp(), members });
-    await assertSucceeds(setDoc(doc(db, 'families', 'f2'), fam({ dad: { name: 'אבא', joinedAt: serverTimestamp() } })));
-    await assertFails(
-      setDoc(doc(db, 'families', 'f3'), fam({ dad: { name: 'אבא', joinedAt: serverTimestamp() }, mom: { name: 'אמא', joinedAt: serverTimestamp() } })),
+    const fam = (members: Record<string, unknown>) => ({
+      name: 'שלנו',
+      createdBy: 'dad',
+      createdAt: serverTimestamp(),
+      members,
+    });
+    await assertSucceeds(
+      setDoc(doc(db, 'families', 'f2'), fam({ dad: { name: 'אבא', joinedAt: serverTimestamp() } })),
     );
-    await assertFails(setDoc(doc(db, 'families', 'f4'), { ...fam({ dad: { name: 'אבא', joinedAt: serverTimestamp() } }), createdBy: 'mom' }));
+    await assertFails(
+      setDoc(
+        doc(db, 'families', 'f3'),
+        fam({
+          dad: { name: 'אבא', joinedAt: serverTimestamp() },
+          mom: { name: 'אמא', joinedAt: serverTimestamp() },
+        }),
+      ),
+    );
+    await assertFails(
+      setDoc(doc(db, 'families', 'f4'), {
+        ...fam({ dad: { name: 'אבא', joinedAt: serverTimestamp() } }),
+        createdBy: 'mom',
+      }),
+    );
   });
 });
 
 describe('joining with an invite', () => {
   const join = (uid: string, code: string, fid = FID) =>
-    updateDoc(doc(as(uid), 'families', fid), { [`members.${uid}`]: { name: 'אבא', joinedAt: serverTimestamp(), inviteCode: code } });
+    updateDoc(doc(as(uid), 'families', fid), {
+      [`members.${uid}`]: { name: 'אבא', joinedAt: serverTimestamp(), inviteCode: code },
+    });
 
   it('succeeds only with a valid, unexpired invite of this family, adding only the caller', async () => {
     await assertFails(join('dad', 'QLDCDE')); // expired
@@ -198,7 +245,9 @@ describe('joining with an invite', () => {
 
 describe('leaving', () => {
   it('a member may remove only themself', async () => {
-    await assertSucceeds(updateDoc(doc(as('mom'), 'families', FID), { 'members.mom': deleteField() }));
+    await assertSucceeds(
+      updateDoc(doc(as('mom'), 'families', FID), { 'members.mom': deleteField() }),
+    );
     await assertFails(getDoc(doc(as('mom'), 'families', FID, 'entries', 'e1')));
   });
 
@@ -208,7 +257,9 @@ describe('leaving', () => {
         'members.dad': { name: 'אבא', joinedAt: serverTimestamp(), inviteCode: 'ABCD23' },
       }),
     );
-    await assertSucceeds(updateDoc(doc(as('dad'), 'families', FID), { 'members.dad': deleteField() }));
+    await assertSucceeds(
+      updateDoc(doc(as('dad'), 'families', FID), { 'members.dad': deleteField() }),
+    );
   });
 
   it('a non-member cannot "leave" (or remove) anyone', async () => {

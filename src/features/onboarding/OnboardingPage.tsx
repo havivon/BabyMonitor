@@ -78,7 +78,7 @@ export function OnboardingPage() {
           <>
             <p className="disclaimer" style={{ justifyContent: 'center' }}>
               <ShieldCheck aria-hidden="true" />
-              <span>{he.onb.privacy}</span>
+              <span>{isCloudConfigured ? he.onb.privacyOptionalAccount : he.onb.privacy}</span>
             </p>
             {isFirstRun && (
               <button

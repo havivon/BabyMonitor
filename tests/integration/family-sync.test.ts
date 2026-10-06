@@ -5,11 +5,21 @@
  */
 import { deleteApp, initializeApp, type FirebaseApp } from 'firebase/app';
 import { connectAuthEmulator, inMemoryPersistence, initializeAuth } from 'firebase/auth';
-import { connectFirestoreEmulator, disableNetwork, enableNetwork, initializeFirestore, type Firestore } from 'firebase/firestore';
+import {
+  connectFirestoreEmulator,
+  disableNetwork,
+  enableNetwork,
+  initializeFirestore,
+  type Firestore,
+} from 'firebase/firestore';
 import type { StateStorage } from 'zustand/middleware';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { stableStringify } from '../../src/platform/cloud/records';
-import { createCloudService, type CloudService, type TimerStarter } from '../../src/platform/cloud/service';
+import {
+  createCloudService,
+  type CloudService,
+  type TimerStarter,
+} from '../../src/platform/cloud/service';
 import { CloudError, type CloudState } from '../../src/platform/cloud/types';
 import { createAppStore, type AppStore } from '../../src/store/appStore';
 
@@ -27,12 +37,19 @@ interface Device {
 
 function memoryStorage(): StateStorage {
   const m = new Map<string, string>();
-  return { getItem: (k) => m.get(k) ?? null, setItem: (k, v) => void m.set(k, v), removeItem: (k) => void m.delete(k) };
+  return {
+    getItem: (k) => m.get(k) ?? null,
+    setItem: (k, v) => void m.set(k, v),
+    removeItem: (k) => void m.delete(k),
+  };
 }
 
 let n = 0;
 function device(name: string): Device {
-  const app = initializeApp({ apiKey: 'demo-key', projectId: PROJECT_ID, appId: `demo-${name}` }, `${name}-${++n}`);
+  const app = initializeApp(
+    { apiKey: 'demo-key', projectId: PROJECT_ID, appId: `demo-${name}` },
+    `${name}-${++n}`,
+  );
   const auth = initializeAuth(app, { persistence: inMemoryPersistence });
   connectAuthEmulator(auth, `http://${HOST}:9099`, { disableWarnings: true });
   const db = initializeFirestore(app, { ignoreUndefinedProperties: true });
@@ -47,7 +64,6 @@ function device(name: string): Device {
     signInWithGoogle: () => Promise.reject(new CloudError('cancelled')),
     onState: (s) => {
       state = s;
-      if (process.env.DEBUG_CLOUD) console.log(name, JSON.stringify(s));
     },
     onTimerStarters: (m) => {
       starters = m;
@@ -72,8 +88,13 @@ async function waitFor(check: () => boolean, label: string, timeoutMs = 15_000):
 }
 
 async function clearEmulators(): Promise<void> {
-  await fetch(`http://${HOST}:8080/emulator/v1/projects/${PROJECT_ID}/databases/(default)/documents`, { method: 'DELETE' });
-  await fetch(`http://${HOST}:9099/emulator/v1/projects/${PROJECT_ID}/accounts`, { method: 'DELETE' });
+  await fetch(
+    `http://${HOST}:8080/emulator/v1/projects/${PROJECT_ID}/databases/(default)/documents`,
+    { method: 'DELETE' },
+  );
+  await fetch(`http://${HOST}:9099/emulator/v1/projects/${PROJECT_ID}/accounts`, {
+    method: 'DELETE',
+  });
 }
 
 const stamp = Date.now();
@@ -94,10 +115,17 @@ afterAll(async () => {
 
 const sharedView = (s: AppStore) => {
   const { babies, entries, measurements, activeTimers } = s.getState();
-  const sort = <T extends { id: string }>(a: T[]) => [...a].sort((x, y) => x.id.localeCompare(y.id));
-  return { babies: sort(babies), entries: sort(entries), measurements: sort(measurements), activeTimers };
+  const sort = <T extends { id: string }>(a: T[]) =>
+    [...a].sort((x, y) => x.id.localeCompare(y.id));
+  return {
+    babies: sort(babies),
+    entries: sort(entries),
+    measurements: sort(measurements),
+    activeTimers,
+  };
 };
-const converged = () => stableStringify(sharedView(mom.store)) === stableStringify(sharedView(dad.store));
+const converged = () =>
+  stableStringify(sharedView(mom.store)) === stableStringify(sharedView(dad.store));
 
 describe('family sync (emulators)', () => {
   it('signs both parents up; email errors map to stable codes', async () => {
@@ -105,16 +133,31 @@ describe('family sync (emulators)', () => {
     await dad.service.signUpWithEmail('אבא', `dad${stamp}@example.com`, 'secret-456');
     await waitFor(() => mom.state().ready && dad.state().ready, 'auth ready');
     expect(mom.state().user).toMatchObject({ displayName: 'אמא', provider: 'password' });
-    const dup = await dad.service.signUpWithEmail('x', `mom${stamp}@example.com`, 'secret-789').catch((e: unknown) => e);
+    const dup = await dad.service
+      .signUpWithEmail('x', `mom${stamp}@example.com`, 'secret-789')
+      .catch((e: unknown) => e);
     expect((dup as CloudError).code).toBe('email-in-use');
-    const weak = await dad.service.signUpWithEmail('x', `weak${stamp}@example.com`, '123').catch((e: unknown) => e);
+    const weak = await dad.service
+      .signUpWithEmail('x', `weak${stamp}@example.com`, '123')
+      .catch((e: unknown) => e);
     expect((weak as CloudError).code).toBe('weak-password');
   });
 
   it('mom creates a family and her device data is uploaded', async () => {
     const s = mom.store.getState();
-    const baby = s.addBaby({ name: 'נועה', birthDate: '2026-06-01', sex: 'female', birthWeightG: 3200 });
-    s.addEntry({ babyId: baby.id, type: 'bottle', at: Date.now() - 3_600_000, content: 'formula', amountMl: 90 });
+    const baby = s.addBaby({
+      name: 'נועה',
+      birthDate: '2026-06-01',
+      sex: 'female',
+      birthWeightG: 3200,
+    });
+    s.addEntry({
+      babyId: baby.id,
+      type: 'bottle',
+      at: Date.now() - 3_600_000,
+      content: 'formula',
+      amountMl: 90,
+    });
     s.addMeasurement({ babyId: baby.id, date: '2026-07-01', weightG: 4300 });
     await mom.service.createFamily('משפחת כהן');
     await waitFor(() => mom.state().family?.members.length === 1, 'family listener');
@@ -137,7 +180,12 @@ describe('family sync (emulators)', () => {
     dad.store.getState().addBaby({ name: 'איתי', birthDate: '2024-03-01', sex: 'male' });
     await dad.service.joinFamily(invite.code, 'merge');
     await waitFor(converged, 'merge converged');
-    expect(dad.store.getState().babies.map((b) => b.name).sort()).toEqual(['איתי', 'נועה']);
+    expect(
+      dad.store
+        .getState()
+        .babies.map((b) => b.name)
+        .sort(),
+    ).toEqual(['איתי', 'נועה']);
     await waitFor(() => mom.state().family?.members.length === 2, 'mom sees dad');
     expect(dad.state().family?.members.map((m) => m.name)).toEqual(['אמא', 'אבא']);
   });
@@ -145,13 +193,24 @@ describe('family sync (emulators)', () => {
   it('adds, edits and deletes propagate both ways', async () => {
     const noa = mom.store.getState().babies.find((b) => b.name === 'נועה');
     if (!noa) throw new Error('missing baby');
-    const added = dad.store.getState().addEntry({ babyId: noa.id, type: 'solid', at: Date.now(), foods: ['בטטה'] });
-    await waitFor(() => mom.store.getState().entries.some((e) => e.id === added.id), 'add reaches mom');
+    const added = dad.store
+      .getState()
+      .addEntry({ babyId: noa.id, type: 'solid', at: Date.now(), foods: ['בטטה'] });
+    await waitFor(
+      () => mom.store.getState().entries.some((e) => e.id === added.id),
+      'add reaches mom',
+    );
 
     const bottle = mom.store.getState().entries.find((e) => e.type === 'bottle');
     if (bottle?.type !== 'bottle') throw new Error('missing bottle');
     mom.store.getState().updateEntry({ ...bottle, amountMl: 120 });
-    await waitFor(() => dad.store.getState().entries.some((e) => e.id === bottle.id && e.type === 'bottle' && e.amountMl === 120), 'edit');
+    await waitFor(
+      () =>
+        dad.store
+          .getState()
+          .entries.some((e) => e.id === bottle.id && e.type === 'bottle' && e.amountMl === 120),
+      'edit',
+    );
 
     dad.store.getState().deleteEntry(added.id);
     await waitFor(() => !mom.store.getState().entries.some((e) => e.id === added.id), 'delete');
@@ -162,29 +221,21 @@ describe('family sync (emulators)', () => {
     const noa = mom.store.getState().babies.find((b) => b.name === 'נועה');
     if (!noa) throw new Error('missing baby');
     mom.store.getState().startTimer(noa.id, 'right');
-    await waitFor(() => dad.store.getState().activeTimers[noa.id] !== undefined, 'timer reaches dad');
+    await waitFor(
+      () => dad.store.getState().activeTimers[noa.id] !== undefined,
+      'timer reaches dad',
+    );
     await waitFor(() => dad.starters()[noa.id]?.name === 'אמא', 'starter name');
     expect(dad.starters()[noa.id]?.isMe).toBe(false);
     expect(mom.starters()[noa.id]?.isMe).toBe(true);
 
     dad.store.getState().finishTimer(noa.id);
-    await waitFor(() => mom.store.getState().activeTimers[noa.id] === undefined, 'timer finished on mom');
+    await waitFor(
+      () => mom.store.getState().activeTimers[noa.id] === undefined,
+      'timer finished on mom',
+    );
     await waitFor(converged, 'converged after the feed');
     expect(mom.store.getState().entries.some((e) => e.type === 'breast')).toBe(true);
-  });
-
-  it('offline edits on one device sync after reconnecting', async () => {
-    const noa = mom.store.getState().babies.find((b) => b.name === 'נועה');
-    if (!noa) throw new Error('missing baby');
-    await disableNetwork(dad.db);
-    const offlineEntry = dad.store.getState().addEntry({ babyId: noa.id, type: 'bottle', at: Date.now(), content: 'breastmilk', amountMl: 60 });
-    const momEntry = mom.store.getState().addEntry({ babyId: noa.id, type: 'bottle', at: Date.now() + 1, content: 'formula', amountMl: 70 });
-    await new Promise((r) => setTimeout(r, 500));
-    expect(mom.store.getState().entries.some((e) => e.id === offlineEntry.id)).toBe(false);
-    expect(dad.store.getState().entries.some((e) => e.id === momEntry.id)).toBe(false);
-    await enableNetwork(dad.db);
-    await waitFor(converged, 'converged after reconnect');
-    expect(mom.store.getState().entries.some((e) => e.id === offlineEntry.id)).toBe(true);
   });
 
   it('cannot create a second family or join twice', async () => {
@@ -200,7 +251,9 @@ describe('family sync (emulators)', () => {
     await waitFor(() => mom.state().family?.members.length === 1, 'mom sees dad left');
     const noa = mom.store.getState().babies.find((b) => b.name === 'נועה');
     if (!noa) throw new Error('missing baby');
-    mom.store.getState().addEntry({ babyId: noa.id, type: 'solid', at: Date.now(), foods: ['אבוקדו'] });
+    mom.store
+      .getState()
+      .addEntry({ babyId: noa.id, type: 'solid', at: Date.now(), foods: ['אבוקדו'] });
     await new Promise((r) => setTimeout(r, 800));
     expect(dad.store.getState().entries).toHaveLength(before);
   });
@@ -218,7 +271,40 @@ describe('family sync (emulators)', () => {
     // Signing in again restores everything from the cloud.
     await mom.service.signInWithEmail(`mom${stamp}@example.com`, 'secret-123');
     await waitFor(() => mom.store.getState().entries.length === count, 'restored from cloud');
-    const wrong = await dad.service.signInWithEmail(`mom${stamp}@example.com`, 'nope-nope').catch((e: unknown) => e);
+    const wrong = await dad.service
+      .signInWithEmail(`mom${stamp}@example.com`, 'nope-nope')
+      .catch((e: unknown) => e);
     expect((wrong as CloudError).code).toBe('wrong-password');
+  });
+
+  // Last: the emulator's write stream is flaky for the SAME client after disable/enableNetwork.
+  it('offline edits on one device sync after reconnecting', async () => {
+    // Dad re-joins (replace: drop his stale local copy) — also covers joining twice over time.
+    const invite = await mom.service.createInvite();
+    await dad.service.joinFamily(invite.code, 'replace');
+    await waitFor(converged, 'converged after re-join');
+    const noa = mom.store.getState().babies.find((b) => b.name === 'נועה');
+    if (!noa) throw new Error('missing baby');
+    await disableNetwork(dad.db);
+    const offlineEntry = dad.store.getState().addEntry({
+      babyId: noa.id,
+      type: 'bottle',
+      at: Date.now(),
+      content: 'breastmilk',
+      amountMl: 60,
+    });
+    const momEntry = mom.store.getState().addEntry({
+      babyId: noa.id,
+      type: 'bottle',
+      at: Date.now() + 1,
+      content: 'formula',
+      amountMl: 70,
+    });
+    await new Promise((r) => setTimeout(r, 500));
+    expect(mom.store.getState().entries.some((e) => e.id === offlineEntry.id)).toBe(false);
+    expect(dad.store.getState().entries.some((e) => e.id === momEntry.id)).toBe(false);
+    await enableNetwork(dad.db);
+    await waitFor(converged, 'converged after reconnect');
+    expect(mom.store.getState().entries.some((e) => e.id === offlineEntry.id)).toBe(true);
   });
 });

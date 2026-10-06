@@ -7,7 +7,7 @@ import { toDateKey } from '../../domain/dates';
 import { isMainlyBottleFed } from '../../domain/feeding';
 import { growthInsights } from '../../domain/growth/insights';
 import { formatPercentile } from '../../domain/growth/percentiles';
-import { assessSeries, growthSeries } from '../../domain/growth/series';
+import { assessSeries, birthValue, growthSeries } from '../../domain/growth/series';
 import type { GrowthIndicator } from '../../domain/growth/who';
 import type { Measurement } from '../../domain/types';
 import { useNow } from '../../hooks/useNow';
@@ -130,7 +130,9 @@ export function GrowthPage() {
     }
   };
 
-  const hasAnyData = measurements.length > 0 || baby.birthWeightG !== undefined;
+  const hasAnyData =
+    measurements.length > 0 ||
+    (['weight', 'length', 'head'] as const).some((m) => birthValue(baby, m) !== undefined);
   const newestFirst = [...measurements].reverse();
   const sexLabel = baby.sex === 'female' ? 'בנות' : 'בנים';
 
@@ -175,6 +177,9 @@ export function GrowthPage() {
             <Segmented label="מדד" options={METRIC_OPTIONS} value={metric} onChange={setMetric} />
             <InsightBanners insights={insights} />
             <PercentileCard
+              onAdd={() => {
+                openSheet(null);
+              }}
               baby={baby}
               metric={metric}
               points={points}
@@ -299,6 +304,7 @@ export function GrowthPage() {
       </main>
       <MeasurementSheet
         key={sheet.session}
+        focusField={metric}
         open={sheet.open}
         measurement={sheet.measurement}
         birthDate={baby.birthDate}

@@ -1,5 +1,5 @@
 import { beforeAll, describe, expect, it } from 'vitest';
-import { assessSeries, growthSeries, measurementValue } from './series';
+import { assessSeries, birthValue, growthSeries, measurementValue } from './series';
 import {
   latestWeightGain,
   percentChangeFromBirth,
@@ -47,6 +47,22 @@ describe('growthSeries', () => {
       [0, 3480, 'measurement'],
       [9, 3420, 'measurement'],
     ]);
+  });
+
+  it('includes birth length / head from the profile, unless measured on the birth date', () => {
+    const b = { birthDate: '2026-06-01', birthLengthMm: 500, birthHeadMm: 340 };
+    const ms = [measurement('2026-06-11', { headMm: 350, lengthMm: 520 })];
+    expect(growthSeries(b, ms, 'length').map((p) => [p.ageDays, p.value, p.source])).toEqual([
+      [0, 500, 'birth'],
+      [10, 520, 'measurement'],
+    ]);
+    expect(growthSeries(b, ms, 'head').map((p) => p.value)).toEqual([340, 350]);
+    const measuredAtBirth = [measurement('2026-06-01', { lengthMm: 495 })];
+    expect(growthSeries(b, measuredAtBirth, 'length').map((p) => [p.value, p.source])).toEqual([
+      [495, 'measurement'],
+    ]);
+    expect(birthValue(b, 'weight')).toBeUndefined();
+    expect(birthValue({ birthLengthMm: 0 }, 'length')).toBeUndefined();
   });
 
   it('builds length/head series without a birth point', () => {

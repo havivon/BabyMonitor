@@ -39,3 +39,10 @@
   min-inline-size: 0;
   max-inline-size: 100%;
 }
+
+/* 4. Home quick-add with 4 tiles (PO: "מדידה" tile). DESIGN §6.5 specifies 3 equal columns;
+      4-up at 360px leaves ~73px tiles (meta text breaks badly), so 4 tiles use a 2×2 grid.
+      Pending the designer's confirmation. */
+.tile-grid--4 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}

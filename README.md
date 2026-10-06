@@ -37,12 +37,38 @@ npm run build:android                 # בניית האתר במצב android + c
 cd android && ./gradlew assembleDebug  # הקובץ נוצר ב-android/app/build/outputs/apk/debug/
 ```
 
+## חשבונות וסנכרון משפחתי (Firebase)
+
+ההתחברות אופציונלית (Google או דוא״ל וסיסמה). בלי הגדרות Firebase האפליקציה מקומית בלבד וכל ממשק החשבון מוסתר. ארכיטקטורה: `docs/ACCOUNTS.md`; קוד: `src/platform/cloud/`; כללי אבטחה: `firestore.rules`.
+
+**הקמת פרויקט Firebase (פעם אחת, בעל המוצר):**
+
+1. ב-[Firebase console](https://console.firebase.google.com) ליצור פרויקט ולהפעיל **Authentication** ← Sign-in method: ‏**Email/Password** ו-**Google**, ו-**Cloud Firestore**.
+2. לפרוס את כללי האבטחה: `npx firebase deploy --only firestore:rules --project <project-id>`.
+3. **אפליקציית Web:** להוסיף Web app ולהעתיק את ה-config ל-`src/platform/cloud/config.ts`, או להגדיר משתני סביבה `VITE_FIREBASE_API_KEY`, `VITE_FIREBASE_AUTH_DOMAIN`, `VITE_FIREBASE_PROJECT_ID`, `VITE_FIREBASE_STORAGE_BUCKET`, `VITE_FIREBASE_MESSAGING_SENDER_ID`, `VITE_FIREBASE_APP_ID` (ב-GitHub: Settings ← Variables). זה config ציבורי מעצם הגדרתו; האבטחה באה מהכללים. להוסיף את דומיין האתר ל-Authorized domains.
+4. **אפליקציית Android:** להוסיף Android app עם package ‏`com.havivon.babymonitor` ולרשום את טביעת האצבע **SHA-1** של מפתח החתימה הקבוע:
+
+   ```
+   AD:FD:8C:98:81:AB:8D:47:C6:97:BA:EF:0E:2C:83:A7:3F:A4:7D:5C
+   ```
+
+   להוריד את `google-services.json` ולשמור אותו בקידוד base64 כ-secret בשם `GOOGLE_SERVICES_JSON_BASE64` (‏`base64 -w0 google-services.json`). ה-workflow כותב אותו ל-`android/app/` בזמן הבנייה; הקובץ לא נשמר במאגר. התחברות Google באנדרואיד נעשית בחלון המקורי של Google ‏(`@capacitor-firebase/authentication`) והסשן מנוהל ב-Firebase JS SDK.
+
+**פיתוח מקומי מול אמולטורים** (ללא פרויקט אמיתי, project id ‏`demo-babymonitor`, נדרש Java 21):
+
+```bash
+npm run emulators                                  # Auth ‏(9099) + Firestore ‏(8080)
+VITE_FIREBASE_EMULATORS=1 npm run dev              # האפליקציה מתחברת לאמולטורים
+npm run test:rules                                 # בדיקות כללי האבטחה + סנכרון בין שני מכשירים
+```
+
 ## בדיקות ואיכות
 
 ```bash
 npm run lint && npm run typecheck && npm run format:check
 npm test           # בדיקות יחידה ורכיבים (Vitest)
 npm run e2e        # בדיקות קצה-לקצה (Playwright, Chromium, מסך מובייל)
+npm run test:rules # כללי Firestore וסנכרון משפחתי מול אמולטורי Firebase (Java 21)
 ```
 
 ## מבנה
@@ -57,3 +83,5 @@ npm run e2e        # בדיקות קצה-לקצה (Playwright, Chromium, מסך 
 | `data/who/`                   | טבלאות LMS הרשמיות של WHO (מקור לקבצים הנוצרים ב-`src/domain/growth/data/`)                   |
 | `docs/`                       | אפיון המוצר (PRD), מערכת העיצוב, סקירת העיצוב ודוח QA                                         |
 | `e2e/`                        | בדיקות קצה-לקצה                                                                               |
+| `src/platform/cloud/`         | חשבונות, משפחה וסנכרון (Firebase, נטען רק בעת הצורך)                                          |
+| `tests/`                      | בדיקות מול אמולטורי Firebase: כללי אבטחה ושני מכשירים במשפחה אחת                              |

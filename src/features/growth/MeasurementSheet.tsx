@@ -27,6 +27,8 @@ interface Props {
   onSave: (input: MeasurementInput) => void;
   onDelete: (measurement: Measurement) => void;
   onClose: () => void;
+  /** Field that gets initial focus (e.g. 'length' when opened from the length tab). Default: weight. */
+  focusField?: 'weight' | 'length' | 'head';
 }
 
 const FIELD_ORDER: MeasurementField[] = ['date', 'weight', 'length', 'head'];
@@ -44,6 +46,7 @@ export function MeasurementSheet({
   onSave,
   onDelete,
   onClose,
+  focusField = 'weight',
 }: Props) {
   const uid = useId();
   const formId = `${uid}-form`;
@@ -108,6 +111,7 @@ export function MeasurementSheet({
         <div className="input-group">
           <input
             id={ids[field]}
+            data-autofocus={field === focusField ? '' : undefined}
             className="input input--num"
             inputMode="decimal"
             autoComplete="off"

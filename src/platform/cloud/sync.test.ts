@@ -275,6 +275,17 @@ describe('sync engine', () => {
     expect(a.starters).toEqual({ [baby.id]: 'dad' });
   });
 
+  it('syncs the birth length / head circumference on the baby profile', async () => {
+    const server = new FakeServer();
+    const a = device(server);
+    const b = device(server);
+    await settle();
+    const baby = seedLocal(a.store);
+    a.store.getState().updateBaby(baby.id, { birthLengthMm: 498, birthHeadMm: 342 });
+    await settle();
+    expect(b.store.getState().babies[0]).toMatchObject({ birthLengthMm: 498, birthHeadMm: 342 });
+  });
+
   it('never syncs device settings', async () => {
     const server = new FakeServer();
     const a = device(server);

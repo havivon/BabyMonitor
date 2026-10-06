@@ -8,12 +8,16 @@ import { GrowthPage } from './GrowthPage';
 
 const NOW = local(2026, 10, 5, 10);
 
-function setup(birthWeightG?: number) {
+function setup(
+  birthWeightG?: number,
+  birth: { birthLengthMm?: number; birthHeadMm?: number } = {},
+) {
   const baby = appStore.getState().addBaby({
     name: 'נועה',
     birthDate: '2026-06-01',
     sex: 'female',
     ...(birthWeightG ? { birthWeightG } : {}),
+    ...birth,
   });
   const user = userEvent.setup();
   render(
@@ -179,5 +183,32 @@ describe('GrowthPage', () => {
     expect(await screen.findByText(/ביום הלידה/)).toBeInTheDocument();
     expect(screen.queryByText(/בגיל היום הראשון/)).not.toBeInTheDocument();
     expect(screen.getByText('משקל לידה', { selector: '.row__sub' })).toBeInTheDocument();
+  });
+
+  it('length/head empty state offers a CTA that opens the sheet focused on that field', async () => {
+    const { user } = setup(3300);
+    await user.click(screen.getByRole('radio', { name: 'אורך' }));
+    await user.click(screen.getByRole('button', { name: 'הוספת מדידת אורך' }));
+    expect(screen.getByRole('heading', { name: 'מדידה חדשה' })).toBeInTheDocument();
+    expect(screen.getByRole('textbox', { name: /אורך/ })).toHaveFocus();
+  });
+
+  it('the header button focuses the field of the current tab', async () => {
+    const { user } = setup(3300);
+    await user.click(screen.getByRole('radio', { name: 'היקף ראש' }));
+    await user.click(screen.getAllByRole('button', { name: 'הוספת מדידה' })[0]!);
+    expect(screen.getByRole('textbox', { name: /היקף ראש/ })).toHaveFocus();
+  });
+
+  it('plots birth length / head from the profile (summary + birth row)', async () => {
+    const { user } = setup(undefined, { birthLengthMm: 495, birthHeadMm: 340 });
+    // No measurements and no birth weight, but birth length exists → no global empty state.
+    expect(screen.queryByText('עוד אין מדידות')).not.toBeInTheDocument();
+    await user.click(screen.getByRole('radio', { name: 'אורך' }));
+    expect(screen.getByText(/אורך לידה · 1 ביוני/)).toBeInTheDocument();
+    expect(screen.getByText('אורך לידה', { selector: '.row__sub' })).toBeInTheDocument();
+    expect(screen.getAllByText('49.5').length).toBeGreaterThan(0);
+    await user.click(screen.getByRole('radio', { name: 'היקף ראש' }));
+    expect(screen.getByText('היקף ראש בלידה', { selector: '.row__sub' })).toBeInTheDocument();
   });
 });

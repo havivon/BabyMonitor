@@ -18,6 +18,9 @@ const config: CapacitorConfig = {
     // index.html uses viewport-fit=cover and the CSS pads with env(safe-area-inset-*), so the
     // WebView runs edge-to-edge; the hint avoids a layout jump while that meta tag is detected.
     SystemBars: { insetsHandling: 'css', initialViewportFitValueHint: 'cover' },
+    // Native Google sign-in only; the Firebase JS SDK owns the session (signInWithCredential),
+    // so one JS auth state drives web and Android alike (docs/ACCOUNTS.md §2).
+    FirebaseAuthentication: { skipNativeAuth: true, providers: ['google.com'] },
   },
 };
 

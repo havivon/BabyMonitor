@@ -338,8 +338,23 @@ describe('CSV export', () => {
     ];
     const lines = measurementsToCsv(ms, data.babies).replace('﻿', '').split('\r\n');
     expect(lines[0]).toBe('תינוק,תאריך,משקל (גרם),אורך (ס״מ),היקף ראש (ס״מ),הערה');
-    expect(lines[1]).toBe('נועה,2026-06-15,3600,,,');
-    expect(lines[2]).toBe('נועה,2026-07-01,4300,54.5,37.2,');
+    expect(lines[1]).toBe('נועה,2026-06-01,3200,,,מדידות לידה'); // from the baby profile
+    expect(lines[2]).toBe('נועה,2026-06-15,3600,,,');
+    expect(lines[3]).toBe('נועה,2026-07-01,4300,54.5,37.2,');
+  });
+
+  it('exports birth length and head circumference from the profile', () => {
+    const baby = {
+      id: 'b',
+      name: 'איתי',
+      birthDate: '2026-01-01',
+      sex: 'male' as const,
+      createdAt: NOW,
+      birthLengthMm: 505,
+      birthHeadMm: 345,
+    };
+    const lines = measurementsToCsv([], [baby]).replace('\uFEFF', '').split('\r\n');
+    expect(lines[1]).toBe('איתי,2026-01-01,,50.5,34.5,מדידות לידה');
   });
 
   it('leaves unknown baby names blank', () => {
@@ -348,6 +363,30 @@ describe('CSV export', () => {
     expect(
       measurementsToCsv([measurement('2026-06-15', { babyId: 'ghost' })], []).split('\r\n')[1],
     ).toBe(',2026-06-15,,,,');
+  });
+});
+
+describe('birth length / head circumference (backward compatible)', () => {
+  it('round-trips the new optional fields and accepts old backups without them', () => {
+    const data = sampleData();
+    const baby = { ...data.babies[0]!, birthLengthMm: 498, birthHeadMm: 341 };
+    const withFields = { ...data, babies: [baby] };
+    expect(parseBackup(serializeBackup(withFields, NOW))).toMatchObject({
+      ok: true,
+      data: { babies: [baby] },
+    });
+    const old = parseBackup(serializeBackup(data, NOW));
+    expect(old.ok && 'birthLengthMm' in (old.data.babies[0] ?? {})).toBe(false);
+  });
+
+  it('rejects invalid values', () => {
+    const res = parseBackup(
+      withData((d) => ((d.babies as Record<string, unknown>[])[0]!.birthHeadMm = -3)),
+    );
+    expect(res).toMatchObject({
+      ok: false,
+      error: { code: 'INVALID_DATA', path: 'data.babies[0].birthHeadMm' },
+    });
   });
 });
 

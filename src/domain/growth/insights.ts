@@ -89,7 +89,7 @@ export type GrowthInsight =
     };
 
 export interface GrowthInsightsInput {
-  baby: Pick<Baby, 'birthDate' | 'birthWeightG' | 'sex'>;
+  baby: Pick<Baby, 'birthDate' | 'birthWeightG' | 'birthLengthMm' | 'birthHeadMm' | 'sex'>;
   measurements: readonly Measurement[];
   /** Loaded WHO tables; percentile-based insights are skipped for missing ones. */
   tables: Partial<Record<GrowthIndicator, LmsTable>>;

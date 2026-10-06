@@ -7,6 +7,7 @@ import {
   Milk,
   Pause,
   Repeat2,
+  Weight,
 } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
@@ -35,7 +36,15 @@ import {
   volumeUnitLabel,
 } from '../../i18n/format';
 import { CONTENT_LABEL, he, SIDE_LABEL, TYPE_LABEL } from '../../i18n/he';
-import { useActiveEntries, useActiveTimer, useSettings } from '../../store';
+import { growthSeries } from '../../domain/growth/series';
+import {
+  useActiveBaby,
+  useActiveEntries,
+  useActiveMeasurements,
+  useActiveTimer,
+  useSettings,
+} from '../../store';
+import { weightQuantity } from '../growth/ui/format';
 import { Parts } from '../../components/Parts';
 import { BackupNote } from '../account/BackupNote';
 import { useOtherStarter } from '../account/useOtherStarter';
@@ -288,14 +297,14 @@ function QuickAdd({
   timer: ActiveTimer | null;
   nextSide: string | null;
   now: number;
-  onOpen: (kind: 'timer' | 'bottle' | 'solid') => void;
+  onOpen: (kind: 'timer' | 'bottle' | 'solid' | 'measurement') => void;
 }) {
   const { volumeUnit } = useSettings();
   const lastBottle = lastFeed(entries, ['bottle']) as BottleEntry | null;
   const lastSolid = lastFeed(entries, ['solid']) as SolidEntry | null;
 
   return (
-    <div className="tile-grid">
+    <div className="tile-grid tile-grid--4">
       <button
         type="button"
         className={`tile tile--breast${timer ? ' tile--active' : ''}`}
@@ -361,7 +370,42 @@ function QuickAdd({
           )}
         </span>
       </button>
+      <MeasurementTile onOpen={() => onOpen('measurement')} />
     </div>
+  );
+}
+
+/** 4th quick-add tile: opens the add-measurement sheet; meta = latest weight (birth weight counts). */
+function MeasurementTile({ onOpen }: { onOpen: () => void }) {
+  const baby = useActiveBaby();
+  const measurements = useActiveMeasurements();
+  const { weightUnit } = useSettings();
+  const lastWeightG = baby ? growthSeries(baby, measurements, 'weight').at(-1)?.value : undefined;
+  const weight = lastWeightG === undefined ? null : weightQuantity(lastWeightG, weightUnit);
+  return (
+    <button
+      type="button"
+      className="tile tile--growth"
+      aria-label={he.home.tile.measurementAria}
+      onClick={onOpen}
+    >
+      <span className="tile__icon" aria-hidden="true">
+        <Weight />
+      </span>
+      <span className="tile__label">{he.home.tile.measurement}</span>
+      <span className="tile__meta">
+        {weight ? (
+          <>
+            {he.home.tile.last}
+            <span className="nowrap">
+              <span className="ltr num">{weight.number}</span> {weight.unit}
+            </span>
+          </>
+        ) : (
+          he.home.tile.measurementEmpty
+        )}
+      </span>
+    </button>
   );
 }
 

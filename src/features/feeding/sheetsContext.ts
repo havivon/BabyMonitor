@@ -5,6 +5,8 @@ export type FeedingSheetRequest =
   | { kind: 'timer' }
   | { kind: 'bottle' }
   | { kind: 'solid' }
+  /** Add a growth measurement (Home "מדידה" tile) — engineer #1's MeasurementSheet. */
+  | { kind: 'measurement' }
   | { kind: 'edit'; entry: FeedingEntry };
 
 export interface FeedingSheetsApi {

@@ -5,7 +5,7 @@ import { DatePicker } from '../../components/Pickers';
 import { RadioGroup, type RadioOption } from '../../components/RadioGroup';
 import { addDaysToKey, isValidDateKey, toDateKey } from '../../domain/dates';
 import type { Baby, Sex, WeightUnit } from '../../domain/types';
-import { formatNumber, weightFromG, weightToG } from '../../domain/units';
+import { formatNumber, UNIT_LABELS, weightFromG, weightToG } from '../../domain/units';
 import { useNow } from '../../hooks/useNow';
 import { he } from '../../i18n/he';
 import { useSettings, type NewBaby } from '../../store';
@@ -23,13 +23,16 @@ const NAME_MAX = 30;
 /** Plausible birth weight bounds (grams) — guards typos such as 33 kg or 0.33 kg. */
 const BIRTH_WEIGHT_MIN_G = 500;
 const BIRTH_WEIGHT_MAX_G = 6500;
+/** Plausible birth length / head circumference bounds (cm), inclusive. */
+const BIRTH_LENGTH_CM = { min: 35, max: 65 } as const;
+const BIRTH_HEAD_CM = { min: 25, max: 45 } as const;
 
 const SEX_OPTIONS: readonly RadioOption<Sex>[] = [
   { value: 'female', label: he.onb.female },
   { value: 'male', label: he.onb.male },
 ];
 
-type FieldName = 'name' | 'birthDate' | 'sex' | 'weight';
+type FieldName = 'name' | 'birthDate' | 'sex' | 'weight' | 'length' | 'head';
 type Errors = Partial<Record<FieldName, string>>;
 
 interface Values {
@@ -37,11 +40,39 @@ interface Values {
   birthDate: string;
   sex: Sex | null;
   weight: string;
+  length: string;
+  head: string;
 }
 
 function weightDisplay(g: number | undefined, unit: WeightUnit): string {
   if (g === undefined) return '';
   return unit === 'kg' ? weightFromG(g, unit).toFixed(2) : weightFromG(g, unit).toFixed(1);
+}
+
+function cmDisplay(mm: number | undefined): string {
+  return mm === undefined ? '' : formatNumber(mm / 10, 0, 1);
+}
+
+/** Whole millimetres from a cm text ("49.5" → 495); `NaN` when not a number. */
+function cmTextToMm(text: string): number {
+  return Math.round(parseDecimal(text) * 10);
+}
+
+function inCmRange(text: string, range: { min: number; max: number }): boolean {
+  const mm = cmTextToMm(text);
+  return mm >= range.min * 10 && mm <= range.max * 10;
+}
+
+type OptionalKey = 'birthWeightG' | 'birthLengthMm' | 'birthHeadMm';
+
+/** `{ [key]: value }` when entered; `{ [key]: undefined }` when cleared but set before; else `{}`. */
+function optional(
+  key: OptionalKey,
+  value: number | '',
+  initial: Partial<Baby> | undefined,
+): Partial<Record<OptionalKey, number>> {
+  if (value !== '') return { [key]: value };
+  return initial?.[key] !== undefined ? { [key]: undefined } : {};
 }
 
 /** Accepts "3.3", "3,3" and surrounding spaces. `NaN` for anything else. */
@@ -72,6 +103,10 @@ function validate(v: Values, unit: WeightUnit, today: string): Errors {
       );
     }
   }
+  if (v.length.trim() && !inCmRange(v.length, BIRTH_LENGTH_CM))
+    errors.length = he.onb.err.length(BIRTH_LENGTH_CM.min, BIRTH_LENGTH_CM.max);
+  if (v.head.trim() && !inCmRange(v.head, BIRTH_HEAD_CM))
+    errors.head = he.onb.err.head(BIRTH_HEAD_CM.min, BIRTH_HEAD_CM.max);
   return errors;
 }
 
@@ -97,12 +132,20 @@ export function BabyForm({ initial, submitLabel, onSubmit, onCancel, footerNote 
     weight: `${uid}-weight`,
     weightHint: `${uid}-weight-hint`,
     weightErr: `${uid}-weight-err`,
+    length: `${uid}-length`,
+    lengthHint: `${uid}-length-hint`,
+    lengthErr: `${uid}-length-err`,
+    head: `${uid}-head`,
+    headHint: `${uid}-head-hint`,
+    headErr: `${uid}-head-err`,
   };
   const [values, setValues] = useState<Values>(() => ({
     name: initial?.name ?? '',
     birthDate: initial?.birthDate ?? '',
     sex: initial?.sex ?? null,
     weight: weightDisplay(initial?.birthWeightG, weightUnit),
+    length: cmDisplay(initial?.birthLengthMm),
+    head: cmDisplay(initial?.birthHeadMm),
   }));
   const [touched, setTouched] = useState<Partial<Record<FieldName, boolean>>>({});
   const [submitted, setSubmitted] = useState(false);
@@ -126,6 +169,8 @@ export function BabyForm({ initial, submitLabel, onSubmit, onCancel, footerNote 
       ['birthDate', ids.date],
       ['sex', ids.sexLabel],
       ['weight', ids.weight],
+      ['length', ids.length],
+      ['head', ids.head],
     ];
     const firstInvalid = order.find(([f]) => errors[f]);
     if (firstInvalid) {
@@ -139,11 +184,17 @@ export function BabyForm({ initial, submitLabel, onSubmit, onCancel, footerNote 
     }
     if (!values.sex) return; // narrowed by validation above
     const weight = values.weight.trim();
+    const length = values.length.trim();
+    const head = values.head.trim();
     onSubmit({
       name: values.name.trim(),
       birthDate: values.birthDate,
       sex: values.sex,
-      ...(weight ? { birthWeightG: weightToG(parseDecimal(weight), weightUnit) } : {}),
+      // A cleared field that had a value is sent as `undefined`, so an edit (a merged patch)
+      // removes it instead of keeping the old value.
+      ...optional('birthWeightG', weight && weightToG(parseDecimal(weight), weightUnit), initial),
+      ...optional('birthLengthMm', length && cmTextToMm(length), initial),
+      ...optional('birthHeadMm', head && cmTextToMm(head), initial),
     });
   };
 
@@ -246,6 +297,27 @@ export function BabyForm({ initial, submitLabel, onSubmit, onCancel, footerNote 
             </span>
           </div>
         </Field>
+
+        <CmField
+          id={ids.length}
+          hintId={ids.lengthHint}
+          errorId={ids.lengthErr}
+          label={he.onb.birthLength}
+          value={values.length}
+          error={shown('length')}
+          onChange={(v) => set('length', v)}
+          onBlur={() => touch('length')}
+        />
+        <CmField
+          id={ids.head}
+          hintId={ids.headHint}
+          errorId={ids.headErr}
+          label={he.onb.birthHead}
+          value={values.head}
+          error={shown('head')}
+          onChange={(v) => set('head', v)}
+          onBlur={() => touch('head')}
+        />
       </div>
 
       <div className="onboarding__footer">
@@ -264,5 +336,48 @@ export function BabyForm({ initial, submitLabel, onSubmit, onCancel, footerNote 
         {footerNote}
       </div>
     </form>
+  );
+}
+
+/** Optional birth measure in cm (length / head circumference), with the hospital-summary hint. */
+function CmField(props: {
+  id: string;
+  hintId: string;
+  errorId: string;
+  label: string;
+  value: string;
+  error: string | undefined;
+  onChange: (value: string) => void;
+  onBlur: () => void;
+}) {
+  const { id, hintId, errorId, label, value, error, onChange, onBlur } = props;
+  return (
+    <Field
+      label={label}
+      htmlFor={id}
+      optional
+      hint={he.onb.birthMeasureHint}
+      hintId={hintId}
+      error={error}
+      errorId={errorId}
+    >
+      <div className="input-group">
+        <input
+          id={id}
+          className="input input--num"
+          type="text"
+          inputMode="decimal"
+          autoComplete="off"
+          value={value}
+          aria-invalid={Boolean(error) || undefined}
+          aria-describedby={error ? errorId : hintId}
+          onChange={(e) => onChange(e.currentTarget.value)}
+          onBlur={onBlur}
+        />
+        <span className="input-group__affix" aria-hidden="true">
+          {UNIT_LABELS.cm}
+        </span>
+      </div>
+    </Field>
   );
 }

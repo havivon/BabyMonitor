@@ -24,7 +24,7 @@
     "build:android": "tsc -b && vite build --mode android && cap sync android",
     "icons:android": "node scripts/build-android-icons.mjs",
     "emulators": "firebase emulators:start --only auth,firestore --project demo-babymonitor",
-    "test:rules": "firebase emulators:exec --only auth,firestore --project demo-babymonitor 'vitest run --config vitest.rules.config.ts'"
+    "test:rules": "firebase emulators:exec --only auth,firestore --project demo-babymonitor 'vitest run --config vitest.rules.config.ts tests/rules && vitest run --config vitest.rules.config.ts tests/integration'"
   },
   "dependencies": {
     "@capacitor-firebase/authentication": "^8.5.2",

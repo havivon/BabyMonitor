@@ -1,10 +1,10 @@
 import { CircleDashed, Ruler, Weight } from 'lucide-react';
 import { ageInDaysOn } from '../../domain/age';
 import { assess, formatPercentile } from '../../domain/growth/percentiles';
-import { measurementValue } from '../../domain/growth/series';
+import { birthValue, measurementValue } from '../../domain/growth/series';
 import type { GrowthIndicator, WhoTables } from '../../domain/growth/who';
 import type { Baby, Measurement, WeightUnit } from '../../domain/types';
-import { METRIC_LABEL, metricQuantity } from './metrics';
+import { BIRTH_LABEL, METRIC_LABEL, metricQuantity } from './metrics';
 import { formatDateLong, lengthQuantity, weightQuantity } from './ui/format';
 import { Qty } from './ui/Qty';
 
@@ -66,11 +66,16 @@ function EndValue({
 }
 
 /**
- * Measurements, newest first, with the birth weight as the last (read-only, edited in Settings)
- * row — unless a weight was also recorded as a measurement on the birth date.
+ * Measurements, newest first, with the profile's birth value of the selected metric as the last
+ * (read-only, edited in Settings) row — unless it was also recorded as a measurement that day.
  */
 export function MeasurementList({ baby, measurements, metric, weightUnit, tables, onEdit }: Props) {
   const Icon = ICON[metric];
+  // The profile's birth value of this metric, unless also recorded as a measurement that day.
+  const atBirth = birthValue(baby, metric);
+  const measuredAtBirth = measurements.some(
+    (m) => m.date === baby.birthDate && measurementValue(m, metric) !== undefined,
+  );
   return (
     <ul className="list" role="list">
       {measurements.map((m) => {
@@ -130,28 +135,27 @@ export function MeasurementList({ baby, measurements, metric, weightUnit, tables
           </li>
         );
       })}
-      {baby.birthWeightG !== undefined &&
-        !measurements.some((m) => m.date === baby.birthDate && m.weightG !== undefined) && (
-          <li>
-            <div className="row row--growth">
-              <span className="row__icon">
-                <Weight aria-hidden="true" />
-              </span>
-              <span className="row__body">
-                <span className="row__title">{formatDateLong(baby.birthDate)}</span>
-                <span className="row__sub">משקל לידה</span>
-              </span>
-              <EndValue
-                baby={baby}
-                metric="weight"
-                value={baby.birthWeightG}
-                date={baby.birthDate}
-                weightUnit={weightUnit}
-                tables={tables}
-              />
-            </div>
-          </li>
-        )}
+      {atBirth !== undefined && !measuredAtBirth && (
+        <li>
+          <div className="row row--growth">
+            <span className="row__icon">
+              <Icon aria-hidden="true" />
+            </span>
+            <span className="row__body">
+              <span className="row__title">{formatDateLong(baby.birthDate)}</span>
+              <span className="row__sub">{BIRTH_LABEL[metric]}</span>
+            </span>
+            <EndValue
+              baby={baby}
+              metric={metric}
+              value={atBirth}
+              date={baby.birthDate}
+              weightUnit={weightUnit}
+              tables={tables}
+            />
+          </div>
+        </li>
+      )}
     </ul>
   );
 }

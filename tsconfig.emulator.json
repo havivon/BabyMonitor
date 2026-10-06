@@ -1,0 +1,9 @@
+{
+  "extends": "./tsconfig.test.json",
+  "compilerOptions": {
+    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.emulator.tsbuildinfo",
+    "types": ["node"]
+  },
+  "include": ["tests/**/*.ts", "vitest.rules.config.ts"],
+  "exclude": []
+}

@@ -1,4 +1,5 @@
 import { useCallback, useMemo, useState, type ReactNode } from 'react';
+import { AddMeasurementSheet } from '../home/AddMeasurementSheet';
 import { BottleSheet } from './BottleSheet';
 import { BreastEditSheet } from './BreastEditSheet';
 import {
@@ -29,15 +30,17 @@ export function FeedingSheetsProvider({ children }: { children: ReactNode }) {
 
   let sheet: ReactNode = null;
   if (request) {
-    const props = { key: request.key, open: isOpen, onClose: close };
-    if (request.kind === 'timer') sheet = <TimerSheet {...props} />;
-    else if (request.kind === 'bottle') sheet = <BottleSheet {...props} />;
-    else if (request.kind === 'solid') sheet = <SolidSheet {...props} />;
+    const { key } = request;
+    const props = { open: isOpen, onClose: close };
+    if (request.kind === 'timer') sheet = <TimerSheet key={key} {...props} />;
+    else if (request.kind === 'bottle') sheet = <BottleSheet key={key} {...props} />;
+    else if (request.kind === 'solid') sheet = <SolidSheet key={key} {...props} />;
+    else if (request.kind === 'measurement') sheet = <AddMeasurementSheet key={key} {...props} />;
     else {
       const { entry } = request;
-      if (entry.type === 'bottle') sheet = <BottleSheet {...props} entry={entry} />;
-      else if (entry.type === 'solid') sheet = <SolidSheet {...props} entry={entry} />;
-      else sheet = <BreastEditSheet {...props} entry={entry} />;
+      if (entry.type === 'bottle') sheet = <BottleSheet key={key} {...props} entry={entry} />;
+      else if (entry.type === 'solid') sheet = <SolidSheet key={key} {...props} entry={entry} />;
+      else sheet = <BreastEditSheet key={key} {...props} entry={entry} />;
     }
   }
 

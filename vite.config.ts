@@ -57,7 +57,16 @@ export default defineConfig(({ mode }) => {
           // public/ icons are matched by the glob; manifest icons are added by the plugin.
           globPatterns: ['**/*.{js,css,html,svg,png,woff2}'],
           // Rubik ships Arabic/Cyrillic subsets we never render; skip precaching them (Hebrew + Latin only).
-          globIgnores: ['**/rubik-{arabic,cyrillic,cyrillic-ext}-*'],
+          // The Firebase SDK (accounts & sync) is only fetched by signed-in users: don't make every
+          // local-only install download it; cache it at runtime instead (works offline after first use).
+          globIgnores: ['**/rubik-{arabic,cyrillic,cyrillic-ext}-*', '**/firebase-*.js', '**/firebaseRuntime-*.js'],
+          runtimeCaching: [
+            {
+              urlPattern: /\/assets\/firebase(Runtime)?-[\w-]+\.js$/,
+              handler: 'CacheFirst',
+              options: { cacheName: 'firebase-sdk', expiration: { maxEntries: 10 } },
+            },
+          ],
           // WHO growth tables are lazy chunks; precache them so growth works offline.
           maximumFileSizeToCacheInBytes: 3 * 1024 * 1024,
           navigateFallback: 'index.html',
@@ -69,6 +78,17 @@ export default defineConfig(({ mode }) => {
     build: {
       target: 'es2022',
       sourcemap: !isAndroid,
+      // The lazily loaded Firebase chunk (~190 KB gzip) is the only one above Vite's 500 KB default.
+      chunkSizeWarningLimit: 700,
+      rollupOptions: {
+        output: {
+          // One named chunk for the Firebase SDK (+ its Capacitor plugin), loaded only on demand.
+          manualChunks(id: string) {
+            if (/node_modules\/(firebase|@firebase|@capacitor-firebase)\//.test(id)) return 'firebase';
+            return undefined;
+          },
+        },
+      },
     },
     server: { port: 5173 },
     preview: { port: 4173, strictPort: true },

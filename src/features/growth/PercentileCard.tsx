@@ -1,3 +1,4 @@
+import { Plus } from 'lucide-react';
 import { formatAge } from '../../domain/age';
 import { parseDateKey } from '../../domain/dates';
 import {
@@ -10,7 +11,7 @@ import type { AssessedPoint } from '../../domain/growth/series';
 import type { GrowthIndicator } from '../../domain/growth/who';
 import type { Baby, WeightUnit } from '../../domain/types';
 import { formatNumber, gToLb, UNIT_LABELS } from '../../domain/units';
-import { METRIC_LABEL, metricQuantity } from './metrics';
+import { BIRTH_LABEL, METRIC_LABEL, metricQuantity } from './metrics';
 import { percentileDescription } from './percentileCopy';
 import { formatDateMedium, signed } from './ui/format';
 import { Qty } from './ui/Qty';
@@ -27,6 +28,8 @@ interface Props {
   weightUnit: WeightUnit;
   /** False while the WHO tables load (percentile shows a placeholder). */
   tablesReady: boolean;
+  /** Opens the add-measurement sheet focused on this metric (empty state CTA). */
+  onAdd?: () => void;
 }
 
 const PSCALE_TICKS = [3, 15, 50, 85, 97];
@@ -55,7 +58,7 @@ function Kv({ label, children }: { label: string; children: React.ReactNode }) {
 const Dash = () => <span aria-label="אין נתון">—</span>;
 
 /** Summary card: latest value, percentile badge + scale, and gain figures. */
-export function PercentileCard({ baby, metric, points, weightUnit, tablesReady }: Props) {
+export function PercentileCard({ baby, metric, points, weightUnit, tablesReady, onAdd }: Props) {
   const latest = points[points.length - 1];
   if (!latest) {
     return (
@@ -63,6 +66,12 @@ export function PercentileCard({ baby, metric, points, weightUnit, tablesReady }
         <div className="empty empty--compact empty--growth">
           <p className="empty__title">עוד אין מדידות {METRIC_LABEL[metric]}</p>
           <p className="empty__text">אחרי הוספת מדידה יופיעו כאן האחוזון והשינוי לאורך זמן.</p>
+          {onAdd && (
+            <button type="button" className="btn btn--primary empty__action" onClick={onAdd}>
+              <Plus aria-hidden="true" />
+              הוספת מדידת {METRIC_LABEL[metric]}
+            </button>
+          )}
         </div>
       </section>
     );
@@ -72,7 +81,7 @@ export function PercentileCard({ baby, metric, points, weightUnit, tablesReady }
   const shownPercentile = percentile === null ? null : formatPercentile(percentile);
   const title =
     latest.source === 'birth'
-      ? `משקל לידה · ${formatDateMedium(latest.date)}`
+      ? `${BIRTH_LABEL[metric]} · ${formatDateMedium(latest.date)}`
       : `${METRIC_LABEL[metric]} אחרון · ${formatDateMedium(latest.date)}`;
   const description =
     percentile !== null

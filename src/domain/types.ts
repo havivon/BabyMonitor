@@ -22,6 +22,10 @@ export interface Baby {
   birthDate: IsoDate;
   sex: Sex;
   birthWeightG?: number;
+  /** Birth length (recumbent), millimetres. */
+  birthLengthMm?: number;
+  /** Birth head circumference, millimetres. */
+  birthHeadMm?: number;
   createdAt: EpochMs;
 }
 

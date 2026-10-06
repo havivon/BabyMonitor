@@ -174,7 +174,11 @@ function parseBaby(v: unknown, p: string): Baby {
       sex: oneOf(o.sex, ['male', 'female'] as const, `${p}.sex`),
       createdAt: time(o.createdAt, `${p}.createdAt`),
     },
-    { birthWeightG: optNum(o.birthWeightG, `${p}.birthWeightG`) },
+    {
+      birthWeightG: optNum(o.birthWeightG, `${p}.birthWeightG`),
+      birthLengthMm: optNum(o.birthLengthMm, `${p}.birthLengthMm`),
+      birthHeadMm: optNum(o.birthHeadMm, `${p}.birthHeadMm`),
+    },
   );
 }
 
@@ -559,7 +563,27 @@ export function measurementsToCsv(
   babies: readonly Baby[],
 ): string {
   const names = new Map(babies.map((b) => [b.id, b.name]));
-  const rows = [...measurements]
+  // Birth measures recorded on the baby profile are exported as a dated row too.
+  const birthRows: Measurement[] = babies
+    .filter(
+      (b) =>
+        b.birthWeightG !== undefined ||
+        b.birthLengthMm !== undefined ||
+        b.birthHeadMm !== undefined,
+    )
+    .map((b) => {
+      const row: Measurement = {
+        id: `birth-${b.id}`,
+        babyId: b.id,
+        date: b.birthDate,
+        note: 'מדידות לידה',
+      };
+      if (b.birthWeightG !== undefined) row.weightG = b.birthWeightG;
+      if (b.birthLengthMm !== undefined) row.lengthMm = b.birthLengthMm;
+      if (b.birthHeadMm !== undefined) row.headMm = b.birthHeadMm;
+      return row;
+    });
+  const rows = [...birthRows, ...measurements]
     .sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0))
     .map((m) => [
       names.get(m.babyId) ?? '',

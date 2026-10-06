@@ -314,6 +314,16 @@ export function createCloudService(deps: CloudServiceDeps): CloudService {
     return { code, familyId: d.familyId, data: d };
   };
 
+  /** True if the current user can read the family as a member (server check). */
+  const isMemberOf = async (fid: string): Promise<boolean> => {
+    try {
+      const snap = await getDoc(doc(db, 'families', fid));
+      return Boolean((snap.data() as FamilyDoc | undefined)?.members?.[requireUser().uid]);
+    } catch {
+      return false;
+    }
+  };
+
   const setMyFamily = (fid: string | null): Promise<void> =>
     setDoc(doc(db, 'users', requireUser().uid), { familyId: fid }, { merge: true });
 
@@ -462,7 +472,12 @@ export function createCloudService(deps: CloudServiceDeps): CloudService {
         stopFamily(); // keep the local copy; never tombstone it
         familyId = null;
         set({ family: null, status: 'off', lastSyncedAt: null });
-        await updateDoc(doc(db, 'families', fid), { [`members.${user.uid}`]: deleteField() });
+        await updateDoc(doc(db, 'families', fid), { [`members.${user.uid}`]: deleteField() }).catch(
+          async (e: unknown) => {
+            // Retried after it already succeeded (no longer a member → denied): we are out.
+            if (await isMemberOf(fid)) throw e;
+          },
+        );
         await setMyFamily(null);
       }),
   };

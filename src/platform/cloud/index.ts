@@ -56,7 +56,7 @@ let service: Promise<CloudService> | null = null;
 /** Loads Firebase and starts the service (once). */
 function loadService(): Promise<CloudService> {
   if (!isCloudConfigured) return Promise.reject(new CloudError('not-configured'));
-  service ??= import('./runtime')
+  service ??= import('./firebaseRuntime')
     .then(({ createRuntime }) =>
       createRuntime({
         onState: (s) => {

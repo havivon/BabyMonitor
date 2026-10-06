@@ -141,6 +141,18 @@ describe('percentile flags', () => {
     expect(normal).toEqual([]);
   });
 
+  it('uses the birth head circumference from the profile for percentile flags', () => {
+    const list = growthInsights({
+      baby: { birthDate: BIRTH, sex: 'male', birthHeadMm: 300 },
+      measurements: [],
+      tables,
+      now: nowAtDay(1),
+    });
+    expect(list).toContainEqual(
+      expect.objectContaining({ kind: 'lowPercentile', indicator: 'head' }),
+    );
+  });
+
   it('flags crossing ≥ 2 major percentile lines downward (after day 14)', () => {
     const w = (day: number, p: number) =>
       valueAtPercentile(tables.weight, 'weight', 'female', day, p) ?? 0;
