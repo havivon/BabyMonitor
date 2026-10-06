@@ -1,6 +1,7 @@
 import { useEffect, type ReactNode } from 'react';
 import { useLocation } from 'react-router-dom';
 import { ToastProvider } from '../components/toast';
+import { AccountFlowsProvider } from '../features/account/AccountFlowsProvider';
 import { FeedingSheetsProvider } from '../features/feeding/FeedingSheetsProvider';
 import { appStore, useAppStore } from '../store';
 import { useBannerTimer } from './useBannerTimer';
@@ -33,7 +34,9 @@ export function Root({ children }: { children: ReactNode }) {
   return (
     <div className={`app${hasTimer ? ' app--has-timer' : ''}`}>
       <ToastProvider>
-        <FeedingSheetsProvider>{children}</FeedingSheetsProvider>
+        <AccountFlowsProvider>
+          <FeedingSheetsProvider>{children}</FeedingSheetsProvider>
+        </AccountFlowsProvider>
       </ToastProvider>
     </div>
   );

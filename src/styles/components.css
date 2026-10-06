@@ -2593,3 +2593,437 @@ a.row:focus-visible { outline-offset: -3px; }
   border: 0;
   background: var(--color-border);
 }
+
+/* ==========================================================================
+   27. Accounts & family sync (DESIGN §15)
+   ========================================================================== */
+
+/* 27.1 "Not backed up" note + sign-in benefits — Home (compact, dismissible) and Settings */
+.benefits {
+  --card-pad: var(--space-5);
+  gap: var(--space-4);
+}
+
+.benefits--compact {
+  --card-pad: var(--space-4);
+  gap: var(--space-3);
+}
+
+.benefits__head {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+}
+
+.benefits__icon {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  inline-size: 44px;
+  block-size: 44px;
+  border-radius: var(--radius-md);
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+}
+.benefits__icon svg { inline-size: 22px; block-size: 22px; }
+.benefits--compact .benefits__icon { inline-size: 40px; block-size: 40px; }
+
+.benefits__body {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-inline-size: 0;
+}
+
+.benefits__title {
+  font-size: var(--fs-h3);
+  line-height: var(--lh-h3);
+  font-weight: var(--fw-semibold);
+}
+.benefits--compact .benefits__title {
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+}
+
+.benefits__text {
+  font-size: var(--fs-body-sm);
+  line-height: var(--lh-body-sm);
+  color: var(--color-text-muted);
+}
+
+.benefits__list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.benefits__item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  font-size: var(--fs-body-sm);
+  line-height: var(--lh-body-sm);
+}
+.benefits__item svg {
+  flex-shrink: 0;
+  inline-size: 20px;
+  block-size: 20px;
+  color: var(--color-primary);
+}
+
+.benefits__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.benefits__note {
+  font-size: var(--fs-caption);
+  line-height: var(--lh-caption);
+  color: var(--color-text-muted);
+}
+
+/* 27.2 "המשך עם Google" — Google brand guidelines: neutral fill, 1px stroke, official
+   multicolor G (never recolored), pill shape. Label uses Rubik 500 (Roboto has no Hebrew). */
+.gbtn {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  inline-size: 100%;
+  min-block-size: var(--control-h);
+  padding-inline: var(--space-4);
+  background: var(--color-google-bg);
+  border: 1px solid var(--color-google-border);
+  border-radius: var(--radius-pill);
+  color: var(--color-google-text);
+  font-size: var(--fs-body);
+  line-height: 1.25;
+  font-weight: var(--fw-medium);
+  white-space: nowrap;
+  overflow: hidden;
+  transition: transform var(--dur-instant) var(--ease-standard);
+}
+
+/* state layer, per Google's guidance (8% hover / 12% pressed of the label color) */
+.gbtn::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: currentColor;
+  opacity: 0;
+  transition: opacity var(--dur-fast) var(--ease-standard);
+}
+.gbtn:hover::before { opacity: 0.08; }
+.gbtn:active::before { opacity: 0.12; }
+.gbtn:active:not(:disabled) { transform: scale(0.98); }
+.gbtn:disabled { opacity: 0.6; cursor: not-allowed; }
+.gbtn[aria-busy="true"] { cursor: progress; }
+
+.gbtn__logo {
+  flex-shrink: 0;
+  inline-size: 20px;
+  block-size: 20px;
+}
+
+.gbtn__spinner {
+  inline-size: 18px;
+  block-size: 18px;
+  animation: bm-spin 0.9s linear infinite;
+}
+
+/* "או עם אימייל" separator */
+.auth-divider {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  font-size: var(--fs-caption);
+  line-height: var(--lh-caption);
+  color: var(--color-text-muted);
+}
+.auth-divider::before,
+.auth-divider::after {
+  content: "";
+  flex: 1 1 auto;
+  block-size: 1px;
+  background: var(--color-border);
+}
+
+/* "אין עדיין חשבון? יצירת חשבון" */
+.auth-alt {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0 var(--space-1);
+  font-size: var(--fs-body-sm);
+  color: var(--color-text-muted);
+}
+
+/* 27.3 LTR text inputs (email, password, codes) inside the RTL form */
+.input--ltr {
+  direction: ltr;
+  text-align: right;
+}
+
+/* Units / buttons inside .input-group sit at the inline end (left in RTL). LTR inputs resolve
+   logical padding in their own direction, so reserve the space physically. */
+.input-group .input--num,
+.input-group .input--ltr {
+  padding-inline: var(--space-4);
+  padding-left: var(--space-12);
+}
+
+/* Password visibility toggle: <div class="input-group"> <input class="input input--ltr">
+   <button class="input-group__btn" aria-pressed aria-label="הצגת הסיסמה"><Eye/></button> */
+.input-group__btn {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-end: 0;
+  display: grid;
+  place-items: center;
+  inline-size: var(--touch-min);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-muted);
+}
+.input-group__btn svg { inline-size: 20px; block-size: 20px; }
+.input-group__btn:hover { color: var(--color-text); }
+.input-group__btn:focus-visible { outline-offset: -4px; }
+
+/* 6-character invite code entry (single input, auto-uppercase) */
+.input--code {
+  direction: ltr;
+  min-block-size: 64px;
+  padding-inline: var(--space-4);
+  padding-left: calc(var(--space-4) + 0.4em); /* balances the trailing letter-spacing */
+  text-align: center;
+  font-size: 1.75rem;
+  font-weight: var(--fw-semibold);
+  letter-spacing: 0.4em;
+  text-transform: uppercase;
+  font-variant-numeric: tabular-nums;
+}
+.input--code::placeholder {
+  letter-spacing: 0.4em;
+  color: var(--color-text-subtle);
+}
+
+/* 27.4 Header sync indicator — only when signed in. Synced = subtle icon; offline/error = pill. */
+.sync-ind {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  min-block-size: 32px;
+  min-inline-size: 32px;
+  justify-content: center;
+  padding-inline: var(--space-2);
+  border-radius: var(--radius-pill);
+  font-size: var(--fs-micro);
+  line-height: 1;
+  font-weight: var(--fw-semibold);
+  color: var(--color-text-subtle);
+  text-decoration: none;
+  white-space: nowrap;
+}
+.sync-ind::after { content: ""; position: absolute; inset: -8px -4px; } /* 48px hit area */
+.sync-ind svg { inline-size: 18px; block-size: 18px; }
+.sync-ind:hover { background: var(--color-surface-2); }
+.sync-ind--syncing svg { animation: bm-spin 1.6s linear infinite; }
+.sync-ind--offline { background: var(--color-warning-soft); color: var(--color-warning); }
+.sync-ind--error { background: var(--color-danger-soft); color: var(--color-danger); }
+.sync-ind--offline:hover,
+.sync-ind--error:hover { filter: brightness(0.97); }
+
+/* Status rows (Settings → חשבון ומשפחה): icon tone without coloring the title */
+.row--success { --row-color: var(--color-success); --row-soft: var(--color-success-soft); }
+.row--warning { --row-color: var(--color-warning); --row-soft: var(--color-warning-soft); }
+.row--error   { --row-color: var(--color-danger);  --row-soft: var(--color-danger-soft); }
+.row--syncing .row__icon svg { animation: bm-spin 1.6s linear infinite; }
+
+/* 27.5 Invite code display */
+.code-display {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-6) var(--space-4) var(--space-5);
+  border: 2px dashed color-mix(in srgb, var(--color-primary) 45%, transparent);
+  border-radius: var(--radius-lg);
+  background: var(--color-primary-soft);
+  text-align: center;
+}
+
+.code-display__label {
+  font-size: var(--fs-caption);
+  line-height: var(--lh-caption);
+  font-weight: var(--fw-medium);
+  color: var(--color-on-primary-soft);
+}
+
+.code-display__code {
+  direction: ltr;
+  unicode-bidi: isolate;
+  display: flex;
+  gap: var(--space-4);
+  font-size: 2.5rem;
+  line-height: 1.1;
+  font-weight: var(--fw-semibold);
+  letter-spacing: 0.14em;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-on-primary-soft);
+  user-select: all;
+}
+
+.code-display--loading .code-display__code { opacity: 0.35; }
+
+/* 27.6 Choice cards — radio cards (merge/replace) and action cards (create/join family).
+   Radio:  <label class="choice"><input type="radio" class="visually-hidden" name=…> … </label>
+   Action: <button class="choice"> … <ChevronLeft class="choice__chevron"/></button> */
+.choice-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.choice {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  inline-size: 100%;
+  padding: var(--space-4);
+  background: var(--color-surface);
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  color: var(--color-text);
+  text-align: start;
+  cursor: pointer;
+  transition:
+    border-color var(--dur-fast) var(--ease-standard),
+    background-color var(--dur-fast) var(--ease-standard),
+    transform var(--dur-instant) var(--ease-standard);
+}
+.choice:hover { border-color: color-mix(in srgb, var(--color-primary) 40%, var(--color-border)); }
+.choice:active { transform: scale(0.99); }
+.choice:has(:focus-visible) { outline: 3px solid var(--color-focus-ring); outline-offset: 2px; }
+
+.choice:has(input:checked),
+.choice[aria-checked="true"],
+.choice.is-selected {
+  border-color: var(--color-primary);
+  background: color-mix(in srgb, var(--color-primary) 6%, var(--color-surface));
+}
+
+.choice__icon {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  inline-size: 40px;
+  block-size: 40px;
+  border-radius: var(--radius-md);
+  background: var(--color-surface-2);
+  color: var(--color-text-muted);
+}
+.choice__icon svg { inline-size: 22px; block-size: 22px; }
+.choice:has(input:checked) .choice__icon,
+.choice[aria-checked="true"] .choice__icon,
+.choice--action .choice__icon {
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+}
+
+.choice__body {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-inline-size: 0;
+}
+
+.choice__title {
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+  font-weight: var(--fw-semibold);
+}
+
+.choice__text {
+  font-size: var(--fs-body-sm);
+  line-height: var(--lh-body-sm);
+  color: var(--color-text-muted);
+}
+
+/* radio dot at the inline end */
+.choice__radio {
+  flex-shrink: 0;
+  inline-size: 22px;
+  block-size: 22px;
+  margin-block-start: 9px;
+  border: 2px solid var(--color-border-strong);
+  border-radius: var(--radius-pill);
+  transition: border-color var(--dur-fast) var(--ease-standard), box-shadow var(--dur-fast) var(--ease-standard);
+}
+.choice:has(input:checked) .choice__radio,
+.choice[aria-checked="true"] .choice__radio {
+  border-color: var(--color-primary);
+  box-shadow: inset 0 0 0 4px var(--color-surface), inset 0 0 0 11px var(--color-primary);
+}
+
+.choice__chevron {
+  flex-shrink: 0;
+  inline-size: 20px;
+  block-size: 20px;
+  margin-block-start: 10px;
+  color: var(--color-text-subtle);
+}
+
+/* 27.7 Family */
+.avatar-stack {
+  display: flex;
+  align-items: center;
+}
+.avatar-stack .avatar { box-shadow: 0 0 0 2px var(--stack-ring, var(--color-surface)); }
+.avatar-stack .avatar + .avatar { margin-inline-start: calc(var(--avatar-size) * -0.2); }
+.family-preview .avatar-stack { --stack-ring: var(--color-surface-2); }
+
+.family-preview {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-5) var(--space-4);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface-2);
+  text-align: center;
+}
+
+.family-preview__name {
+  margin-block-start: var(--space-1);
+  font-size: var(--fs-h2);
+  line-height: var(--lh-h2);
+  font-weight: var(--fw-semibold);
+}
+
+.family-preview__members {
+  font-size: var(--fs-body-sm);
+  line-height: var(--lh-body-sm);
+  color: var(--color-text-muted);
+}
+
+/* Dialog icon tones (sign out = neutral, not destructive) */
+.dialog__icon--primary { background: var(--color-primary-soft); color: var(--color-primary); }
+.dialog__icon--warning { background: var(--color-warning-soft); color: var(--color-warning); }
+
+/* Section-header row inside a .list (e.g. the family card title) */
+.row--header .row__title {
+  font-size: var(--fs-h3);
+  line-height: var(--lh-h3);
+  font-weight: var(--fw-semibold);
+}

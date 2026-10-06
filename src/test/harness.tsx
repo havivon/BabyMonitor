@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import { MemoryRouter } from 'react-router-dom';
 import { ToastProvider } from '../components/toast';
 import type { Baby, FeedingEntry, Measurement } from '../domain/types';
+import { AccountFlowsProvider } from '../features/account/AccountFlowsProvider';
 import { FeedingSheetsProvider } from '../features/feeding/FeedingSheetsProvider';
 import { appStore } from '../store';
 
@@ -32,7 +33,9 @@ export function renderInShell(ui: ReactNode, route = '/'): RenderResult {
     <MemoryRouter initialEntries={[route]}>
       <div className="app">
         <ToastProvider>
-          <FeedingSheetsProvider>{ui}</FeedingSheetsProvider>
+          <AccountFlowsProvider>
+            <FeedingSheetsProvider>{ui}</FeedingSheetsProvider>
+          </AccountFlowsProvider>
         </ToastProvider>
       </div>
     </MemoryRouter>,

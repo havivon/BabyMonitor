@@ -7,6 +7,7 @@ import {
   feedingsToCsv,
   measurementsToCsv,
   parseBackup,
+  parseRecord,
   serializeBackup,
   validateBackupData,
   type BackupData,
@@ -347,5 +348,21 @@ describe('CSV export', () => {
     expect(
       measurementsToCsv([measurement('2026-06-15', { babyId: 'ghost' })], []).split('\r\n')[1],
     ).toBe(',2026-06-15,,,,');
+  });
+});
+
+describe('parseRecord', () => {
+  it('validates single records and strips unknown fields', () => {
+    const data = sampleData();
+    expect(parseRecord('baby', { ...data.babies[0], extra: 1 })).toEqual(data.babies[0]);
+    expect(parseRecord('entry', data.entries[1])).toEqual(data.entries[1]);
+    expect(parseRecord('measurement', data.measurements[0])).toEqual(data.measurements[0]);
+    expect(parseRecord('timer', data.activeTimers.baby1)).toEqual(data.activeTimers.baby1);
+  });
+
+  it('returns null for malformed records', () => {
+    expect(parseRecord('entry', { id: 'x', type: 'bottle' })).toBeNull();
+    expect(parseRecord('baby', null)).toBeNull();
+    expect(parseRecord('timer', { babyId: 'b', segments: [] })).toBeNull();
   });
 });

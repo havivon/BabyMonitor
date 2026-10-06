@@ -9,6 +9,7 @@ Owner: Design · Status: v1, ready for build · Language: Hebrew (RTL) · Compan
 | `src/styles/components.css` | Production CSS for all components. Engineers compose these classes; no per-component CSS needed for v1. |
 | `docs/design/mockup.html` | Static mockup that uses the three CSS files above. Open it in a browser. |
 | `docs/design/mockup-light.png`, `mockup-dark.png` | Screenshots of the mockup (12 screens per theme). |
+| `docs/design/mockup-accounts-light.png`, `mockup-accounts-dark.png` | Accounts & family sync screens (9 per theme), §15. |
 | `docs/design/DESIGN-REVIEW.md`, `docs/design/review/` | Design QA of the built app (P1/P2/P3 findings with evidence). |
 
 **Import order** in `main.tsx`: `@fontsource/rubik/400.css`, `500.css`, `600.css`, `700.css`, then `tokens.css`, `global.css`, `components.css`.
@@ -440,13 +441,14 @@ Shared rules:
 
 ### 7.1 Onboarding (first run; no baby exists)
 `.onboarding`, no tab bar.
-1. `brand-mark` · title "ברוכים הבאים ל-BabyMonitor" · lead "מעקב רגוע ופשוט אחר האכלות וגדילה. כמה פרטים קטנים ומתחילים."
+1. `brand-mark` · title "ברוכים הבאים ל-BabyMonitor" · lead "מעקב רגוע ופשוט אחר האכלות וגדילה."
+   - When cloud is configured, add `btn--secondary btn--sm` "כבר יש לנו חשבון — התחברות" (`LogIn` icon with `.flip-rtl`) directly under the lead, **before** the form. It is for a new phone or the second parent; see §15.8.
 2. Form:
    - **שם** (required, 1–30 chars).
    - **תאריך לידה** (date picker; not in the future, not more than 3 years ago).
    - **מין**: `.seg--lg` with בת | בן, required. Hint: "משמש לחישוב אחוזוני הגדילה לפי טבלאות WHO".
    - **משקל לידה (לא חובה)**: `.input-group` with ק״ג (or lb). Hint: "מומלץ — כך אפשר לעקוב אחרי החזרה למשקל הלידה". When entered, it is also saved as a Measurement on the birth date.
-3. Footer: `btn--primary btn--lg btn--block` "התחלה" (disabled until the required fields are valid) · `.disclaimer` with `shield-check` "בלי הרשמה ובלי שרת — הכול נשמר במכשיר שלך".
+3. Footer: `btn--primary btn--lg btn--block` "התחלה" (disabled until the required fields are valid) · `.disclaimer` with `shield-check` "החשבון אינו חובה — בלעדיו הכול נשמר רק במכשיר הזה". Without cloud config, keep the v1 text "בלי הרשמה ובלי שרת — הכול נשמר במכשיר שלך".
 4. Below it, a ghost link "יש לי קובץ גיבוי" opens the import flow.
 
 ### 7.2 Home (בית)
@@ -673,7 +675,7 @@ Voice: warm, calm, short, gender-neutral. Use nouns and infinitives for actions 
 | `onb.birthWeight` | משקל לידה |
 | `onb.birthWeightHint` | מומלץ — כך אפשר לעקוב אחרי החזרה למשקל הלידה |
 | `onb.start` | התחלה |
-| `onb.privacy` | בלי הרשמה ובלי שרת — הכול נשמר במכשיר שלך |
+| `onb.privacy` | החשבון אינו חובה — בלעדיו הכול נשמר רק במכשיר הזה (no cloud config: בלי הרשמה ובלי שרת — הכול נשמר במכשיר שלך) |
 | `onb.import` | יש לי קובץ גיבוי |
 | `onb.err.name` | יש להזין שם |
 | `onb.err.birthDate` | יש לבחור תאריך לידה |
@@ -1125,6 +1127,8 @@ Use the outline style, `strokeWidth={2}` (1.75 at ≥ 28px). The size comes from
 
 **Lists & onboarding:** `list` `row` `row--primary` `row--danger` `row--growth` `row--wrap` `row__icon` `row__body` `row__title` `row__sub` `row__end` `row__value` `onboarding` `onboarding__intro` `onboarding__title` `onboarding__lead` `onboarding__form` `onboarding__footer`
 
+**Accounts (§15):** `benefits` `benefits--compact` `benefits__head` `benefits__icon` `benefits__body` `benefits__title` `benefits__text` `benefits__list` `benefits__item` `benefits__actions` `benefits__note` `gbtn` `gbtn__logo` `gbtn__spinner` `auth-divider` `auth-alt` `input--ltr` `input-group__btn` `input--code` `sync-ind` `sync-ind--syncing` `sync-ind--offline` `sync-ind--error` `row--success` `row--warning` `row--error` `row--syncing` `row--header` `code-display` `code-display__label` `code-display__code` `code-display--loading` `choice-group` `choice` `choice--action` `choice__icon` `choice__body` `choice__title` `choice__text` `choice__radio` `choice__chevron` `avatar-stack` `family-preview` `family-preview__name` `family-preview__members` `dialog__icon--primary` `dialog__icon--warning`
+
 **State hooks (not classes):** `[aria-pressed]`, `[aria-checked]`, `[aria-current="page"]`, `[aria-invalid]`, `[aria-disabled]`, `:disabled`, `.is-selected`, `.is-scrolled`.
 
 **CSS variables components accept:** `--card-pad`, `--stack-gap`, `--cluster-gap`, `--grid-gap`, `--chip-cols`, `--kv-cols`, `--chart-h`, `--from`/`--to`/`--value`/`--meter-color` (meter), `--p` (pscale), `--avatar-size`, `--page-extra-bottom`.
@@ -1143,10 +1147,287 @@ Use the outline style, `strokeWidth={2}` (1.75 at ≥ 28px). The size comes from
 
 ---
 
-## 15. Changelog
+## 15. Accounts & family sync (optional sign-in)
+
+Source of truth for behavior: `docs/ACCOUNTS.md`. UI contract: `src/platform/cloud/types.ts`. Mockups: `mockup-accounts-light.png` and `mockup-accounts-dark.png` (frames are named after the subsections below).
+**Rule zero:** when `isCloudConfigured === false`, none of this UI renders, and the app is exactly v1.
+**Tone:** honest and calm. We say plainly that local data is not backed up, but we never use alarm colors, countdowns, or repeated prompts for it. Sign-in is always optional, and every flow has a "not now" exit.
+
+### 15.1 Components (all in `components.css` §27)
+
+| Class | Use |
+|---|---|
+| `.benefits`, `--compact`, `__head`, `__icon`, `__body`, `__title`, `__text`, `__list`, `__item`, `__actions`, `__note` | The "not backed up" note (Home, compact) and card (Settings, full). Combine with `.card`. |
+| `.gbtn`, `__logo`, `__spinner` | "המשך עם Google" button (§15.3). |
+| `.auth-divider` | "או עם אימייל" separator. |
+| `.auth-alt` | "אין עדיין חשבון? [יצירת חשבון]" line. Holds a `btn--ghost btn--sm`. |
+| `.input--ltr` | Email and password inputs: typed LTR, aligned to the RTL form edge. |
+| `.input-group__btn` | Password visibility toggle inside `.input-group`. |
+| `.input--code` | 6-character invite code entry (single input, auto-uppercase, letter-spaced). |
+| `.sync-ind`, `--syncing`, `--offline`, `--error` | Header sync indicator (§15.6). |
+| `.row--success`, `.row--warning`, `.row--error`, `.row--syncing` | Status rows; the icon gets the tone and the title stays neutral. |
+| `.row--header` | Section-title row inside a `.list` (family name). |
+| `.code-display`, `__label`, `__code`, `--loading` | Big invite code. |
+| `.choice-group`, `.choice`, `--action`, `__icon`, `__body`, `__title`, `__text`, `__radio`, `__chevron` | Radio cards: `<label class="choice">` + visually hidden `<input type="radio">`; selected state via `:has(:checked)`. Action cards: `<button class="choice choice--action">` + `__chevron`. |
+| `.avatar-stack` | Overlapping member avatars. Set `--stack-ring` to the background color if it is not `surface`. |
+| `.family-preview`, `__name`, `__members` | Join preview. |
+| `.dialog__icon--primary`, `.dialog__icon--warning` | Non-destructive confirmations (sign out). |
+
+New tokens: `--color-google-bg`, `--color-google-border`, `--color-google-text` (light and dark, per Google's brand guidelines).
+
+Icons (lucide): `CloudUpload` (backup), `CloudOff` (not backed up / offline), `CloudCheck` (synced), `CloudAlert` (error), `RefreshCw` (syncing / two-way), `Smartphone` (new phone), `LogIn` and `LogOut` (always with `.flip-rtl`), `Mail` (password provider), `Eye` / `EyeOff`, `Send` (invite), `KeyRound` (join with code), `HousePlus` (create family), `Merge`, `Replace`, `Copy`, `Share2`, `DoorOpen` (leave family), `ShieldCheck`, `CircleCheck`. Do not use person or users icons; members are shown as initial avatars.
+
+### 15.2 "Not backed up" note & sign-in benefits
+
+**Home note**: `section.card.benefits.benefits--compact`, placed **directly under the quick-add tiles**.
+- Shown only when all of these hold:
+  - cloud is configured
+  - the user is signed out
+  - at least 1 entry exists
+  - it was not dismissed in the last 14 days
+- Content:
+  - `__icon` `CloudUpload`
+  - `__title` "הנתונים שמורים רק בטלפון הזה"
+  - `__text` "הם אינם מגובים. התחברות שומרת גיבוי בענן, מאפשרת לשני ההורים לעדכן יחד ומשחזרת הכול בטלפון חדש."
+  - `__actions`: `btn--secondary btn--sm` "התחברות" (LogIn) → sign-in sheet · `btn--ghost btn--sm` "לא עכשיו"
+- "לא עכשיו" stores `hints.signInNoteDismissedAt = now` (device-local, never synced). The note comes back once after 14 days, then follows the same rule.
+- Never shown during an active timer, and never more than once per app session.
+
+**Settings card**: `section.card.benefits`, the **first item in Settings** whenever cloud is configured and the user is signed out. It is not dismissible.
+- `__icon` `CloudOff`
+- `__title` "הנתונים שמורים רק בטלפון הזה"
+- `__text` "הם אינם מגובים בענן. התחברות לחשבון:"
+- `__list`:
+  - `CloudUpload` "שומרת גיבוי אוטומטי בענן"
+  - `RefreshCw` "מאפשרת לשני ההורים לעדכן יחד, כל אחד מהטלפון שלו"
+  - `Smartphone` "משחזרת הכול בטלפון חדש"
+- `btn--primary btn--block` "התחברות"
+- `__note` "אפשר גם להמשיך בלי חשבון. בינתיים כדאי לשמור מדי פעם קובץ גיבוי (גיבוי ונתונים ← ייצוא גיבוי)."
+
+### 15.3 Sign-in sheet
+
+A default-height `.sheet` (no category modifier). `__icon` is `LogIn`. It has three states that swap in place; the header title changes and a back chevron (`ChevronRight`, aria "חזרה") appears in states 2 and 3. Initial focus goes to the Google button.
+
+1. **התחברות** (default)
+   - Lead: `p.text-muted` "גיבוי בענן, עדכון משותף עם בן/בת הזוג ושחזור בטלפון חדש."
+   - `button.gbtn`: G mark + "המשך עם Google"
+   - `.auth-divider` "או עם אימייל"
+   - Field **אימייל**: `input.input.input--ltr type=email autocomplete=email inputmode=email`, placeholder `name@example.com`
+   - Field **סיסמה**: `.input-group` with `input.input.input--ltr type=password autocomplete=current-password` and `button.input-group__btn` (`Eye`, `aria-pressed=false`, aria "הצגת הסיסמה"; when pressed: `EyeOff`, aria "הסתרת הסיסמה", input `type=text`)
+   - Under the password field: `btn--ghost btn--sm` "שכחתי סיסמה" (pulled to the field edge)
+   - `.auth-alt` "אין עדיין חשבון?" + ghost "יצירת חשבון"
+   - `.disclaimer` `ShieldCheck` "בהתחברות עם Google הסיסמה מוזנת במסך של Google בלבד — האפליקציה לא רואה אותה."
+   - Footer: `btn--primary btn--lg` "התחברות"
+2. **יצירת חשבון**
+   - Field **שם** (required, 1–40 chars), hint "כך השם יופיע לבן/בת הזוג במשפחה"
+   - **אימייל**
+   - **סיסמה** (`autocomplete=new-password`), hint "לפחות 6 תווים"
+   - `.auth-divider` "או" + `.gbtn`
+   - Footer: "יצירת חשבון"
+3. **איפוס סיסמה**
+   - Text "נשלח קישור לאיפוס הסיסמה לכתובת האימייל."
+   - **אימייל** (prefilled from state 1)
+   - Footer: "שליחת קישור לאיפוס"
+   - On success, replace the form with `.banner--success` `CircleCheck`: title "הקישור נשלח", text "שלחנו קישור לאיפוס אל {email}. כדאי לבדוק גם בתיקיית הספאם." Footer becomes `btn--secondary` "חזרה להתחברות".
+
+**Loading**
+- Submit button: `aria-busy="true"`, the icon is `LoaderCircle` (spins via `.btn[aria-busy] svg`), and the label changes:
+  - "מתחברים…"
+  - "יוצרים חשבון…"
+  - "שולחים…"
+- Google button while waiting: `aria-busy="true"` and `disabled`. Keep the G mark and add `LoaderCircle.gbtn__spinner` after the label.
+- All inputs are `disabled` while any request runs.
+- On success the sheet closes. Then:
+  - with a family: toast "התחברת · הנתונים מסונכרנים"
+  - without a family: the family setup sheet opens (§15.7)
+
+**Google button (brand guidelines)**
+- Neutral fill with a 1px stroke:
+  - light: `#FFFFFF` fill, `#747775` stroke, `#1F1F1F` text
+  - dark: `#131314` fill, `#8E918F` stroke, `#E3E3E3` text
+- The official multicolor G mark, 20px, unmodified. It is the standard 4-path SVG, kept in `src/components/GoogleMark.tsx` with `aria-hidden`. Never put it in a colored circle or recolor it.
+- Pill shape, 48px tall, label "המשך עם Google". In RTL the mark sits at the inline start (right), next to the label.
+- The label uses Rubik 500 because Roboto has no Hebrew glyphs.
+- Hover and pressed states use a state layer (8% / 12% of the label color), never a fill change.
+- Contrast:
+  - dark stroke on the sheet: 5.0:1
+  - label: 16.5:1 (light), 14.5:1 (dark)
+  - each G color on the dark fill: ≥ 4.7:1
+
+**Errors — every `CloudErrorCode`**
+- Field-level errors appear under the field (`.field__error`). Form-level errors appear as a `.banner--danger` at the top of the sheet body (`CircleAlert`), with `role="alert"`.
+
+| Code | Where | Hebrew |
+|---|---|---|
+| `cancelled` | — | (show nothing; the user closed Google's screen) |
+| `invalid-email` | email field | כתובת האימייל לא נראית תקינה |
+| `wrong-password` | form | האימייל או הסיסמה שגויים |
+| `email-in-use` | email field | כבר קיים חשבון עם האימייל הזה. + `btn--ghost btn--sm` "התחברות עם האימייל הזה" (switches to state 1 with the email kept) |
+| `weak-password` | password field | הסיסמה צריכה להכיל לפחות 6 תווים |
+| `too-many-requests` | form | היו יותר מדי ניסיונות. כדאי לחכות כמה דקות ולנסות שוב. |
+| `network` | form (or toast outside forms) | אין חיבור לאינטרנט. כדאי לנסות שוב כשהחיבור יחזור. |
+| `not-configured` | form | ההתחברות לא זמינה כרגע בגרסה הזו. |
+| `invite-not-found` | code field | לא מצאנו משפחה עם הקוד הזה. כדאי לבדוק אותו ולנסות שוב. |
+| `invite-expired` | code field | תוקף הקוד פג. אפשר לבקש קוד חדש מבן/בת הזוג. |
+| `already-in-family` | form | החשבון הזה כבר שייך למשפחה. כדי להצטרף למשפחה אחרת צריך קודם לעזוב את הנוכחית. |
+| `not-in-family` | toast | החשבון כבר לא חבר במשפחה הזו. |
+| `permission-denied` | toast / form | אין הרשאה לפעולה הזו. ייתכן שהחשבון הוסר מהמשפחה. |
+| `unknown` | form / toast | משהו השתבש. כדאי לנסות שוב. |
+
+- Client-side validation runs on blur and submit, before calling the cloud:
+  - empty email: "יש להזין אימייל"
+  - empty password: "יש להזין סיסמה"
+  - empty name: "יש להזין שם"
+- Fields with errors get `aria-invalid` and `aria-describedby`. Focus moves to the first invalid field, or to the banner for form-level errors.
+
+### 15.4 Settings → "חשבון ומשפחה" (signed in)
+
+This is the first section of Settings, shown only when signed in. It has three groups.
+
+**1. Account + sync** (`section__eyebrow` "חשבון ומשפחה", then a `.list`):
+- **Account row** (static `div.row`):
+  - `.avatar` with the first letter of `displayName` (fallback: email)
+  - `__title` = displayName
+  - `__sub` = email in `<span class="ltr">`
+  - `__end` = provider mark: the 18px G mark for Google, or `Mail` for password, with aria-label "מחובר/ת עם Google" / "מחובר/ת עם אימייל"
+- **Sync row**: `div.row` with a tone modifier; the icon is in `__icon`.
+
+| `SyncStatus` | Modifier · icon | Title | Sub |
+|---|---|---|---|
+| `synced` | `row--success` · `CloudCheck` | מסונכרן | לפני 2 דק׳ (from `lastSyncedAt`; "עכשיו" under 1 min; updates every 30 s) |
+| `syncing` | `row--syncing` · `RefreshCw` | מסנכרן… | — |
+| `connecting` | `row--syncing` · `RefreshCw` | מתחבר… | — |
+| `offline` | `row--warning` · `CloudOff` | לא מקוון | השינויים נשמרים בטלפון ויסונכרנו כשהחיבור יחזור |
+| `error` | `row--error` · `CloudAlert` | הסנכרון נכשל | השינויים נשמרים בטלפון. + `__end`: `btn--secondary btn--sm` "ניסיון חוזר" |
+| `off` (signed in, no family) | — | (the family group shows "עוד אין משפחה", see below) | |
+
+**2. Family** (`.list` with `aria-label="משפחה"`):
+- **Header row** `row--header`:
+  - `__title` = family name
+  - `__sub` = "{n} חברים" ("חבר אחד" for 1)
+  - `__end` = `.avatar-stack` of members (`avatar--sm`, alternate `avatar--alt`)
+- **One row per member**: avatar, name. The current user gets a neutral `badge` "אני". Others get the sub "הצטרף/ה ב-{d.M.yyyy}".
+- `row--primary` `Send` "הזמנת בן/בת זוג" → invite sheet (§15.5)
+- **No family** (signed in, `family === null`): show instead
+  - `row--header` "עוד אין משפחה" / sub "יוצרים משפחה או מצטרפים עם קוד כדי לגבות ולשתף"
+  - `row--primary` `HousePlus` "יצירת משפחה"
+  - `row--primary` `KeyRound` "הצטרפות עם קוד"
+
+**3. Session** (`.list`):
+- `button.row` `LogOut` (flip) "התנתקות" → `.dialog`:
+  - `dialog__icon--primary` (`LogOut`)
+  - title "להתנתק?"
+  - text "הנתונים נשארים שמורים בענן ויימחקו מהטלפון הזה. אפשר להתחבר שוב בכל עת ולשחזר אותם."
+  - actions `btn--primary` "התנתקות" · `btn--outline` "ביטול"
+  - after: toast "התנתקת. הנתונים שמורים בענן."
+- `button.row.row--danger` `DoorOpen` "עזיבת המשפחה" → `.dialog`:
+  - danger icon `DoorOpen`
+  - title "לעזוב את {familyName}?"
+  - text "הטלפון ישמור עותק של הנתונים, אבל עדכונים חדשים כבר לא יסונכרנו עם שאר בני המשפחה. אפשר להצטרף שוב עם קוד הזמנה."
+  - actions `btn--danger` "עזיבת המשפחה" · `btn--outline` "ביטול"
+  - after: toast "עזבת את המשפחה. הנתונים נשארו בטלפון."
+
+Gender-neutral notes: "התחברת", "התנתקת", "עזבת" and "הצטרפת" are written the same for both genders, so they are fine. Avoid adjectives such as "מחובר" without the slash form.
+
+### 15.5 Invite sheet ("הזמנת בן/בת זוג")
+
+A default-height `.sheet`. `__icon` is `Send`. `createInvite()` is called when the sheet opens; meanwhile show `.code-display--loading` with the code "······".
+- Lead `p.text-muted`: "בטלפון של בן/בת הזוג: מתקינים את BabyMonitor, מתחברים ובוחרים <strong>הצטרפות עם קוד</strong>."
+- `.code-display`:
+  - `__label` "קוד הצטרפות ל{familyName}"
+  - `__code` split into two `<span>`s of 3 characters, with `aria-label` spelling the code letter by letter ("K 7 Q 2 M X"). The copied and shared value is the raw 6-character code.
+- `.disclaimer` `Clock`: "הקוד בתוקף 7 ימים, עד {יום ג׳, 13 באוקטובר}. אפשר ליצור קוד חדש בכל עת."
+- `btn--ghost btn--sm` `RefreshCw` "יצירת קוד חדש" (replaces the code; the old one stays valid until it expires)
+- Footer:
+  - `btn--secondary btn--lg` `Copy` "העתקה" → toast "הקוד הועתק"
+  - `btn--primary btn--lg` `Share2` "שיתוף" → `navigator.share({ text })` with text "מצטרפים למשפחה שלנו ב-BabyMonitor: בוחרים ״הצטרפות עם קוד״ ומקלידים {code}. הקוד בתוקף עד {date}."
+  - Without Web Share support, hide "שיתוף" and make "העתקה" the primary button.
+- Errors (`network`, `permission-denied`): a `.banner--danger` in place of the code, plus `btn--secondary` "ניסיון חוזר".
+
+### 15.6 Header sync indicator
+
+`a.sync-ind` in `.app-header__actions` on every tab, rendered **only when signed in and in a family**. It links to Settings, scrolled to "חשבון ומשפחה".
+
+| Status | Look | aria-label |
+|---|---|---|
+| `synced` | icon only, `CloudCheck`, `text-subtle` (deliberately quiet) | מסונכרן · לפני 2 דק׳ |
+| `syncing` / `connecting` | icon only, `RefreshCw` with `.sync-ind--syncing` (slow spin; static under reduced motion) | מסנכרן… |
+| `offline` | pill `.sync-ind--offline`: `CloudOff` + "לא מקוון" | לא מקוון — השינויים יסונכרנו כשהחיבור יחזור |
+| `error` | pill `.sync-ind--error`: `CloudAlert` + "שגיאת סנכרון" | הסנכרון נכשל — פתיחת הגדרות החשבון |
+
+The indicator does not move the header title. On Home it sits at the inline end, opposite the baby switcher. To avoid flicker, `syncing` appears only after 600 ms.
+
+### 15.7 First time after sign-in, no family yet
+
+This sheet opens automatically after a successful sign-in or sign-up when `family === null`. It is a default `.sheet`; `__icon` is `CircleCheck`; the title is "התחברת · עוד צעד אחד".
+- Lead: "כדי לגבות ולשתף, יוצרים משפחה חדשה — או מצטרפים למשפחה שבן/בת הזוג כבר יצר/ה."
+- `.choice-group` `role=radiogroup`:
+  1. `label.choice` `HousePlus` "יצירת משפחה חדשה" / "הנתונים מהטלפון הזה יעלו לענן, ואפשר יהיה להזמין את בן/בת הזוג." (default selected)
+     - Directly under it, while selected, field **שם המשפחה**:
+       - prefill "משפחת {last word of displayName}" when displayName has 2+ words, otherwise "משפחת {displayName}"
+       - required, 1–40 chars
+       - hint "השם מוצג לכל חברי המשפחה. אפשר לשנות."
+  2. `label.choice` `KeyRound` "הצטרפות עם קוד" / "כשבן/בת הזוג כבר משתמש/ת באפליקציה ושלח/ה קוד הזמנה."
+- Footer primary changes with the selection:
+  - create: `HousePlus` "יצירת המשפחה". Loading label "יוצרים משפחה…". Success toast "המשפחה נוצרה · הנתונים מגובים".
+  - join: "המשך", which opens the join flow (§15.8).
+- Closing the sheet ("אחר כך") is allowed. Settings then shows the no-family state, and the header indicator stays hidden.
+
+### 15.8 Join a family
+
+**Step 1: code.** `.sheet`, `__icon` `KeyRound`, title "הצטרפות למשפחה".
+- Lead "את הקוד יוצרים בטלפון של בן/בת הזוג: הגדרות ← חשבון ומשפחה ← הזמנת בן/בת זוג."
+- Field **קוד הצטרפות**: a **single** `input.input.input--code` with:
+  - `maxlength=6`
+  - `autocapitalize=characters`
+  - `autocomplete=one-time-code`
+  - `inputmode=text`, `spellcheck=false`
+  - placeholder "······"
+- Input handling:
+  - Uppercase on input and strip spaces and dashes, so a pasted "k7q-2mx" works.
+  - Drop characters outside `INVITE_ALPHABET` (`src/platform/cloud/inviteCode.ts`: A–Z and 2–9 without the look-alikes I, L, O, 0, 1) without a message; they simply don't appear.
+- Footer: "המשך". It is disabled until 6 characters are entered, then runs `previewInvite()` with loading label "בודקים…".
+- Errors go under the field: `invite-not-found`, `invite-expired`, `network`.
+
+**Step 2: preview.** Back chevron in the header.
+- `.family-preview`: an `.avatar-stack` of `avatar--lg` (member initials), `__name` = familyName, `__members` = names joined with "ו" ("דנה ונועם", or "דנה, נועם ומאיה").
+- If **the device has data AND `familyHasData`**, show `fieldset.field` with legend "גם בטלפון הזה יש נתונים. מה לעשות איתם?" and a `.choice-group` radiogroup:
+  - `Merge` **"מיזוג הנתונים מהמכשיר למשפחה"** / "כל מה שנרשם בטלפון הזה יתווסף לנתוני המשפחה. שום דבר לא נמחק." (default)
+  - `Replace` **"שימוש בנתוני המשפחה בלבד"** / "הנתונים בטלפון הזה יימחקו ויוחלפו בנתוני המשפחה. כדאי לשמור קודם קובץ גיבוי."
+    - While it is selected, show `btn--secondary btn--sm` `Download` "שמירת גיבוי של הטלפון" right under the card (it runs the existing JSON export). After a download, show the hint "הגיבוי נשמר ✓".
+- Other cases:
+  - Device has data, family empty: no choice. Show the note "הנתונים מהטלפון הזה יעלו למשפחה."
+  - Device empty: no choice and no note.
+- Footer: `btn--primary btn--lg` "הצטרפות ל{familyName}". With **replace** selected, a `.dialog` confirms first:
+  - title "להחליף את הנתונים בטלפון?"
+  - text "הנתונים שנרשמו בטלפון הזה יימחקו. נתוני המשפחה יישארו."
+  - actions `btn--danger` "החלפה" · `btn--outline` "חזרה"
+- Success: the sheet closes. Toast "הצטרפת ל{familyName}". The header indicator appears.
+
+### 15.9 Shared-family touches (both parents)
+
+- The running timer is shared. When the active timer was started on the other parent's phone, the banner and Home card meta read "התחילה ב-06:52 · נועם". On the timer sheet the breakdown line adds "הופעל אצל נועם".
+- Sync is invisible in normal use. No toast for incoming remote changes; lists update in place without animation jumps (new rows fade in for 220 ms).
+- Units, theme, active baby and dismissed hints are per device, so they are never shown as "shared" settings.
+
+### 15.10 Accessibility notes
+
+- The sign-in sheet traps focus like every sheet. The Google popup or native sheet returns focus to the Google button on cancel.
+- The password toggle uses `aria-pressed` and keeps the caret position.
+- `.input--code` gets `aria-describedby` pointing at the error. Screen readers hear the code letter by letter through the `aria-label` on `.code-display__code`.
+- The sync row is a polite live region (`role="status"`) so status changes are announced once. The header indicator is not a live region (avoid duplicate announcements).
+- All new pairs meet AA (§12). The `.sync-ind` pills use `warning`/`danger` on their soft backgrounds (4.8:1 or more; the Google button: §15.3).
+
+---
+
+## 16. Changelog
 - **v1.1 (after design QA, see DESIGN-REVIEW.md):**
   - Dark `surface-2` changed to `#2e2925`. New `switch-thumb` token. Sheet seg/stepper hairline.
   - Stepper input is 3.6ch with an 8px gap.
   - Full-bleed sticky `.day-header`.
   - New classes `.chip--removable` and `.field__hint--warning`.
   - Spec amendments: age wording, the active-feed hero on Home (no banner on Home), Settings baby-row actions, the breastfeeding chart split by side, and Stats delta format.
+- **v1.2 (accounts & family sync, §15):**
+  - New components: benefits note, Google button, auth divider, LTR inputs, password toggle, code input and display, choice cards, avatar stack, family preview, header sync indicator, status rows.
+  - New tokens: `--color-google-*`.
+  - Onboarding gains the "כבר יש לנו חשבון — התחברות" entry and the updated privacy line.

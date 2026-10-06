@@ -1,9 +1,11 @@
-import { Droplet, ShieldCheck, Upload } from 'lucide-react';
-import { useRef, type ChangeEvent } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Droplet, LogIn, ShieldCheck, Upload } from 'lucide-react';
+import { useRef, useState, type ChangeEvent } from 'react';
+import { Navigate, useNavigate } from 'react-router-dom';
 import { parseBackup } from '../../domain/backup';
 import { useToast } from '../../components/toast';
 import { he } from '../../i18n/he';
+import { isCloudConfigured } from '../../platform/cloud';
+import { useAccountFlows } from '../account/flowsContext';
 import { appStore, useAppStore, type NewBaby } from '../../store';
 import { BabyForm } from './BabyForm';
 
@@ -16,6 +18,9 @@ export function OnboardingPage() {
   const toast = useToast();
   const isFirstRun = useAppStore((s) => s.babies.length === 0);
   const fileInput = useRef<HTMLInputElement>(null);
+  const flows = useAccountFlows();
+  /** Came here via "כבר יש לנו חשבון": once the family's babies sync down, go straight Home. */
+  const [viaAccount, setViaAccount] = useState(false);
 
   const submit = (data: NewBaby): void => {
     // `baby.birthWeightG` is the single source of the birth weight (growthSeries plots it as
@@ -40,6 +45,8 @@ export function OnboardingPage() {
     void navigate('/', { replace: true });
   };
 
+  if (viaAccount && !isFirstRun) return <Navigate to="/" replace />;
+
   return (
     <main className="onboarding">
       <div className="onboarding__intro">
@@ -59,6 +66,20 @@ export function OnboardingPage() {
               <ShieldCheck aria-hidden="true" />
               <span>{he.onb.privacy}</span>
             </p>
+            {isFirstRun && isCloudConfigured && (
+              // New phone / second parent: sign in, then join the family (docs/ACCOUNTS.md §6).
+              <button
+                type="button"
+                className="btn btn--secondary btn--block"
+                onClick={() => {
+                  setViaAccount(true);
+                  flows.openSignIn('join');
+                }}
+              >
+                <LogIn aria-hidden="true" />
+                {he.account.onboarding}
+              </button>
+            )}
             {isFirstRun && (
               <button
                 type="button"

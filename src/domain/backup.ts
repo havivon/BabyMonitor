@@ -352,6 +352,34 @@ function parseData(raw: unknown, p: string): BackupData {
   return { babies, entries, measurements, activeTimers, settings };
 }
 
+/** Record kinds that can be validated one at a time (used by cloud sync for remote documents). */
+export interface RecordTypes {
+  baby: Baby;
+  entry: FeedingEntry;
+  measurement: Measurement;
+  timer: ActiveTimer;
+}
+export type RecordKind = keyof RecordTypes;
+
+const RECORD_PARSERS: { [K in RecordKind]: (v: unknown, p: string) => RecordTypes[K] } = {
+  baby: parseBaby,
+  entry: parseEntry,
+  measurement: parseMeasurement,
+  timer: parseTimer,
+};
+
+/**
+ * Validates and normalises ONE record with the same strict rules as backup import (unknown fields
+ * stripped). Returns `null` for malformed data — never throws.
+ */
+export function parseRecord<K extends RecordKind>(kind: K, raw: unknown): RecordTypes[K] | null {
+  try {
+    return RECORD_PARSERS[kind](raw, kind);
+  } catch {
+    return null;
+  }
+}
+
 function toBackupError(e: unknown): BackupError {
   if (e instanceof ValidationError) return { code: e.code, path: e.path, message: e.message };
   return { code: 'INVALID_DATA', message: e instanceof Error ? e.message : String(e) };

@@ -22,6 +22,11 @@
   --color-surface-raised: #ffffff;  /* sheets, dialogs, menus */
   --color-thumb: #ffffff;           /* selected segment / stepper buttons */
   --color-switch-thumb: #ffffff;    /* switch knob when off; on = --color-on-primary */
+
+  /* Google sign-in button — Google brand guidelines (light theme). Never recolor the G mark. */
+  --color-google-bg: #ffffff;
+  --color-google-border: #747775;
+  --color-google-text: #1f1f1f;
   --color-border: #e4dccf;          /* hairlines, card outlines, dividers */
   --color-border-strong: #8c8276;   /* input outlines (≥3:1 vs surface) */
 
@@ -109,6 +114,11 @@
   --color-surface-raised: #25211e;
   --color-thumb: #3a3530;
   --color-switch-thumb: #d9d1c5;    /* 9.25:1 on the off track */
+
+  /* Google sign-in button — Google brand guidelines (dark theme) */
+  --color-google-bg: #131314;
+  --color-google-border: #8e918f;
+  --color-google-text: #e3e3e3;
   --color-border: #38322d;
   --color-border-strong: #7d746b;
 
@@ -190,6 +200,10 @@
     --color-surface-raised: #25211e;
     --color-thumb: #3a3530;
     --color-switch-thumb: #d9d1c5;
+
+    --color-google-bg: #131314;
+    --color-google-border: #8e918f;
+    --color-google-text: #e3e3e3;
     --color-border: #38322d;
     --color-border-strong: #7d746b;
 

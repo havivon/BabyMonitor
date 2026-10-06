@@ -1,4 +1,5 @@
 import { AppHeader } from '../../app/AppHeader';
+import { AccountSection } from '../account/AccountSection';
 import { AboutSection } from './AboutSection';
 import { BabiesSection } from './BabiesSection';
 import { DataSection } from './DataSection';
@@ -10,6 +11,8 @@ export function SettingsPage() {
     <>
       <AppHeader title="הגדרות" />
       <main className="page" style={{ gap: 'var(--space-5)' }}>
+        {/* Accounts & family (engineer #2, docs/ACCOUNTS.md §6) — renders nothing until configured. */}
+        <AccountSection />
         <BabiesSection />
         <PreferencesSection />
         <DataSection />

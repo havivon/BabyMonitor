@@ -93,4 +93,6 @@ export interface CloudActions {
   joinFamily(code: string, mode: JoinMode): Promise<void>;
   /** Leaves the family; the device keeps a local copy of the data. */
   leaveFamily(): Promise<void>;
+  /** Restarts the sync listeners after `status === 'error'` (the "ניסיון חוזר" button). */
+  retrySync(): Promise<void>;
 }

@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { SyncIndicator } from '../features/account/SyncIndicator';
 import { useScrolled } from '../hooks/useScrolled';
 
 export interface AppHeaderProps {
@@ -16,7 +17,11 @@ export function AppHeader({ title, start, actions }: AppHeaderProps) {
   return (
     <header className={`app-header${scrolled ? ' is-scrolled' : ''}`}>
       {title ? <h1 className="app-header__title">{title}</h1> : start}
-      {actions && <div className="app-header__actions">{actions}</div>}
+      <div className="app-header__actions">
+        {actions}
+        {/* Sync status, only when signed in (renders nothing otherwise). */}
+        <SyncIndicator />
+      </div>
     </header>
   );
 }

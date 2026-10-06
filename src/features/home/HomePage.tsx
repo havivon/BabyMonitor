@@ -37,6 +37,7 @@ import {
 import { CONTENT_LABEL, he, SIDE_LABEL, TYPE_LABEL } from '../../i18n/he';
 import { useActiveEntries, useActiveTimer, useSettings } from '../../store';
 import { Parts } from '../../components/Parts';
+import { BackupNote } from '../account/BackupNote';
 import { useFeedingSheets } from '../feeding/sheetsContext';
 import { TimelineItem } from '../feeding/TimelineItem';
 import { MilkGuideline } from './MilkGuideline';
@@ -82,6 +83,8 @@ export function HomePage() {
             onOpen={(kind) => sheets.open({ kind })}
           />
         </section>
+
+        <BackupNote variant="home" />
 
         {entries.length > 0 && <TodaySection entries={entries} now={now} />}
 
