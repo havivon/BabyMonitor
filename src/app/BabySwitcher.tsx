@@ -45,8 +45,8 @@ export function BabySwitcher() {
       >
         <Avatar baby={baby} index={index} />
         <span className="baby-switch__text">
-          <span className="baby-switch__name">{baby.name}</span>
-          {age && <span className="baby-switch__age">{age}</span>}
+          <span className="baby-switch__name truncate">{baby.name}</span>
+          {age && <span className="baby-switch__age truncate">{age}</span>}
         </span>
         <ChevronDown aria-hidden="true" />
       </button>

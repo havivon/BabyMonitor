@@ -145,4 +145,23 @@ test.describe('multiple babies', () => {
     expect(stored.entries.map((x) => x.babyId)).toEqual(['a']);
     expect(stored.settings.activeBabyId).toBe('a');
   });
+
+  // BUG-010: timers are per baby, but only the ACTIVE baby's timer is surfaced. With twins, a feed
+  // running for the other baby is invisible on every tab (only a small badge inside the switcher
+  // sheet), so it is easily forgotten. DESIGN §6.18: the banner appears on every tab while a timer
+  // exists.
+  test('a timer running for the non-active baby is still surfaced outside Home (BUG-010)', async ({
+    page,
+  }) => {
+    await seed(page, {
+      babies: [
+        makeBaby({ id: 'a', name: 'נועה' }),
+        makeBaby({ id: 'b', name: 'איתי', sex: 'male' }),
+      ],
+      activeTimers: { b: { babyId: 'b', segments: [{ side: 'left', startedAt: NOW - 10 * MIN }] } },
+      settings: { activeBabyId: 'a' },
+    });
+    await page.goto('/#/history');
+    await expect(page.locator('.timer-banner')).toBeVisible();
+  });
 });

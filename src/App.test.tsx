@@ -1,6 +1,9 @@
 import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it } from 'vitest';
 import App from './App';
+
+// Routes are lazy chunks; under full-suite load the first import can exceed findBy's 1 s default.
+const LAZY = { timeout: 5000 };
 import { appStore } from './store';
 import { seedStore } from './test/harness';
 
@@ -13,7 +16,7 @@ describe('App shell', () => {
   it('redirects a first run (no baby) to onboarding, then lands on Home', async () => {
     render(<App />);
     expect(
-      await screen.findByRole('heading', { level: 1, name: 'ברוכים הבאים ל-BabyMonitor' }),
+      await screen.findByRole('heading', { level: 1, name: 'ברוכים הבאים ל-BabyMonitor' }, LAZY),
     ).toBeInTheDocument();
     expect(window.location.hash).toBe('#/onboarding');
     expect(screen.queryByRole('navigation', { name: 'ניווט ראשי' })).not.toBeInTheDocument();
@@ -24,7 +27,7 @@ describe('App shell', () => {
     fireEvent.change(screen.getByLabelText(/משקל לידה/), { target: { value: '3,3' } });
     fireEvent.click(screen.getByRole('button', { name: 'התחלה' }));
 
-    expect(await screen.findByText('עוד לא נרשמו האכלות')).toBeInTheDocument();
+    expect(await screen.findByText('עוד לא נרשמו האכלות', undefined, LAZY)).toBeInTheDocument();
     expect(window.location.hash).toBe('#/');
     const { babies, measurements } = appStore.getState();
     expect(babies).toMatchObject([
@@ -36,7 +39,7 @@ describe('App shell', () => {
   it('onboarding validation shows Hebrew errors and focuses the first invalid field', async () => {
     window.location.hash = '#/onboarding';
     render(<App />);
-    const name = await screen.findByLabelText('שם');
+    const name = await screen.findByLabelText('שם', undefined, LAZY);
     fireEvent.submit(name.closest('form')!);
     expect(screen.getByText('יש להזין שם')).toBeInTheDocument();
     expect(screen.getByText('יש לבחור תאריך לידה')).toBeInTheDocument();
@@ -54,7 +57,7 @@ describe('App shell', () => {
     seedStore();
     window.location.hash = hash;
     render(<App />);
-    expect(await screen.findByRole('heading', { level: 1, name: title })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { level: 1, name: title }, LAZY)).toBeInTheDocument();
     const nav = screen.getByRole('navigation', { name: 'ניווט ראשי' });
     expect(within(nav).getByRole('link', { name: title })).toHaveAttribute('aria-current', 'page');
   });
@@ -63,7 +66,7 @@ describe('App shell', () => {
     seedStore();
     window.location.hash = '#/nope';
     render(<App />);
-    expect(await screen.findByRole('button', { name: /החלפת ילד\/ה/ })).toBeInTheDocument();
+    expect(await screen.findByRole('button', { name: /החלפת ילד\/ה/ }, LAZY)).toBeInTheDocument();
   });
 
   it('shows the active-timer banner on every tab; it opens the timer and hides meanwhile', async () => {
@@ -71,7 +74,7 @@ describe('App shell', () => {
     act(() => appStore.getState().startTimer(baby.id, 'right'));
     window.location.hash = '#/history';
     const { container } = render(<App />);
-    await screen.findByRole('heading', { level: 1, name: 'היסטוריה' });
+    await screen.findByRole('heading', { level: 1, name: 'היסטוריה' }, LAZY);
     expect(container.querySelector('.app')).toHaveClass('app--has-timer');
     fireEvent.click(screen.getByRole('button', { name: 'פתיחת טיימר ההנקה' }));
     expect(screen.getByRole('dialog', { name: 'הנקה' })).toBeInTheDocument();
@@ -80,5 +83,23 @@ describe('App shell', () => {
     expect(screen.getByRole('button', { name: 'פתיחת טיימר ההנקה' })).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'השהיית ההנקה' }));
     expect(screen.getByText('הנקה מושהית · ימין')).toBeInTheDocument();
+  });
+
+  it("surfaces another baby's running timer outside Home and switches to that baby (BUG-010)", async () => {
+    const first = seedStore();
+    const second = appStore
+      .getState()
+      .addBaby({ name: 'איתי', birthDate: '2026-07-01', sex: 'male' });
+    act(() => {
+      appStore.getState().startTimer(second.id, 'left');
+      appStore.getState().setActiveBaby(first.id);
+    });
+    window.location.hash = '#/history';
+    render(<App />);
+    await screen.findByRole('heading', { level: 1, name: 'היסטוריה' }, LAZY);
+    expect(screen.getByText('איתי · הנקה · שמאל')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'פתיחת טיימר ההנקה' }));
+    expect(appStore.getState().settings.activeBabyId).toBe(second.id);
+    expect(screen.getByRole('dialog', { name: 'הנקה' })).toBeInTheDocument();
   });
 });

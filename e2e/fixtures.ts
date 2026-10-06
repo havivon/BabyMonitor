@@ -421,6 +421,26 @@ export async function expectNoUnlabeledControls(page: Page, context = ''): Promi
   }
 }
 
+/**
+ * Numeric ranges ("7%–10%", "100–150") inside RTL text must sit in an LTR isolate, otherwise the
+ * bidi algorithm shows them reversed ("10%–7%"). Returns offending text snippets.
+ */
+export async function unisolatedRanges(page: Page): Promise<string[]> {
+  return page.evaluate(() => {
+    const out: string[] = [];
+    const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+    for (let n = walker.nextNode(); n; n = walker.nextNode()) {
+      const t = n.textContent ?? '';
+      if (!/\d[\d.,%]*\s*[–-]\s*\d/.test(t)) continue;
+      const el = n.parentElement;
+      if (!el || el.closest('svg, [dir="ltr"], bdi')) continue;
+      if (getComputedStyle(el).direction === 'ltr') continue;
+      out.push(t.trim().slice(0, 90));
+    }
+    return out;
+  });
+}
+
 /** No horizontal scrolling of the document or of any open dialog/sheet. */
 export async function expectNoHorizontalOverflow(page: Page, context = ''): Promise<void> {
   const report = await page.evaluate(() => {

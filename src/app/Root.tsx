@@ -2,14 +2,15 @@ import { useEffect, type ReactNode } from 'react';
 import { useLocation } from 'react-router-dom';
 import { ToastProvider } from '../components/toast';
 import { FeedingSheetsProvider } from '../features/feeding/FeedingSheetsProvider';
-import { appStore, useActiveTimer, useAppStore } from '../store';
+import { appStore, useAppStore } from '../store';
+import { useBannerTimer } from './useBannerTimer';
 
 /**
  * App root: the `.app` container (it carries `app--has-timer`, which reserves room for the timer
  * banner in the page AND lifts toasts above it), the toast host and the feeding sheets host.
  */
 export function Root({ children }: { children: ReactNode }) {
-  const timer = useActiveTimer();
+  const timer = useBannerTimer();
   const { pathname } = useLocation();
   const babies = useAppStore((s) => s.babies);
   const activeBabyId = useAppStore((s) => s.settings.activeBabyId);

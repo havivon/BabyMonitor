@@ -104,4 +104,15 @@ test.describe('long names', () => {
     const tabbar = await page.locator('.tabbar').boundingBox();
     expect(tabbar?.height ?? 999).toBeLessThan(100);
   });
+
+  // BUG-011: a long name wraps to two lines and grows the 56 px header instead of truncating.
+  test('a long name stays on one line in the header (BUG-011)', async ({ page }) => {
+    await freezeClockAt(page);
+    await seed(page, heavy);
+    await page.goto('/');
+    const name = page.locator('.baby-switch__name');
+    const lineHeight = await name.evaluate((el) => parseFloat(getComputedStyle(el).lineHeight));
+    const box = await name.boundingBox();
+    expect(box?.height ?? 0).toBeLessThanOrEqual(lineHeight + 1);
+  });
 });

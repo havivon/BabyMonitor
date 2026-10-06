@@ -10,13 +10,15 @@ import { appStore } from '../store';
 export interface TimerBannerProps {
   timer: ActiveTimer;
   onOpen: () => void;
+  /** Set when the timer belongs to a baby other than the active one (shown in the title). */
+  babyName?: string;
 }
 
 /**
  * Persistent active-timer banner above the tab bar (DESIGN §6.18). `role="status"` announces
  * state changes (side / paused); the ticking time itself is hidden from the live region.
  */
-export function TimerBanner({ timer, onOpen }: TimerBannerProps) {
+export function TimerBanner({ timer, onOpen, babyName }: TimerBannerProps) {
   const now = useNow(1000);
   const paused = isPaused(timer);
   const side = SIDE_LABEL[currentSide(timer) ?? 'right'];
@@ -41,6 +43,7 @@ export function TimerBanner({ timer, onOpen }: TimerBannerProps) {
         </span>
         <span className="timer-banner__text">
           <span className="timer-banner__title">
+            {babyName && `${babyName} · `}
             {paused ? he.banner.titlePaused(side) : he.banner.title(side)}
           </span>
           <span className="timer-banner__meta nowrap">

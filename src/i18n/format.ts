@@ -116,10 +116,14 @@ export function volumeNumber(ml: number, unit: VolumeUnit): string {
 export const volumeUnitLabel = (unit: VolumeUnit): string =>
   unit === 'ml' ? he.units.ml : he.units.oz;
 
-/** Rounds a display-unit volume to the input precision (whole ml, 0.5 oz). */
+/**
+ * A stored volume in the display unit, at the precision the lists show (whole ml, 0.1 oz), so an
+ * editor shows exactly what the timeline shows (125 ml → 4.2 oz, BUG-012). The ± stepper then
+ * snaps to its 0.5 oz grid on the first press.
+ */
 export function displayVolume(ml: number, unit: VolumeUnit): number {
   const v = volumeFromMl(ml, unit);
-  return unit === 'ml' ? Math.round(v) : Math.round(v * 2) / 2;
+  return unit === 'ml' ? Math.round(v) : Math.round(v * 10) / 10;
 }
 
 const LRI = '⁦';

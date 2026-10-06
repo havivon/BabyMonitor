@@ -271,4 +271,18 @@ test.describe('bottle', () => {
     await gotoTab(page, 'history');
     await expect(page.locator('.day-header__summary').first()).toContainText('209 מ״ל');
   });
+
+  // BUG-012: in oz mode the edit sheet rounds the amount to the 0.5 oz step (125 ml → "4") while
+  // every list shows 4.2 oz, so the editor misreports the logged amount.
+  test('oz edit sheet shows the same amount as the list (BUG-012)', async ({ page }) => {
+    await seed(page, {
+      babies: [baby],
+      entries: [bottle('b1', NOW - 60 * MIN, 125, 'formula', { id: 'x1' })],
+      settings: { volumeUnit: 'oz' },
+    });
+    await page.goto('/#/history');
+    await expect(timelineItems(page).first().locator('.timeline-item__value')).toHaveText('4.2 oz');
+    await timelineItems(page).first().click();
+    await expect(dialog(page, 'עריכת האכלה').getByLabel('כמות בoz')).toHaveValue('4.2');
+  });
 });

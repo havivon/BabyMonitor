@@ -10,6 +10,7 @@ import {
   test,
   text,
   toast,
+  unisolatedRanges,
 } from './fixtures';
 import { weightPercentile, whoRow } from './who';
 import type { Page } from '@playwright/test';
@@ -257,5 +258,79 @@ test.describe('growth', () => {
     await weightInput(sheet).fill('5');
     await page.keyboard.press('Escape');
     await expect(alertDialog(page, 'לצאת בלי לשמור?')).toBeVisible();
+  });
+
+  // BUG-009: ranges in insight copy are plain text inside RTL paragraphs, so they render reversed
+  // ("10%–7%", "150–100 גר׳"). Every numeric range must be in an LTR isolate (DESIGN §11.3).
+  test('numeric ranges in growth insights are not visually reversed (BUG-009)', async ({
+    page,
+  }) => {
+    await seed(page, {
+      babies: [
+        makeBaby({ id: 'a', birthDate: '2026-09-28', birthWeightG: 3500 }),
+        makeBaby({
+          id: 'b',
+          name: 'איתי',
+          sex: 'male',
+          birthDate: '2026-06-01',
+          birthWeightG: 3600,
+        }),
+      ],
+      measurements: [
+        { id: 'm1', babyId: 'a', date: '2026-10-01', weightG: 3200 }, // −8.6 % → "7%–10%" copy
+        { id: 'm2', babyId: 'b', date: '2026-08-01', weightG: 5200 },
+        { id: 'm3', babyId: 'b', date: '2026-10-01', weightG: 5600 }, // slow gain → "100–150 גר׳"
+      ],
+      settings: { activeBabyId: 'a' },
+    });
+    await page.goto('/#/growth');
+    await expect(page.locator('.banner').first()).toBeVisible();
+    const a = await unisolatedRanges(page);
+    await gotoTab(page, 'settings');
+    await page.getByRole('button', { name: 'בחירת איתי' }).click();
+    await gotoTab(page, 'growth');
+    await expect(page.getByText('עלייה איטית במשקל')).toBeVisible();
+    const b = await unisolatedRanges(page);
+    expect([...a, ...b]).toEqual([]);
+  });
+
+  // Regression for BUG-002 (fixed during QA): the Growth "daily milk" card gave an ml target to a
+  // breastfed baby and counted breastfeeds as bottle feeds.
+  test('daily milk guideline card: only for a mainly bottle-fed baby', async ({ page }) => {
+    const now = Date.parse('2026-10-05T14:00:00+03:00');
+    await seed(page, {
+      babies: [makeBaby({ id: 'b1', birthDate: '2026-08-01', birthWeightG: 3300 })],
+      measurements: [{ id: 'm1', babyId: 'b1', date: '2026-10-01', weightG: 4500 }],
+      entries: [
+        {
+          id: 'e1',
+          babyId: 'b1',
+          type: 'bottle',
+          at: now - 3_600_000,
+          content: 'formula',
+          amountMl: 120,
+        },
+        {
+          id: 'e2',
+          babyId: 'b1',
+          type: 'breast',
+          startedAt: now - 7_200_000,
+          endedAt: now - 6_600_000,
+          segments: [{ side: 'left', startedAt: now - 7_200_000, endedAt: now - 6_600_000 }],
+        },
+      ],
+    });
+    await page.goto('/#/growth');
+    await expect(page.locator('.percentile__value')).toHaveText(/\d/);
+    await expect(page.getByText('כמות חלב יומית משוערת')).toHaveCount(0);
+    // Remove the breastfeed → bottle only → card appears with 4.5 kg × 120–180 = 540–810 ml.
+    await page.goto('/#/history');
+    await page.locator('.timeline-item--breast').click();
+    await dialog(page, 'עריכת האכלה').getByRole('button', { name: 'מחיקה' }).click();
+    await gotoTab(page, 'growth');
+    const card = page.locator('section.card').filter({ hasText: 'כמות חלב יומית משוערת' });
+    await expect(card).toBeVisible();
+    expect(await text(card)).toContain('540–810');
+    await expect(card).toContainText('הנחיה כללית');
   });
 });

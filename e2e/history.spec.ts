@@ -143,14 +143,42 @@ test.describe('history', () => {
     await expect(days).toHaveCount(14);
     const more = page.getByRole('button', { name: 'הצגת ימים נוספים' });
     await expect(more).toBeVisible();
-    // Scrolling near the button (infinite scroll) or tapping it loads further batches of 14 days.
-    for (let i = 0; i < 5 && (await more.count()) > 0; i++) {
-      await more.scrollIntoViewIfNeeded().catch(() => undefined);
-      await page.waitForTimeout(200);
+    // Tapping the button or scrolling near it (infinite scroll) loads 14 more days each time. The
+    // button may move away while it is being tapped (infinite scroll fires first), so the tap is
+    // allowed to miss — what matters is that everything becomes reachable.
+    for (let i = 0; i < 8 && (await more.count()) > 0; i++) {
+      await more.click({ timeout: 2000 }).catch(() => undefined);
+      await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
     }
     await expect(more).toHaveCount(0);
     await expect(days).toHaveCount(31); // 30 days back reach into a 31st calendar day
     expect(await timelineItems(page).count()).toBe(180);
+  });
+
+  // Infinite scroll (DESIGN §7.6). Engineering gates it behind the first explicit tap so the button
+  // can't jump away under the user's finger; after that, reaching the end loads the next batch.
+  test('after the first "load more", scrolling to the end keeps loading', async ({ page }) => {
+    await freezeClockAt(page);
+    const entries: Entry[] = [];
+    for (let d = 0; d < 60; d++) {
+      for (let i = 0; i < 6; i++)
+        entries.push(bottle('b1', NOW - d * DAY - i * 3 * HOUR - 10 * MIN, 60));
+    }
+    await seed(page, { babies: [baby], entries });
+    await page.goto('/#/history');
+    const days = page.locator('.timeline__day');
+    await expect(days).toHaveCount(14);
+    await page
+      .getByRole('button', { name: 'הצגת ימים נוספים' })
+      .click({ timeout: 3000 })
+      .catch(() => undefined);
+    await expect.poll(() => days.count()).toBeGreaterThanOrEqual(28);
+    const before = 28;
+    for (let i = 0; i < 3; i++) {
+      await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+      await page.waitForTimeout(150);
+    }
+    await expect.poll(() => days.count()).toBeGreaterThan(before);
   });
 
   test('tap an item opens its edit sheet; delete there and undo', async ({ page }) => {

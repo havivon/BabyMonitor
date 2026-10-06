@@ -32,3 +32,10 @@
 .nowrap {
   white-space: nowrap;
 }
+
+/* 3. Baby switcher (BUG-011): let the header pill shrink so a long name truncates (with
+      `.truncate` on the name) instead of wrapping and growing the 56px header. */
+.baby-switch {
+  min-inline-size: 0;
+  max-inline-size: 100%;
+}

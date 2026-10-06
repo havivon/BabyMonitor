@@ -93,6 +93,21 @@ describe('BottleSheet', () => {
     expect((appStore.getState().entries[0] as BottleEntry).amountMl).toBe(133);
   });
 
+  it('in oz, the edit sheet shows the amount as the lists do and keeps the stored ml (BUG-012)', () => {
+    seedStore({ entries: [bottle(NOW - HOUR, 125, { id: 'oz1' })] });
+    appStore.getState().updateSettings({ volumeUnit: 'oz' });
+    renderInShell(
+      <BottleSheet
+        open
+        onClose={() => undefined}
+        entry={appStore.getState().entries[0] as BottleEntry}
+      />,
+    );
+    expect(amountInput()).toHaveValue('4.2');
+    save();
+    expect((appStore.getState().entries[0] as BottleEntry).amountMl).toBe(125);
+  });
+
   it('edits and deletes an existing bottle (delete offers undo with the same id)', () => {
     const existing = bottle(NOW - HOUR, 100, { id: 'keep-me', content: 'breastmilk' });
     seedStore({ entries: [existing] });
