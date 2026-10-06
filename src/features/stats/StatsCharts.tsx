@@ -199,30 +199,33 @@ export function DayBars({
           </BarChart>
         </ResponsiveContainer>
       </div>
-      {/* Text alternative for the chart (same data, same series names). */}
-      <table className="visually-hidden">
-        <caption>{ariaLabel}</caption>
-        <thead>
-          <tr>
-            <th scope="col">יום</th>
-            {series.map((s) => (
-              <th key={s.key} scope="col">
-                {s.label}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {days.map((d) => (
-            <tr key={d.date}>
-              <th scope="row">{d.isToday ? 'היום' : formatDateMedium(d.date)}</th>
+      {/* Text alternative for the chart (same data, same series names). A wrapper div carries
+        .visually-hidden: tables ignore width/overflow and would widen the page. */}
+      <div className="visually-hidden">
+        <table>
+          <caption>{ariaLabel}</caption>
+          <thead>
+            <tr>
+              <th scope="col">יום</th>
               {series.map((s) => (
-                <td key={s.key}>{cell(d, s)}</td>
+                <th key={s.key} scope="col">
+                  {s.label}
+                </th>
               ))}
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {days.map((d) => (
+              <tr key={d.date}>
+                <th scope="row">{d.isToday ? 'היום' : formatDateMedium(d.date)}</th>
+                {series.map((s) => (
+                  <td key={s.key}>{cell(d, s)}</td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </>
   );
 }

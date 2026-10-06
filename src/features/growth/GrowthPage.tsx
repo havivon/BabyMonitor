@@ -245,32 +245,34 @@ export function GrowthPage() {
                   </div>
                 </>
               )}
-              <table className="visually-hidden">
-                <caption>{CHART_TITLE[metric]} — מדידות ואחוזונים</caption>
-                <thead>
-                  <tr>
-                    <th scope="col">תאריך</th>
-                    <th scope="col">גיל</th>
-                    <th scope="col">{METRIC_LABEL[metric]}</th>
-                    <th scope="col">אחוזון</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {points.map((p) => {
-                    const q = metricQuantity(metric, p.value, weightUnit);
-                    return (
-                      <tr key={p.date}>
-                        <td>{formatDateLong(p.date)}</td>
-                        <td>{ageLabel(p.ageDays)}</td>
-                        <td>
-                          {q.number} {q.unit}
-                        </td>
-                        <td>{p.percentile === null ? '—' : formatPercentile(p.percentile)}</td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+              <div className="visually-hidden">
+                <table>
+                  <caption>{CHART_TITLE[metric]} — מדידות ואחוזונים</caption>
+                  <thead>
+                    <tr>
+                      <th scope="col">תאריך</th>
+                      <th scope="col">גיל</th>
+                      <th scope="col">{METRIC_LABEL[metric]}</th>
+                      <th scope="col">אחוזון</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {points.map((p) => {
+                      const q = metricQuantity(metric, p.value, weightUnit);
+                      return (
+                        <tr key={p.date}>
+                          <td>{formatDateLong(p.date)}</td>
+                          <td>{ageLabel(p.ageDays)}</td>
+                          <td>
+                            {q.number} {q.unit}
+                          </td>
+                          <td>{p.percentile === null ? '—' : formatPercentile(p.percentile)}</td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
             </section>
             {metric === 'weight' && guide && (
               <MilkGuideCard guide={guide} volumeUnit={volumeUnit} />

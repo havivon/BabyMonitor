@@ -82,12 +82,12 @@ test.describe('stats', () => {
       'true',
     );
 
-    expect(await compactText(tile(page, 'האכלות ביום').locator('.stat__value'))).toBe('6');
+    expect(await compactText(tile(page, 'האכלות חלב ביום').locator('.stat__value'))).toBe('6');
     expect(await compactText(tile(page, 'בקבוק ביום').locator('.stat__value'))).toBe('300מ״ל');
     expect(await compactText(tile(page, 'הנקה ביום').locator('.stat__value'))).toBe('30ד׳');
     expect(await compactText(tile(page, 'מרווח ממוצע').locator('.stat__value'))).toBe('4:00שע׳');
 
-    expect(await visibleDelta(page, 'האכלות ביום')).toBe('+1');
+    expect(await visibleDelta(page, 'האכלות חלב ביום')).toBe('+1');
     expect(await visibleDelta(page, 'בקבוק ביום')).toBe('+60 מ״ל');
     expect(await visibleDelta(page, 'הנקה ביום')).toBe('+6 ד׳');
     // previous: 160 h / 34 gaps = 4:42:21 → current 4:00 is 42 min shorter.
@@ -99,12 +99,12 @@ test.describe('stats', () => {
     await expect(page.getByText('ממוצע יומי · השינוי לעומת 7 הימים הקודמים')).toBeVisible();
 
     // Charts, with today's bar labelled.
-    await expect(page.getByRole('heading', { name: 'האכלות לפי יום' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'האכלות ומוצקים לפי יום' })).toBeVisible();
     await expect(page.getByRole('heading', { name: 'כמות בקבוק יומית' })).toBeVisible();
     await expect(page.getByRole('heading', { name: 'זמן הנקה יומי' })).toBeVisible();
     const feedsChart = page
       .locator('section.card')
-      .filter({ has: page.getByRole('heading', { name: 'האכלות לפי יום' }) });
+      .filter({ has: page.getByRole('heading', { name: 'האכלות ומוצקים לפי יום' }) });
     await expect(
       feedsChart
         .locator('svg text')
@@ -128,13 +128,13 @@ test.describe('stats', () => {
     for (const r of ['14 ימים', '30 ימים']) {
       await range.getByRole('radio', { name: r }).click();
       await expect(range.getByRole('radio', { name: r })).toHaveAttribute('aria-checked', 'true');
-      expect(await compactText(tile(page, 'האכלות ביום').locator('.stat__value'))).toBe('5.5');
+      expect(await compactText(tile(page, 'האכלות חלב ביום').locator('.stat__value'))).toBe('5.5');
       expect(await compactText(tile(page, 'בקבוק ביום').locator('.stat__value'))).toBe('270מ״ל');
       expect(await compactText(tile(page, 'הנקה ביום').locator('.stat__value'))).toBe('27ד׳');
       // 332 h / 76 gaps = 4 h 22 min.
       expect(await compactText(tile(page, 'מרווח ממוצע').locator('.stat__value'))).toBe('4:22שע׳');
-      await expect(tile(page, 'האכלות ביום').locator('.stat__delta')).toHaveCount(0);
-      await expect(tile(page, 'האכלות ביום').locator('.stat__sub')).toHaveText('ממוצע יומי');
+      await expect(tile(page, 'האכלות חלב ביום').locator('.stat__delta')).toHaveCount(0);
+      await expect(tile(page, 'האכלות חלב ביום').locator('.stat__sub')).toHaveText('ממוצע יומי');
     }
   });
 
@@ -179,8 +179,8 @@ test.describe('stats', () => {
     }
     await seed(page, { babies: [makeBaby({ id: 'b1', birthDate: '2026-04-01' })], entries });
     await page.goto('/#/stats');
-    const delta = tile(page, 'האכלות ביום').locator('.stat__delta');
-    expect(await visibleDelta(page, 'האכלות ביום')).toBe('ללא שינוי');
+    const delta = tile(page, 'האכלות חלב ביום').locator('.stat__delta');
+    expect(await visibleDelta(page, 'האכלות חלב ביום')).toBe('ללא שינוי');
     await expect(delta.locator('svg')).toHaveCount(0);
   });
 });
