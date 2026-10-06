@@ -171,6 +171,28 @@ describe('SettingsPage', () => {
     expect(await screen.findByText('הגיבוי יובא בהצלחה')).toBeInTheDocument();
   });
 
+  it('warns that a running breastfeed will be discarded by the import', async () => {
+    const { noa } = seed();
+    appStore.getState().startTimer(noa.id, 'left');
+    const before = selectBackupData(appStore.getState());
+    const user = renderPage();
+    const json = serializeBackup({ ...before, activeTimers: {} }, NOW);
+    await user.upload(screen.getByTestId('backup-file-input'), new File([json], 'b.json'));
+    const dialog = await screen.findByRole('alertdialog', { name: 'לייבא את הגיבוי?' });
+    expect(within(dialog).getByText(/הנקה פעילה תיעצר ותימחק/)).toBeInTheDocument();
+    await user.click(within(dialog).getByRole('button', { name: 'ייבוא והחלפה' }));
+    expect(appStore.getState().activeTimers).toEqual({});
+  });
+
+  it('does not mention a breastfeed when no timer runs', async () => {
+    seed();
+    const user = renderPage();
+    const json = serializeBackup(selectBackupData(appStore.getState()), NOW);
+    await user.upload(screen.getByTestId('backup-file-input'), new File([json], 'b.json'));
+    const dialog = await screen.findByRole('alertdialog');
+    expect(within(dialog).queryByText(/הנקה פעילה/)).not.toBeInTheDocument();
+  });
+
   it('keeps data when the import is cancelled', async () => {
     seed();
     const before = selectBackupData(appStore.getState());

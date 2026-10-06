@@ -1,4 +1,4 @@
-import { fireEvent, screen, within } from '@testing-library/react';
+import { act, fireEvent, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { appStore } from '../../store';
 import { renderInShell, seedStore } from '../../test/harness';
@@ -76,6 +76,50 @@ describe('HistoryPage', () => {
     expect(screen.getAllByRole('heading', { level: 2 })).toHaveLength(14);
     fireEvent.click(screen.getByRole('button', { name: 'הצגת ימים נוספים' }));
     expect(screen.getAllByRole('heading', { level: 2 })).toHaveLength(28);
+  });
+
+  it('infinite scroll engages only after the first tap, and never mid-press (QA OBS-1)', () => {
+    const observers: { cb: IntersectionObserverCallback; el?: Element }[] = [];
+    vi.stubGlobal(
+      'IntersectionObserver',
+      class {
+        private o: { cb: IntersectionObserverCallback; el?: Element };
+        constructor(cb: IntersectionObserverCallback) {
+          this.o = { cb };
+          observers.push(this.o);
+        }
+        observe(el: Element) {
+          this.o.el = el;
+        }
+        disconnect() {
+          this.o.el = undefined;
+        }
+      },
+    );
+    const fire = (): void => {
+      const o = observers.at(-1);
+      act(() => {
+        o?.cb([{ isIntersecting: true } as IntersectionObserverEntry], {} as IntersectionObserver);
+      });
+    };
+    const entries = Array.from({ length: 60 * 2 }, (_, i) =>
+      bottle(NOW - Math.floor(i / 2) * DAY - (i % 2) * HOUR, 100),
+    );
+    seedStore({ entries });
+    renderInShell(<HistoryPage />);
+    const dayCount = (): number => screen.getAllByRole('heading', { level: 2 }).length;
+    expect(observers).toHaveLength(0); // no auto-load before the first tap
+    const more = screen.getByRole('button', { name: 'הצגת ימים נוספים' });
+    fireEvent.click(more);
+    expect(dayCount()).toBe(28);
+    fire(); // scrolled near the end → next batch
+    expect(dayCount()).toBe(42);
+    fireEvent.pointerDown(more);
+    fire(); // a finger is on the button: don't move it
+    expect(dayCount()).toBe(42);
+    fireEvent.click(more);
+    expect(dayCount()).toBe(56);
+    vi.unstubAllGlobals();
   });
 
   it('opens an entry for editing; delete removes it and "בטל" restores it (same id)', () => {

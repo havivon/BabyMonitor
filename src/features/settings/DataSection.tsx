@@ -78,7 +78,11 @@ export function DataSection() {
       `${data.entries.length} רישומי האכלה`,
       `${data.measurements.length} מדידות`,
     ];
-    return `הייבוא יחליף את כל הנתונים שבמכשיר בנתונים מהקובץ (${parts.join(', ')}).`;
+    const running = Object.keys(appStore.getState().activeTimers).length > 0;
+    return (
+      `הייבוא יחליף את כל הנתונים שבמכשיר בנתונים מהקובץ (${parts.join(', ')}).` +
+      (running ? ' הנקה פעילה תיעצר ותימחק.' : '')
+    );
   };
 
   return (

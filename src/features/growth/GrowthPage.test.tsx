@@ -120,12 +120,16 @@ describe('GrowthPage', () => {
     vi.setSystemTime(local(2026, 6, 6, 10)); // day 5
     const { baby } = setup(3500);
     appStore.getState().addMeasurement({ babyId: baby.id, date: '2026-06-05', weightG: 3100 });
-    const LRI = '\u2066';
-    const PDI = '\u2069';
-    expect(await screen.findByText(`ירידה של ${LRI}11.4${PDI}% ממשקל הלידה`)).toBeInTheDocument();
+    const title = await screen.findByText(
+      (_, el) =>
+        el?.className === 'banner__title' && el.textContent === 'ירידה של 11.4% ממשקל הלידה',
+    );
+    // Numbers inside the Hebrew copy are bidi-isolated in <bdi> (BUG-009).
+    expect(title.querySelector('bdi')).toHaveTextContent('11.4');
     expect(screen.getByText(/מצדיקה בדיקה. כדאי להתייעץ עם רופא\/ת הילדים/)).toBeInTheDocument();
-    // Numbers inside the Hebrew copy are bidi-isolated (BUG-009).
-    expect(screen.getByText(/מצדיקה בדיקה/).textContent).toContain(`${LRI}10${PDI}%`);
+    expect(
+      [...screen.getByText(/מצדיקה בדיקה/).querySelectorAll('bdi')].map((b) => b.textContent),
+    ).toContain('10');
     expect(screen.getByText('משקל לידה')).toBeInTheDocument();
     // Percentile appears once the WHO tables have loaded.
     await waitFor(() => {

@@ -1,7 +1,7 @@
 import { CircleAlert, CircleCheck, Info, TriangleAlert } from 'lucide-react';
 import type { GrowthInsight } from '../../domain/growth/insights';
-import { isolateNumbers } from '../../i18n/format';
 import { insightCopy, type BannerTone } from './insightCopy';
+import { IsolatedText } from './ui/IsolatedText';
 
 const ICON: Record<BannerTone, typeof Info> = {
   danger: CircleAlert,
@@ -30,8 +30,12 @@ export function InsightBanners({ insights }: { insights: readonly GrowthInsight[
               <Icon aria-hidden />
             </span>
             <div className="banner__body">
-              <p className="banner__title">{isolateNumbers(copy.title)}</p>
-              <p className="banner__text">{isolateNumbers(copy.text)}</p>
+              <p className="banner__title">
+                <IsolatedText text={copy.title} />
+              </p>
+              <p className="banner__text">
+                <IsolatedText text={copy.text} />
+              </p>
             </div>
           </div>
         );

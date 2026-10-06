@@ -50,8 +50,8 @@ describe('StatsPage', () => {
   it('shows daily averages with the change vs the previous period', () => {
     seed();
     render(<StatsPage />);
-    expect(within(tile('האכלות ביום')).getByText('8')).toBeInTheDocument();
-    expect(within(tile('האכלות ביום')).getByText('+2')).toBeInTheDocument();
+    expect(within(tile('האכלות חלב ביום')).getByText('8')).toBeInTheDocument();
+    expect(within(tile('האכלות חלב ביום')).getByText('+2')).toBeInTheDocument();
     expect(screen.getByText('ממוצע יומי · השינוי לעומת 7 הימים הקודמים')).toBeInTheDocument();
     expect(within(tile('בקבוק ביום')).getByText('800')).toBeInTheDocument();
     // Delta = signed value + unit only (counts have no unit); the period is in one caption.
@@ -62,7 +62,7 @@ describe('StatsPage', () => {
       return el?.textContent.trim();
     };
     expect(visibleDelta('בקבוק ביום')).toBe('+200 מ״ל');
-    expect(visibleDelta('האכלות ביום')).toBe('+2');
+    expect(visibleDelta('האכלות חלב ביום')).toBe('+2');
     // Zero change → "ללא שינוי" with no trend icon.
     expect(visibleDelta('הנקה ביום')).toBe('ללא שינוי');
     expect(tile('הנקה ביום').querySelector('.stat__delta svg')).toBeNull();
@@ -72,8 +72,17 @@ describe('StatsPage', () => {
       'לעומת 7 הימים הקודמים',
     );
     expect(tile('הנקה ביום').querySelector('.stat__value')).toHaveTextContent('0ד׳');
-    expect(screen.getByRole('heading', { name: 'האכלות לפי יום' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'האכלות ומוצקים לפי יום' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'כמות בקבוק יומית' })).toBeInTheDocument();
+    // Each chart has a text alternative with the same series as the bars (incl. solids).
+    const table = screen.getByRole('table', { name: /והארוחות המוצקות לפי יום/ });
+    expect(
+      within(table)
+        .getAllByRole('columnheader')
+        .map((th) => th.textContent),
+    ).toEqual(['יום', 'הנקה', 'בקבוק', 'מוצקים']);
+    expect(within(table).getAllByRole('row')).toHaveLength(8); // header + 7 days
+    expect(within(table).getByRole('rowheader', { name: 'היום' })).toBeInTheDocument();
     // No breastfeeding → that chart is hidden.
     expect(screen.queryByRole('heading', { name: 'זמן הנקה יומי' })).not.toBeInTheDocument();
   });
@@ -85,8 +94,8 @@ describe('StatsPage', () => {
     await user.click(screen.getByRole('radio', { name: '14 ימים' }));
     expect(screen.getByRole('radio', { name: '14 ימים' })).toHaveAttribute('aria-checked', 'true');
     // 14 days: (7×8 + 7×6) / 14 = 7 per day; the previous 14 days only had nothing → no delta.
-    expect(within(tile('האכלות ביום')).getByText('7')).toBeInTheDocument();
-    expect(within(tile('האכלות ביום')).getByText('ממוצע יומי')).toBeInTheDocument();
+    expect(within(tile('האכלות חלב ביום')).getByText('7')).toBeInTheDocument();
+    expect(within(tile('האכלות חלב ביום')).getByText('ממוצע יומי')).toBeInTheDocument();
     expect(within(tile('בקבוק ביום')).getByText('700')).toBeInTheDocument();
   });
 

@@ -172,7 +172,7 @@ export function StatsPage() {
               <StatTile
                 modifier="primary"
                 icon={<Clock aria-hidden="true" />}
-                label="האכלות ביום"
+                label="האכלות חלב ביום"
                 value={
                   current.feedsPerDay === null ? DASH : formatNumber(current.feedsPerDay, 0, 1)
                 }
@@ -252,13 +252,13 @@ export function StatsPage() {
               <section className="card" aria-labelledby="stats-feeds-title">
                 <div className="card__header">
                   <h2 className="card__title" id="stats-feeds-title">
-                    האכלות לפי יום
+                    האכלות ומוצקים לפי יום
                   </h2>
                 </div>
                 <DayBars
                   days={days}
                   height={180}
-                  ariaLabel="מספר האכלות לפי יום ולפי סוג"
+                  ariaLabel="מספר ההאכלות (הנקה ובקבוק) והארוחות המוצקות לפי יום"
                   series={[
                     { key: 'breast', label: 'הנקה', color: 'var(--color-breast)' },
                     { key: 'bottle', label: 'בקבוק', color: 'var(--color-bottle)' },

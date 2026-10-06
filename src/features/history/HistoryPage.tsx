@@ -100,19 +100,26 @@ export function HistoryPage() {
     [sheets],
   );
   const showMore = useCallback(() => setDayCount((c) => c + DAYS_PER_PAGE), []);
+  // "Load more" must never move away under a finger (QA OBS-1):
+  // 1. Infinite scroll engages only after the first explicit tap. Before that, the button can't
+  //    jump just because it scrolled into view.
+  // 2. While a pointer is down on the button, the observer does not load. Otherwise content would
+  //    be inserted above it between pointerdown and click, and the click would land on a timeline item.
+  const [autoLoad, setAutoLoad] = useState(false);
+  const pressing = useRef(false);
   // Infinite scroll: load the next batch when the "more" button approaches the viewport.
   useEffect(() => {
     const el = moreRef.current;
-    if (!el || typeof IntersectionObserver === 'undefined') return;
+    if (!autoLoad || !el || typeof IntersectionObserver === 'undefined') return;
     const io = new IntersectionObserver(
       (items) => {
-        if (items.some((i) => i.isIntersecting)) showMore();
+        if (!pressing.current && items.some((i) => i.isIntersecting)) showMore();
       },
       { rootMargin: '600px 0px' },
     );
     io.observe(el);
     return () => io.disconnect();
-  }, [hasMore, dayCount, showMore]);
+  }, [autoLoad, hasMore, dayCount, showMore]);
 
   const jumpTo = (key: string): void => {
     // Newest first: the first day on or before the chosen date (else the oldest day).
@@ -190,6 +197,7 @@ export function HistoryPage() {
               onChange={(v) => {
                 setFilter(v ?? 'all');
                 setDayCount(DAYS_PER_PAGE);
+                setAutoLoad(false);
               }}
             />
             {groups.length === 0 ? (
@@ -229,7 +237,23 @@ export function HistoryPage() {
                 ref={moreRef}
                 type="button"
                 className="btn btn--outline btn--block"
-                onClick={showMore}
+                onPointerDown={() => {
+                  pressing.current = true;
+                }}
+                onPointerUp={() => {
+                  pressing.current = false;
+                }}
+                onPointerCancel={() => {
+                  pressing.current = false;
+                }}
+                onPointerLeave={() => {
+                  pressing.current = false;
+                }}
+                onClick={() => {
+                  pressing.current = false;
+                  showMore();
+                  setAutoLoad(true);
+                }}
               >
                 {he.history.more}
               </button>
