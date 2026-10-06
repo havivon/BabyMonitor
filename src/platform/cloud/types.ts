@@ -59,12 +59,12 @@ export type CloudErrorCode =
   | 'unknown';
 
 export class CloudError extends Error {
-  constructor(
-    readonly code: CloudErrorCode,
-    message?: string,
-  ) {
+  readonly code: CloudErrorCode;
+
+  constructor(code: CloudErrorCode, message?: string) {
     super(message ?? code);
     this.name = 'CloudError';
+    this.code = code;
   }
 }
 
