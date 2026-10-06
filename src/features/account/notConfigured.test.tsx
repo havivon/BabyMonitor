@@ -30,13 +30,13 @@ describe('cloud not configured', () => {
     window.location.hash = '#/';
     const { unmount } = render(<App />);
     await screen.findByRole('button', { name: /החלפת ילד\/ה/ }, LAZY);
-    expect(screen.queryByText('הנתונים אינם מגובים')).not.toBeInTheDocument();
+    expect(screen.queryByText('הנתונים שמורים רק בטלפון הזה')).not.toBeInTheDocument();
     expect(screen.queryByRole('link', { name: /מצב הסנכרון/ })).not.toBeInTheDocument();
     unmount();
     window.location.hash = '#/settings';
     render(<App />);
     await screen.findByRole('heading', { level: 1, name: 'הגדרות' }, LAZY);
     expect(screen.queryByText('חשבון ומשפחה')).not.toBeInTheDocument();
-    expect(screen.queryByText('הנתונים אינם מגובים')).not.toBeInTheDocument();
+    expect(screen.queryByText('הנתונים שמורים רק בטלפון הזה')).not.toBeInTheDocument();
   });
 });

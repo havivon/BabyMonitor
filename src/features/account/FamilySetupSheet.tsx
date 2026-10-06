@@ -1,124 +1,188 @@
-import { CircleAlert, LoaderCircle, UserPlus, Users } from 'lucide-react';
-import { useId, useState, type SyntheticEvent } from 'react';
-import { Field } from '../../components/Field';
+import { CircleAlert, CircleCheck, HousePlus, KeyRound, LoaderCircle } from 'lucide-react';
+import { useId, useState, type ReactNode, type SyntheticEvent } from 'react';
+import { describedBy } from '../../components/dom';
 import { Sheet } from '../../components/Sheet';
 import { useToast } from '../../components/toast';
 import { he } from '../../i18n/he';
 import { cloud, useCloud } from '../../platform/cloud';
-import { useActiveBaby } from '../../store';
-import { JoinFlow } from './JoinFlow';
+import { defaultFamilyName } from './names';
 import { useCloudAction } from './useCloudAction';
+import { useJoinFlow } from './useJoinFlow';
 
-const t = he.account.family;
+const t = he.account.setup;
+const NAME_MAX = 40;
 
 export interface FamilySetupSheetProps {
   open: boolean;
   onClose: () => void;
-  /** Start on the join-with-code step (e.g. second parent coming from onboarding). */
-  initialStep?: 'choose' | 'join';
+  /** Opened automatically right after sign-in ("התחברת · עוד צעד אחד") vs. from Settings. */
+  afterSignIn?: boolean;
+  /** Preselected choice (onboarding's "כבר יש לנו חשבון" prefers joining). */
+  initialChoice?: 'create' | 'join';
+  /** Open straight on the join-with-code flow (Settings → "הצטרפות עם קוד"). */
+  startOnJoin?: boolean;
 }
 
 /**
- * Signed in without a family: create one (name prefilled from the baby / the user) — which uploads
- * this device's data — or join an existing family with an invite code.
+ * Signed in without a family (DESIGN §15.7): create one — uploading this device's data — or join an
+ * existing family with a code (§15.8, same sheet). "אחר כך" is the sheet's close button.
  */
-export function FamilySetupSheet({ open, onClose, initialStep = 'choose' }: FamilySetupSheetProps) {
+export function FamilySetupSheet({
+  open,
+  onClose,
+  afterSignIn = false,
+  initialChoice = 'create',
+  startOnJoin = false,
+}: FamilySetupSheetProps) {
   const uid = useId();
   const toast = useToast();
   const { user } = useCloud();
-  const baby = useActiveBaby();
-  const [step, setStep] = useState(initialStep);
-  const [name, setName] = useState(() => {
-    const who = baby?.name ?? user?.displayName ?? '';
-    return who ? t.createNameDefault(who) : '';
-  });
-  const [submitted, setSubmitted] = useState(false);
-  const action = useCloudAction();
-  const nameError = name.trim() ? null : he.account.signIn.errName;
+  const [choice, setChoice] = useState(initialChoice);
+  const [joining, setJoining] = useState(startOnJoin);
+  // `null` until edited: the prefill follows the user, who may arrive after this sheet mounted.
+  const [edited, setName] = useState<string | null>(null);
+  const name = edited ?? defaultFamilyName(user?.displayName ?? user?.email?.split('@')[0]);
+  const [touched, setTouched] = useState(false);
+  const create = useCloudAction();
+  const nameError = name.trim() ? null : t.errName;
+  const showNameError = touched && nameError;
 
-  const create = async (e: SyntheticEvent): Promise<void> => {
+  const join = useJoinFlow({
+    onJoined: (familyName) => {
+      toast.show({ text: he.account.join.joined(familyName) });
+      onClose();
+    },
+    onExit: startOnJoin ? undefined : () => setJoining(false),
+  });
+
+  if (joining) {
+    return (
+      <Sheet
+        open={open}
+        onClose={onClose}
+        title={join.title}
+        icon={join.icon}
+        onBack={join.onBack}
+        footer={join.footer}
+        dense
+      >
+        {join.body}
+      </Sheet>
+    );
+  }
+
+  const submit = async (e: SyntheticEvent): Promise<void> => {
     e.preventDefault();
-    setSubmitted(true);
-    if (nameError) return;
-    if (await action.run(() => cloud.createFamily(name.trim()))) {
+    if (choice === 'join') {
+      setJoining(true);
+      return;
+    }
+    setTouched(true);
+    if (nameError) {
+      document.getElementById(`${uid}-name`)?.focus();
+      return;
+    }
+    if (await create.run(() => cloud.createFamily(name.trim()))) {
       toast.show({ text: t.created });
       onClose();
     }
   };
 
-  if (step === 'join') {
-    return (
-      <Sheet open={open} onClose={onClose} title={he.account.join.title} icon={<UserPlus />}>
-        <JoinFlow
-          onJoined={(familyName) => {
-            toast.show({ text: he.account.join.joined(familyName) });
-            onClose();
-          }}
-        />
-        {/* No code yet (e.g. the first parent on a new phone)? Creating a family is one tap away. */}
-        <button
-          type="button"
-          className="btn btn--ghost btn--block"
-          onClick={() => setStep('choose')}
-        >
-          {t.create}
-        </button>
-      </Sheet>
-    );
-  }
+  const option = (value: 'create' | 'join', icon: ReactNode, title: string, text: string) => (
+    <label className="choice">
+      <input
+        type="radio"
+        className="visually-hidden"
+        name={`${uid}-choice`}
+        value={value}
+        checked={choice === value}
+        disabled={create.pending}
+        onChange={() => setChoice(value)}
+      />
+      <span className="choice__icon" aria-hidden="true">
+        {icon}
+      </span>
+      <span className="choice__body">
+        <span className="choice__title">{title}</span>
+        <span className="choice__text">{text}</span>
+      </span>
+      <span className="choice__radio" aria-hidden="true" />
+    </label>
+  );
 
   return (
-    <Sheet open={open} onClose={onClose} title={t.setupTitle} icon={<Users />}>
-      <p className="text-muted">{t.setupLead}</p>
-      {action.error && (
+    <Sheet
+      open={open}
+      onClose={onClose}
+      title={afterSignIn ? t.title : he.account.family.create}
+      icon={afterSignIn ? <CircleCheck /> : <HousePlus />}
+      dense
+      footer={
+        <button
+          type="submit"
+          form={`${uid}-form`}
+          className="btn btn--primary btn--lg"
+          disabled={create.pending}
+          aria-busy={create.pending || undefined}
+        >
+          {create.pending ? (
+            <LoaderCircle aria-hidden="true" />
+          ) : (
+            choice === 'create' && <HousePlus aria-hidden="true" />
+          )}
+          {choice === 'join' ? t.next : create.pending ? t.creating : t.create}
+        </button>
+      }
+    >
+      <p className="text-muted">{t.lead}</p>
+      {create.error && (
         <div className="banner banner--danger" role="alert">
           <CircleAlert className="banner__icon" aria-hidden="true" />
           <div className="banner__body">
-            <span className="banner__text">{action.error}</span>
+            <span className="banner__text">{create.error}</span>
           </div>
         </div>
       )}
-      <form className="stack stack--4" noValidate onSubmit={(e) => void create(e)}>
-        <Field
-          label={t.createName}
-          htmlFor={`${uid}-name`}
-          error={submitted ? nameError : null}
-          errorId={`${uid}-name-err`}
-        >
-          <input
-            id={`${uid}-name`}
-            className="input"
-            type="text"
-            maxLength={40}
-            value={name}
-            disabled={action.pending}
-            aria-invalid={Boolean(submitted && nameError) || undefined}
-            aria-describedby={submitted && nameError ? `${uid}-name-err` : undefined}
-            onChange={(e) => setName(e.currentTarget.value)}
-          />
-        </Field>
-        <button
-          type="submit"
-          className="btn btn--primary btn--lg btn--block"
-          disabled={action.pending}
-          aria-busy={action.pending || undefined}
-        >
-          {action.pending ? <LoaderCircle aria-hidden="true" /> : <Users aria-hidden="true" />}
-          {t.createSubmit}
-        </button>
+      <form id={`${uid}-form`} noValidate onSubmit={(e) => void submit(e)}>
+        <div className="choice-group" role="radiogroup" aria-label={t.groupLabel}>
+          {option('create', <HousePlus />, t.createTitle, t.createText)}
+          {choice === 'create' && (
+            <div
+              className={`field${showNameError ? ' field--invalid' : ''}`}
+              style={{ paddingInline: 'var(--space-1)' }}
+            >
+              <label className="field__label" htmlFor={`${uid}-name`}>
+                {t.familyName}
+              </label>
+              <input
+                id={`${uid}-name`}
+                className="input"
+                type="text"
+                maxLength={NAME_MAX}
+                value={name}
+                disabled={create.pending}
+                aria-invalid={Boolean(showNameError) || undefined}
+                aria-describedby={describedBy(
+                  showNameError ? `${uid}-name-err` : `${uid}-name-hint`,
+                )}
+                onChange={(e) => setName(e.currentTarget.value)}
+                onBlur={() => setTouched(true)}
+              />
+              {showNameError ? (
+                <span className="field__error" id={`${uid}-name-err`}>
+                  <CircleAlert aria-hidden="true" />
+                  <span>{nameError}</span>
+                </span>
+              ) : (
+                <span className="field__hint" id={`${uid}-name-hint`}>
+                  {t.familyNameHint}
+                </span>
+              )}
+            </div>
+          )}
+          {option('join', <KeyRound />, t.joinTitle, t.joinText)}
+        </div>
       </form>
-      <button
-        type="button"
-        className="btn btn--secondary btn--block"
-        disabled={action.pending}
-        onClick={() => setStep('join')}
-      >
-        <UserPlus aria-hidden="true" />
-        {t.join}
-      </button>
-      <button type="button" className="btn btn--ghost btn--block" onClick={onClose}>
-        {t.later}
-      </button>
     </Sheet>
   );
 }

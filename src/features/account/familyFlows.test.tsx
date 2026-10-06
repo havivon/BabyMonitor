@@ -1,26 +1,26 @@
 import { act, fireEvent, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { appStore } from '../../store';
-import { renderInShell, seedStore } from '../../test/harness';
 import { FAMILY, fakeCloud, USER } from '../../test/fakeCloud';
+import { renderInShell, seedStore } from '../../test/harness';
 import { bottle, local } from '../../test/helpers';
 import { useAccountFlows } from './flowsContext';
+import { cleanInviteInput } from './inviteCode';
 import { InviteSheet } from './InviteSheet';
-import { JoinFlow } from './JoinFlow';
+import { joinNames } from './names';
 
 vi.mock('../../platform/cloud', async () => (await import('../../test/fakeCloud')).cloudModule);
 
 const { actions } = fakeCloud;
-const click = async (name: string | RegExp, scope: HTMLElement | null = null): Promise<void> => {
-  const target = scope
-    ? within(scope).getByRole('button', { name })
-    : screen.getByRole('button', { name });
+const press = async (name: string | RegExp, scope?: HTMLElement): Promise<void> => {
+  const el = (scope ? within(scope) : screen).getByRole('button', { name });
   await act(async () => {
-    fireEvent.click(target);
+    fireEvent.click(el);
+    await Promise.resolve();
   });
 };
 
-/** A button that opens a flow through the provider, like Home / Settings / onboarding do. */
+/** Opens a flow through the provider, the way Home / Settings / onboarding do. */
 function Opener({ flow }: { flow: 'signIn' | 'join' | 'invite' | 'setup' }) {
   const flows = useAccountFlows();
   const run = {
@@ -35,165 +35,263 @@ function Opener({ flow }: { flow: 'signIn' | 'join' | 'invite' | 'setup' }) {
     </button>
   );
 }
+const openFlow = (flow: 'signIn' | 'join' | 'invite' | 'setup'): void => {
+  renderInShell(<Opener flow={flow} />);
+  fireEvent.click(screen.getByRole('button', { name: 'open' }));
+};
+
+/** Sets navigator.clipboard / navigator.share for one test (restored in afterEach). */
+const restorers: (() => void)[] = [];
+function stubNavigator(key: 'clipboard' | 'share', value: unknown): void {
+  const had = Object.getOwnPropertyDescriptor(navigator, key);
+  Object.defineProperty(navigator, key, { value, configurable: true, writable: true });
+  restorers.push(() => {
+    if (had) Object.defineProperty(navigator, key, had);
+    else Reflect.deleteProperty(navigator, key);
+  });
+}
 
 beforeEach(() => {
   fakeCloud.reset();
   seedStore();
 });
 afterEach(() => {
+  restorers.splice(0).forEach((r) => r());
   vi.unstubAllGlobals();
 });
 
-describe('after sign-in', () => {
-  it('a user without a family is offered to create one (name prefilled from the baby)', async () => {
-    renderInShell(<Opener flow="signIn" />);
-    fireEvent.click(screen.getByRole('button', { name: 'open' }));
+describe('helpers', () => {
+  it('cleans pasted invite codes to the alphabet', () => {
+    expect(cleanInviteInput('k7q-2mx')).toBe('K7Q2MX');
+    expect(cleanInviteInput(' k7q 2mx ')).toBe('K7Q2MX');
+    expect(cleanInviteInput('O0I1L-AB')).toBe('AB'); // look-alikes are dropped
+    expect(cleanInviteInput('ABCDEFGH')).toBe('ABCDEF');
+  });
+  it('joins member names the Hebrew way', () => {
+    expect(joinNames(['דנה'])).toBe('דנה');
+    expect(joinNames(['דנה', 'נועם'])).toBe('דנה ונועם');
+    expect(joinNames(['דנה', 'נועם', 'מאיה'])).toBe('דנה, נועם ומאיה');
+  });
+});
+
+describe('after sign-in (§15.7)', () => {
+  it('no family yet → "התחברת · עוד צעד אחד", create (prefilled) uploads the data', async () => {
+    openFlow('signIn');
     actions.signInWithGoogle.mockImplementationOnce(() => {
-      fakeCloud.set({ user: USER, status: 'connecting' });
+      fakeCloud.set({ user: { ...USER, displayName: 'מיכל כהן' }, status: 'connecting' });
       return Promise.resolve();
     });
-    await click('המשך עם Google');
-    expect(screen.getByText('התחברת בהצלחה')).toBeInTheDocument();
-    // Membership not known yet → no setup sheet flash.
-    expect(screen.queryByRole('dialog', { name: 'משפחה' })).not.toBeInTheDocument();
-
+    await press('המשך עם Google');
+    // Membership not known yet → no flash of the setup sheet.
+    expect(screen.queryByRole('dialog', { name: 'התחברת · עוד צעד אחד' })).not.toBeInTheDocument();
     act(() => fakeCloud.set({ status: 'off' }));
-    const sheet = screen.getByRole('dialog', { name: 'משפחה' });
-    expect(within(sheet).getByLabelText('שם המשפחה')).toHaveValue('המשפחה של נועה');
+    const sheet = screen.getByRole('dialog', { name: 'התחברת · עוד צעד אחד' });
+    const group = within(sheet).getByRole('radiogroup', { name: 'איך ממשיכים' });
+    expect(within(group).getByRole('radio', { name: /יצירת משפחה חדשה/ })).toBeChecked();
+    expect(within(sheet).getByLabelText('שם המשפחה')).toHaveValue('משפחת כהן');
+
     actions.createFamily.mockImplementationOnce((name) => {
       fakeCloud.set({ family: { ...FAMILY, name }, status: 'synced' });
       return Promise.resolve();
     });
-    await click('יצירת משפחה', within(sheet).getByLabelText('שם המשפחה').closest('form'));
-    expect(actions.createFamily).toHaveBeenCalledWith('המשפחה של נועה');
-    expect(screen.getByText('המשפחה נוצרה והנתונים גובו')).toBeInTheDocument();
+    await press('יצירת המשפחה', sheet);
+    expect(actions.createFamily).toHaveBeenCalledWith('משפחת כהן');
+    expect(screen.getByText('המשפחה נוצרה · הנתונים מגובים')).toBeInTheDocument();
     expect(sheet).not.toHaveAttribute('open');
   });
 
-  it('a user who already has a family is not asked anything', async () => {
-    renderInShell(<Opener flow="signIn" />);
-    fireEvent.click(screen.getByRole('button', { name: 'open' }));
+  it('already in a family → just a toast, no setup', async () => {
+    openFlow('signIn');
     actions.signInWithGoogle.mockImplementationOnce(() => {
-      fakeCloud.set({ user: USER, family: FAMILY, status: 'syncing' });
+      fakeCloud.set({ user: USER, status: 'connecting' });
       return Promise.resolve();
     });
-    await click('המשך עם Google');
-    expect(screen.queryByRole('dialog', { name: 'משפחה' })).not.toBeInTheDocument();
+    await press('המשך עם Google');
+    act(() => fakeCloud.set({ family: FAMILY, status: 'syncing' }));
+    expect(screen.getByText('התחברת · הנתונים מסונכרנים')).toBeInTheDocument();
+    expect(screen.queryByRole('dialog', { name: 'התחברת · עוד צעד אחד' })).not.toBeInTheDocument();
   });
 
-  it('create-family errors are shown in Hebrew', async () => {
+  it('choosing "הצטרפות עם קוד" switches the same sheet to the join flow', async () => {
     fakeCloud.set({ user: USER });
-    renderInShell(<Opener flow="setup" />);
-    fireEvent.click(screen.getByRole('button', { name: 'open' }));
+    openFlow('setup');
+    const sheet = screen.getByRole('dialog', { name: 'יצירת משפחה' });
+    fireEvent.click(within(sheet).getByRole('radio', { name: /הצטרפות עם קוד/ }));
+    expect(within(sheet).queryByLabelText('שם המשפחה')).not.toBeInTheDocument();
+    await press('המשך', sheet);
+    expect(within(sheet).getByRole('heading', { name: 'הצטרפות למשפחה' })).toBeInTheDocument();
+    fireEvent.click(within(sheet).getByRole('button', { name: 'חזרה' }));
+    expect(within(sheet).getByRole('radio', { name: /הצטרפות עם קוד/ })).toBeChecked();
+  });
+
+  it('an empty family name and server errors are reported', async () => {
+    fakeCloud.set({ user: { ...USER, displayName: null, email: null } });
+    openFlow('setup');
+    const sheet = screen.getByRole('dialog', { name: 'יצירת משפחה' });
+    await press('יצירת המשפחה', sheet);
+    expect(within(sheet).getByText('יש להזין שם למשפחה')).toBeInTheDocument();
+    expect(actions.createFamily).not.toHaveBeenCalled();
+    fireEvent.change(within(sheet).getByLabelText('שם המשפחה'), { target: { value: 'משפחת לוי' } });
     actions.createFamily.mockImplementationOnce(() => fakeCloud.fail('already-in-family'));
-    const form = screen.getByLabelText('שם המשפחה').closest('form')!;
-    await click('יצירת משפחה', form);
-    expect(screen.getByRole('alert')).toHaveTextContent('החשבון כבר שייך למשפחה.');
+    await press('יצירת המשפחה', sheet);
+    expect(within(sheet).getByRole('alert')).toHaveTextContent('החשבון הזה כבר שייך למשפחה.');
   });
 });
 
-describe('JoinFlow', () => {
-  const onJoined = vi.fn();
-  beforeEach(() => onJoined.mockReset());
+describe('join a family (§15.8)', () => {
+  const codeInput = (): HTMLElement => screen.getByLabelText('קוד הצטרפות');
 
-  it('normalises the code, validates its length and maps invite errors', async () => {
-    renderInShell(<JoinFlow onJoined={onJoined} />);
-    const code = screen.getByLabelText('קוד הזמנה');
-    fireEvent.change(code, { target: { value: 'k7q-2m' } });
-    expect(code).toHaveValue('K7Q2M');
-    await click('המשך');
-    expect(screen.getByText('הקוד צריך להכיל 6 תווים')).toBeInTheDocument();
-    expect(actions.previewInvite).not.toHaveBeenCalled();
+  it('code step: cleans input, enables "המשך" at 6 characters, errors under the field', async () => {
+    fakeCloud.set({ user: USER });
+    openFlow('join');
+    const next = screen.getByRole('button', { name: 'המשך' });
+    fireEvent.change(codeInput(), { target: { value: 'k7q-2m' } });
+    expect(codeInput()).toHaveValue('K7Q2M');
+    expect(next).toBeDisabled();
+    fireEvent.change(codeInput(), { target: { value: 'k7q-2mx' } });
+    expect(next).toBeEnabled();
 
-    fireEvent.change(code, { target: { value: 'k7q 2mz' } });
     actions.previewInvite.mockImplementationOnce(() => fakeCloud.fail('invite-expired'));
-    await click('המשך');
-    expect(actions.previewInvite).toHaveBeenCalledWith('K7Q2MZ');
-    expect(screen.getByRole('alert')).toHaveTextContent('תוקף הקוד פג. אפשר לבקש קוד חדש.');
+    await press('המשך');
+    expect(actions.previewInvite).toHaveBeenCalledWith('K7Q2MX');
+    expect(codeInput()).toHaveAccessibleDescription('תוקף הקוד פג. אפשר לבקש קוד חדש מבן/בת הזוג.');
+    expect(codeInput()).toHaveFocus();
     actions.previewInvite.mockImplementationOnce(() => fakeCloud.fail('invite-not-found'));
-    await click('המשך');
-    expect(screen.getByRole('alert')).toHaveTextContent('הקוד לא נמצא');
+    await press('המשך');
+    expect(codeInput()).toHaveAccessibleDescription(/לא מצאנו משפחה עם הקוד הזה/);
   });
 
-  it('no device data: preview, then join (merge) without asking', async () => {
-    appStore.getState().resetAll(); // a fresh phone (second parent)
-    renderInShell(<JoinFlow onJoined={onJoined} />);
-    fireEvent.change(screen.getByLabelText('קוד הזמנה'), { target: { value: 'K7Q2MZ' } });
-    await click('המשך');
-    expect(screen.getByText('המשפחה של נועה')).toBeInTheDocument();
-    expect(screen.getByText('בני המשפחה: דנה')).toBeInTheDocument();
+  it('a fresh phone joins without being asked (merge)', async () => {
+    appStore.getState().resetAll();
+    fakeCloud.set({ user: USER });
+    actions.previewInvite.mockImplementationOnce(() =>
+      Promise.resolve({
+        familyName: 'משפחת לוי',
+        memberNames: ['דנה', 'נועם'],
+        familyHasData: true,
+      }),
+    );
+    renderInShell(<Opener flow="join" />);
+    fireEvent.click(screen.getByRole('button', { name: 'open' }));
+    fireEvent.change(codeInput(), { target: { value: 'K7Q2MX' } });
+    await press('המשך');
+    expect(screen.getByText('משפחת לוי')).toBeInTheDocument();
+    expect(screen.getByText('דנה ונועם · כבר יש נתונים במשפחה')).toBeInTheDocument();
     expect(screen.queryByRole('radiogroup')).not.toBeInTheDocument();
-    await click('הצטרפות');
-    expect(actions.joinFamily).toHaveBeenCalledWith('K7Q2MZ', 'merge');
-    expect(onJoined).toHaveBeenCalledWith('המשפחה של נועה');
+    expect(screen.queryByText('הנתונים מהטלפון הזה יעלו למשפחה.')).not.toBeInTheDocument();
+    await press('הצטרפות למשפחת לוי');
+    expect(actions.joinFamily).toHaveBeenCalledWith('K7Q2MX', 'merge');
+    expect(screen.getByText('הצטרפת למשפחת לוי')).toBeInTheDocument();
   });
 
-  it('both sides have data: asks merge vs replace and offers a backup before replacing', async () => {
+  it('device has data, family empty: no choice, a note that it will be uploaded', async () => {
+    fakeCloud.set({ user: USER });
+    actions.previewInvite.mockImplementationOnce(() =>
+      Promise.resolve({ familyName: 'משפחת לוי', memberNames: ['דנה'], familyHasData: false }),
+    );
+    openFlow('join');
+    fireEvent.change(codeInput(), { target: { value: 'K7Q2MX' } });
+    await press('המשך');
+    expect(screen.getByText('הנתונים מהטלפון הזה יעלו למשפחה.')).toBeInTheDocument();
+    expect(screen.queryByRole('radiogroup')).not.toBeInTheDocument();
+  });
+
+  it('both have data: merge by default; replace offers a backup and is confirmed first', async () => {
     seedStore({ entries: [bottle(local(2026, 10, 5, 9), 120)] });
+    fakeCloud.set({ user: USER });
     const createObjectURL = vi.fn(() => 'blob:x');
     vi.stubGlobal('URL', Object.assign(URL, { createObjectURL, revokeObjectURL: vi.fn() }));
-    renderInShell(<JoinFlow onJoined={onJoined} />);
-    fireEvent.change(screen.getByLabelText('קוד הזמנה'), { target: { value: 'K7Q2MZ' } });
-    await click('המשך');
-    const group = screen.getByRole('radiogroup', { name: /יש נתונים גם בטלפון הזה/ });
+    openFlow('join');
+    fireEvent.change(codeInput(), { target: { value: 'K7Q2MX' } });
+    await press('המשך');
+    const group = screen.getByRole('radiogroup');
+    expect(screen.getByText('גם בטלפון הזה יש נתונים. מה לעשות איתם?')).toBeInTheDocument();
     expect(
-      within(group).getByRole('radio', { name: 'מיזוג הנתונים מהמכשיר למשפחה' }),
-    ).toHaveAttribute('aria-checked', 'true');
-    expect(screen.queryByRole('button', { name: 'הורדת גיבוי של הטלפון' })).not.toBeInTheDocument();
-    fireEvent.click(within(group).getByRole('radio', { name: 'שימוש בנתוני המשפחה בלבד' }));
-    await click('הורדת גיבוי של הטלפון');
+      within(group).getByRole('radio', { name: /מיזוג הנתונים מהמכשיר למשפחה/ }),
+    ).toBeChecked();
+    expect(screen.queryByRole('button', { name: 'שמירת גיבוי של הטלפון' })).not.toBeInTheDocument();
+
+    fireEvent.click(within(group).getByRole('radio', { name: /שימוש בנתוני המשפחה בלבד/ }));
+    await press('שמירת גיבוי של הטלפון');
     expect(createObjectURL).toHaveBeenCalledOnce();
-    expect(screen.getByText('קובץ הגיבוי נשמר')).toBeInTheDocument();
+    expect(screen.getByText('הגיבוי נשמר ✓')).toBeInTheDocument();
+
+    await press(`הצטרפות ל${FAMILY.name}`);
+    const confirm = screen.getByRole('alertdialog', { name: 'להחליף את הנתונים בטלפון?' });
+    expect(actions.joinFamily).not.toHaveBeenCalled();
+    await press('חזרה', confirm);
+    expect(actions.joinFamily).not.toHaveBeenCalled();
+
     actions.joinFamily.mockImplementationOnce(() => fakeCloud.fail('network'));
-    await click('הצטרפות');
+    await press(`הצטרפות ל${FAMILY.name}`);
+    await press('החלפה', screen.getByRole('alertdialog', { name: 'להחליף את הנתונים בטלפון?' }));
     expect(screen.getByRole('alert')).toHaveTextContent('אין חיבור לאינטרנט');
-    expect(onJoined).not.toHaveBeenCalled();
-    await click('הצטרפות');
-    expect(actions.joinFamily).toHaveBeenLastCalledWith('K7Q2MZ', 'replace');
-    expect(onJoined).toHaveBeenCalledOnce();
-    expect(appStore.getState().entries).toHaveLength(1); // the cloud layer, not the UI, replaces data
+
+    await press(`הצטרפות ל${FAMILY.name}`);
+    await press('החלפה', screen.getByRole('alertdialog', { name: 'להחליף את הנתונים בטלפון?' }));
+    expect(actions.joinFamily).toHaveBeenLastCalledWith('K7Q2MX', 'replace');
+    expect(appStore.getState().entries).toHaveLength(1); // replacing is the cloud layer's job
   });
 });
 
-describe('InviteSheet', () => {
+describe('invite (§15.5)', () => {
   beforeEach(() => fakeCloud.set({ user: USER, family: FAMILY, status: 'synced' }));
 
-  it('creates a code; copy writes it to the clipboard (with a Hebrew fallback on failure)', async () => {
-    const writeText = vi.fn(() => Promise.resolve());
-    vi.stubGlobal('navigator', { ...navigator, clipboard: { writeText }, share: undefined });
+  const renderInvite = async (): Promise<void> => {
     await act(async () => {
       renderInShell(<InviteSheet open onClose={() => undefined} />);
+      await Promise.resolve();
     });
-    expect(screen.getByText('K7Q2MZ')).toBeInTheDocument();
+  };
+
+  it('shows the code split 3+3, spelled out for screen readers, with its expiry', async () => {
+    stubNavigator('share', undefined);
+    await renderInvite();
+    const code = screen.getByRole('img', { name: 'K 7 Q 2 M X' });
+    expect(code).toHaveTextContent('K7Q2MX');
+    expect(code.children).toHaveLength(2);
+    expect(screen.getByText(`קוד הצטרפות ל${FAMILY.name}`)).toBeInTheDocument();
+    expect(screen.getByText(/הקוד בתוקף 7 ימים, עד יום ג׳, 13 באוקטובר/)).toBeInTheDocument();
+  });
+
+  it('copy (primary without Web Share) → toast; a blocked clipboard → error toast', async () => {
+    const writeText = vi.fn(() => Promise.resolve());
+    stubNavigator('clipboard', { writeText });
+    stubNavigator('share', undefined);
+    await renderInvite();
     expect(screen.queryByRole('button', { name: 'שיתוף' })).not.toBeInTheDocument();
-    await click('העתקת הקוד');
-    expect(writeText).toHaveBeenCalledWith('K7Q2MZ');
+    expect(screen.getByRole('button', { name: 'העתקה' })).toHaveClass('btn--primary');
+    await press('העתקה');
+    expect(writeText).toHaveBeenCalledWith('K7Q2MX');
     expect(screen.getByText('הקוד הועתק')).toBeInTheDocument();
     writeText.mockImplementationOnce(() => Promise.reject(new Error('denied')));
-    await click('העתקת הקוד');
+    await press('העתקה');
     expect(screen.getByRole('alert')).toHaveTextContent('לא הצלחנו להעתיק');
   });
 
-  it('shares through the Web Share API when available; cancelling is silent', async () => {
+  it('shares with the spec text; cancelling the share sheet is silent', async () => {
     const share = vi.fn(() => Promise.reject(new DOMException('cancel', 'AbortError')));
-    vi.stubGlobal('navigator', { ...navigator, share });
-    await act(async () => {
-      renderInShell(<InviteSheet open onClose={() => undefined} />);
-    });
-    await click('שיתוף');
+    stubNavigator('share', share);
+    await renderInvite();
+    await press('שיתוף');
     expect(share).toHaveBeenCalledWith({
-      text: 'הצטרפות ל"המשפחה של נועה" ב-BabyMonitor: קוד ההזמנה הוא K7Q2MZ',
+      text: 'מצטרפים למשפחה שלנו ב-BabyMonitor: בוחרים ״הצטרפות עם קוד״ ומקלידים K7Q2MX. הקוד בתוקף עד יום ג׳, 13 באוקטובר.',
     });
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });
 
-  it('a failed code creation can be retried', async () => {
+  it('errors replace the code with a banner and "ניסיון חוזר"; a new code can be made', async () => {
+    stubNavigator('share', undefined);
     actions.createInvite.mockImplementationOnce(() => fakeCloud.fail('permission-denied'));
-    await act(async () => {
-      renderInShell(<InviteSheet open onClose={() => undefined} />);
-    });
+    await renderInvite();
     expect(screen.getByRole('alert')).toHaveTextContent('אין הרשאה לפעולה הזו.');
-    await click('ניסיון נוסף');
-    expect(screen.getByText('K7Q2MZ')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'העתקה' })).not.toBeInTheDocument();
+    await press('ניסיון חוזר');
+    expect(screen.getByRole('img', { name: 'K 7 Q 2 M X' })).toBeInTheDocument();
+    actions.createInvite.mockImplementationOnce(() =>
+      Promise.resolve({ code: 'ABCDEF', expiresAt: Date.UTC(2026, 9, 13, 10, 0) }),
+    );
+    await press('יצירת קוד חדש');
+    expect(screen.getByRole('img', { name: 'A B C D E F' })).toBeInTheDocument();
   });
 });

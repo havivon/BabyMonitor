@@ -32,6 +32,7 @@ import {
 import type { ActiveTimer, BreastEntry, EpochMs, Side } from '../../domain/types';
 import { formatDuration, formatTimer } from '../../domain/units';
 import { useAnnouncer } from '../../hooks/useAnnouncer';
+import { useOtherStarter } from '../account/useOtherStarter';
 import { useNow } from '../../hooks/useNow';
 import { roundMinutes } from '../../i18n/format';
 import { he, SIDE_LABEL } from '../../i18n/he';
@@ -88,6 +89,7 @@ export function TimerSheet({ open, onClose }: TimerSheetProps) {
   const now = useNow(1000);
   const uid = useId();
   const [message, announce] = useAnnouncer();
+  const starter = useOtherStarter(timer?.babyId);
   const [mode, setMode] = useState<Mode>('timer');
   const [confirm, setConfirm] = useState<Confirm>(null);
   const [submitted, setSubmitted] = useState(false);
@@ -393,6 +395,8 @@ export function TimerSheet({ open, onClose }: TimerSheetProps) {
                     {SIDE_LABEL[s]} <strong className="ltr num">{sideTime(s, elapsed[s])}</strong>
                   </span>
                 ))}
+                {/* Shared family timer started on the other parent's phone (DESIGN §15.9). */}
+                {starter && <span>{he.banner.startedAt(starter)}</span>}
               </div>
             ) : (
               previous && (

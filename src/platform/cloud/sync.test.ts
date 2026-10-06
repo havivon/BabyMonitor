@@ -18,7 +18,11 @@ function memoryStorage(): StateStorage {
 
 let ids = 0;
 function newStore(): AppStore {
-  return createAppStore({ storage: memoryStorage(), now: () => T0, generateId: () => `id${++ids}` });
+  return createAppStore({
+    storage: memoryStorage(),
+    now: () => T0,
+    generateId: () => `id${++ids}`,
+  });
 }
 
 function connectivity(initial = true): Connectivity & { set(online: boolean): void } {
@@ -45,18 +49,27 @@ interface Device {
   engine: ReturnType<typeof startSync>;
 }
 
-function device(server: FakeServer, store = newStore()): Device {
+function device(
+  server: FakeServer,
+  store = newStore(),
+  uid?: string,
+): Device & { starters: Record<string, string> } {
   const client = server.client();
   const statuses: SyncStatusInfo[] = [];
   const net = connectivity();
+  const out = { starters: {} as Record<string, string> };
   const engine = startSync({
     store,
     backend: client,
     connectivity: net,
     now: () => T0,
+    uid,
     onStatus: (s) => statuses.push(s),
+    onTimerStarters: (m) => {
+      out.starters = m;
+    },
   });
-  return { store, client, statuses, net, engine };
+  return Object.assign(out, { store, client, statuses, net, engine });
 }
 
 /** Puts a device offline (client + connectivity). */
@@ -67,13 +80,24 @@ function offline(d: Device, value: boolean) {
 
 const shared = (s: AppStore) => {
   const { babies, entries, measurements, activeTimers } = s.getState();
-  const byId = <T extends { id: string }>(a: T[]) => [...a].sort((x, y) => x.id.localeCompare(y.id));
-  return { babies: byId(babies), entries: byId(entries), measurements: byId(measurements), activeTimers };
+  const byId = <T extends { id: string }>(a: T[]) =>
+    [...a].sort((x, y) => x.id.localeCompare(y.id));
+  return {
+    babies: byId(babies),
+    entries: byId(entries),
+    measurements: byId(measurements),
+    activeTimers,
+  };
 };
 
 function seedLocal(store: AppStore) {
   const s = store.getState();
-  const baby = s.addBaby({ name: 'נועה', birthDate: '2026-06-01', sex: 'female', birthWeightG: 3200 });
+  const baby = s.addBaby({
+    name: 'נועה',
+    birthDate: '2026-06-01',
+    sex: 'female',
+    birthWeightG: 3200,
+  });
   s.addEntry({ babyId: baby.id, type: 'bottle', at: T0, content: 'formula', amountMl: 90 });
   s.addMeasurement({ babyId: baby.id, date: '2026-07-01', weightG: 4300 });
   return baby;
@@ -145,7 +169,13 @@ describe('sync engine', () => {
     const m = b.store.getState().measurements[0];
     if (!m) throw new Error('missing measurement');
     b.store.getState().deleteMeasurement(m.id);
-    a.store.getState().addEntry({ babyId: baby.id, type: 'bottle', at: T0 + 2, content: 'breastmilk', amountMl: 60 });
+    a.store.getState().addEntry({
+      babyId: baby.id,
+      type: 'bottle',
+      at: T0 + 2,
+      content: 'breastmilk',
+      amountMl: 60,
+    });
     await settle();
     expect(b.engine.status.status).toBe('offline');
     expect(b.store.getState().entries).toHaveLength(2); // A's new entry not visible yet
@@ -221,6 +251,30 @@ describe('sync engine', () => {
     expect(b.store.getState().entries.some((e) => e.type === 'breast')).toBe(true);
   });
 
+  it('records who started a shared timer and keeps it across side switches', async () => {
+    const server = new FakeServer();
+    const a = device(server, newStore(), 'mom');
+    const b = device(server, newStore(), 'dad');
+    await settle();
+    const baby = seedLocal(a.store);
+    await settle();
+    a.store.getState().startTimer(baby.id, 'right');
+    await settle();
+    expect(a.starters).toEqual({ [baby.id]: 'mom' });
+    expect(b.starters).toEqual({ [baby.id]: 'mom' });
+    b.store.getState().switchTimerSide(baby.id);
+    await settle();
+    expect(server.docs.timers.get(baby.id)?.startedBy).toBe('mom');
+    expect(a.starters).toEqual({ [baby.id]: 'mom' });
+    b.store.getState().finishTimer(baby.id, { endAt: T0 + 60_000 });
+    await settle();
+    expect(a.starters).toEqual({});
+    expect(b.starters).toEqual({});
+    b.store.getState().startTimer(baby.id, 'left');
+    await settle();
+    expect(a.starters).toEqual({ [baby.id]: 'dad' });
+  });
+
   it('never syncs device settings', async () => {
     const server = new FakeServer();
     const a = device(server);
@@ -244,10 +298,22 @@ describe('sync engine', () => {
     const b = device(server, bStore);
     await b.engine.ready;
     await settle();
-    expect(bStore.getState().babies.map((x) => x.name).sort()).toEqual(['איתי', 'נועה']);
-    expect(a.store.getState().babies.map((x) => x.name).sort()).toEqual(['איתי', 'נועה']);
+    expect(
+      bStore
+        .getState()
+        .babies.map((x) => x.name)
+        .sort(),
+    ).toEqual(['איתי', 'נועה']);
+    expect(
+      a.store
+        .getState()
+        .babies.map((x) => x.name)
+        .sort(),
+    ).toEqual(['איתי', 'נועה']);
     // B's own active baby is kept.
-    expect(bStore.getState().settings.activeBabyId).toBe(bStore.getState().babies.find((x) => x.name === 'איתי')?.id);
+    expect(bStore.getState().settings.activeBabyId).toBe(
+      bStore.getState().babies.find((x) => x.name === 'איתי')?.id,
+    );
   });
 
   it('ignores malformed remote documents', async () => {

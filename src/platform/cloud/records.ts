@@ -33,7 +33,10 @@ export function recordId(collection: SyncCollection, record: SyncRecord): string
 }
 
 /** Validates a remote record; `null` for malformed data (ignored by the sync engine). */
-export function decodeRecord<C extends SyncCollection>(collection: C, raw: unknown): SyncRecordTypes[C] | null {
+export function decodeRecord<C extends SyncCollection>(
+  collection: C,
+  raw: unknown,
+): SyncRecordTypes[C] | null {
   return parseRecord(RECORD_KIND[collection], raw) as SyncRecordTypes[C] | null;
 }
 

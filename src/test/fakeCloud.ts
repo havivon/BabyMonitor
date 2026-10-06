@@ -17,6 +17,12 @@ import {
   type CloudUser,
   type Family,
 } from '../platform/cloud/types';
+import {
+  INVITE_CODE_LENGTH,
+  INVITE_TTL_MS,
+  isValidInviteCode,
+  normalizeInviteCode,
+} from '../platform/cloud/inviteCode';
 
 export const SIGNED_OUT: CloudState = {
   ready: true,
@@ -55,6 +61,24 @@ function useCloud(): CloudState {
   );
 }
 
+interface Starter {
+  uid: string;
+  name: string;
+  isMe: boolean;
+}
+let starters: Record<string, Starter> = {};
+
+function useTimerStarter(babyId: string | null | undefined): Starter | null {
+  useSyncExternalStore(
+    (cb) => {
+      listeners.add(cb);
+      return () => listeners.delete(cb);
+    },
+    () => state,
+  );
+  return babyId ? (starters[babyId] ?? null) : null;
+}
+
 const ok = (): Promise<void> => Promise.resolve();
 
 function makeActions(): { [K in keyof CloudActions]: ReturnType<typeof vi.fn<CloudActions[K]>> } {
@@ -66,13 +90,14 @@ function makeActions(): { [K in keyof CloudActions]: ReturnType<typeof vi.fn<Clo
     signOut: vi.fn<CloudActions['signOut']>(ok),
     createFamily: vi.fn<CloudActions['createFamily']>(ok),
     createInvite: vi.fn<CloudActions['createInvite']>(() =>
-      Promise.resolve({ code: 'K7Q2MZ', expiresAt: Date.UTC(2026, 9, 12, 10, 0) }),
+      Promise.resolve({ code: 'K7Q2MX', expiresAt: Date.UTC(2026, 9, 13, 10, 0) }),
     ),
     previewInvite: vi.fn<CloudActions['previewInvite']>(() =>
       Promise.resolve({ familyName: FAMILY.name, memberNames: ['דנה'], familyHasData: true }),
     ),
     joinFamily: vi.fn<CloudActions['joinFamily']>(ok),
     leaveFamily: vi.fn<CloudActions['leaveFamily']>(ok),
+    retrySync: vi.fn<CloudActions['retrySync']>(ok),
   };
 }
 
@@ -88,9 +113,18 @@ export const fakeCloud = {
     state = { ...state, ...patch };
     for (const l of listeners) l();
   },
+  /** Who started each baby's running feed (shared family timer). */
+  setStarter(babyId: string, starter: Starter | null): void {
+    starters = { ...starters };
+    if (starter) starters[babyId] = starter;
+    else Reflect.deleteProperty(starters, babyId);
+    state = { ...state }; // notify subscribers
+    for (const l of listeners) l();
+  },
   /** Signed-out state and default (successful) action implementations. */
   reset(): void {
     state = SIGNED_OUT;
+    starters = {};
     const fresh = makeActions();
     for (const key of Object.keys(actions) as (keyof CloudActions)[]) {
       actions[key].mockReset();
@@ -111,6 +145,11 @@ export const fakeCloud = {
 export const cloudModule = {
   isCloudConfigured: true,
   useCloud,
+  useTimerStarter,
   cloud: actions as CloudActions,
   CloudError,
+  INVITE_CODE_LENGTH,
+  INVITE_TTL_MS,
+  normalizeInviteCode,
+  isValidInviteCode,
 };

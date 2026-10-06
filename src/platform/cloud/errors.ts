@@ -48,11 +48,12 @@ function messageOf(e: unknown): string {
 export function toCloudError(e: unknown): CloudError {
   if (e instanceof CloudError) return e;
   const code = codeOf(e);
-  const mapped = code ? BY_CODE[code] ?? BY_CODE[code.replace(/^firestore\//, '')] : undefined;
+  const mapped = code ? (BY_CODE[code] ?? BY_CODE[code.replace(/^firestore\//, '')]) : undefined;
   if (mapped) return new CloudError(mapped, messageOf(e) || code);
   const msg = messageOf(e);
   // Native Google sign-in (Capacitor): user closed the account picker.
-  if (code === '12501' || /cancel+ed|SIGN_IN_CANCELLED/i.test(msg)) return new CloudError('cancelled', msg);
+  if (code === '12501' || /cancel+ed|SIGN_IN_CANCELLED/i.test(msg))
+    return new CloudError('cancelled', msg);
   if (/network|offline|failed to fetch/i.test(msg)) return new CloudError('network', msg);
   return new CloudError('unknown', msg || code || 'unknown error');
 }

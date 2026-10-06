@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useToast } from '../../components/toast';
 import { he } from '../../i18n/he';
 import { isCloudConfigured, useCloud } from '../../platform/cloud';
@@ -13,10 +13,11 @@ type Request =
   | { kind: 'invite' };
 
 /**
- * Hosts the account sheets once for the whole app (Home note, Settings, onboarding all open them).
- * After a successful sign-in, as soon as the user's family membership is known (status is no longer
- * 'connecting'), a user without a family is offered create / join. Renders nothing extra when the
- * cloud is not configured.
+ * Hosts the account sheets once for the whole app (Home note, Settings and onboarding open them).
+ * After a successful sign-in, as soon as family membership is known (status ≠ 'connecting'):
+ * - with a family → toast "התחברת · הנתונים מסונכרנים";
+ * - without one → the "התחברת · עוד צעד אחד" setup sheet (DESIGN §15.3 / §15.7).
+ * Renders only its children when the cloud is not configured.
  */
 export function AccountFlowsProvider({ children }: { children: ReactNode }) {
   if (!isCloudConfigured) return <>{children}</>;
@@ -28,15 +29,23 @@ function ConfiguredAccountFlows({ children }: { children: ReactNode }) {
   const { user, family, status } = useCloud();
   const [request, setRequest] = useState<(Request & { key: number }) | null>(null);
   const [isOpen, setIsOpen] = useState(false);
-  /** Set right after a sign-in; cleared once family setup is done or not needed. */
+  /** Set right after a sign-in; cleared once setup is done, dismissed or not needed. */
   const [afterSignIn, setAfterSignIn] = useState<SignInIntent | null>(null);
   /** Last sign-in's intent + count; keeps the setup sheet mounted so it can animate closed. */
   const [setup, setSetup] = useState<{ intent: SignInIntent; n: number } | null>(null);
+  const welcomePending = useRef(false);
 
   const membershipKnown = user !== null && status !== 'connecting';
   // Signed in to an account that already has a family: nothing to set up (adjusted during render).
   if (afterSignIn !== null && membershipKnown && family !== null) setAfterSignIn(null);
   const setupDue = afterSignIn !== null && membershipKnown && family === null;
+
+  // One-time welcome toast for an account that already has a family.
+  useEffect(() => {
+    if (!welcomePending.current || !membershipKnown) return;
+    welcomePending.current = false;
+    if (family) toast.show({ text: he.account.signIn.signedInSynced });
+  }, [membershipKnown, family, toast]);
 
   const open = useCallback((r: Request) => {
     setRequest((prev) => ({ ...r, key: (prev?.key ?? 0) + 1 }));
@@ -63,7 +72,7 @@ function ConfiguredAccountFlows({ children }: { children: ReactNode }) {
         onClose={close}
         onSignedIn={() => {
           close();
-          toast.show({ text: he.account.signIn.signedIn });
+          welcomePending.current = true;
           setAfterSignIn(intent);
           setSetup((prev) => ({ intent, n: (prev?.n ?? 0) + 1 }));
         }}
@@ -75,7 +84,7 @@ function ConfiguredAccountFlows({ children }: { children: ReactNode }) {
         key={request.key}
         open={isOpen}
         onClose={close}
-        initialStep={request.step}
+        startOnJoin={request.step === 'join'}
       />
     );
   } else if (request?.kind === 'invite') {
@@ -90,7 +99,8 @@ function ConfiguredAccountFlows({ children }: { children: ReactNode }) {
         <FamilySetupSheet
           key={`setup-${setup.n}`}
           open={setupDue}
-          initialStep={setup.intent === 'join' ? 'join' : 'choose'}
+          afterSignIn
+          initialChoice={setup.intent === 'join' ? 'join' : 'create'}
           onClose={() => setAfterSignIn(null)}
         />
       )}

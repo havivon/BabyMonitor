@@ -3,6 +3,7 @@ import { formatClock } from '../domain/dates';
 import { currentSide, isPaused, timerElapsed, timerStartedAt } from '../domain/timer';
 import type { ActiveTimer } from '../domain/types';
 import { formatTimer } from '../domain/units';
+import { useOtherStarter } from '../features/account/useOtherStarter';
 import { useNow } from '../hooks/useNow';
 import { he, SIDE_LABEL } from '../i18n/he';
 import { appStore } from '../store';
@@ -20,6 +21,7 @@ export interface TimerBannerProps {
  */
 export function TimerBanner({ timer, onOpen, babyName }: TimerBannerProps) {
   const now = useNow(1000);
+  const starter = useOtherStarter(timer.babyId);
   const paused = isPaused(timer);
   const side = SIDE_LABEL[currentSide(timer) ?? 'right'];
   const startedAt = timerStartedAt(timer) ?? now;
@@ -49,6 +51,7 @@ export function TimerBanner({ timer, onOpen, babyName }: TimerBannerProps) {
           <span className="timer-banner__meta nowrap">
             {he.banner.meta}
             <span className="ltr num">{formatClock(startedAt)}</span>
+            {starter && ` · ${starter}`}
           </span>
         </span>
         <span className="timer-banner__time" aria-hidden="true">

@@ -41,7 +41,9 @@ export const firebaseConfig: FirebaseWebConfig = {
  * (host defaults to 127.0.0.1). The project id then defaults to `demo-babymonitor`.
  */
 export const emulatorHost: string | null =
-  env.VITE_FIREBASE_EMULATORS === '1' ? (env.VITE_FIREBASE_EMULATOR_HOST?.trim() || '127.0.0.1') : null;
+  env.VITE_FIREBASE_EMULATORS === '1'
+    ? env.VITE_FIREBASE_EMULATOR_HOST?.trim() || '127.0.0.1'
+    : null;
 
 export function isConfigComplete(config: FirebaseWebConfig): boolean {
   return Boolean(config.apiKey && config.projectId && config.appId);

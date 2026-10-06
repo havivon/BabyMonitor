@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import App from '../../App';
 import { appStore } from '../../store';
@@ -26,6 +26,7 @@ describe('onboarding → "כבר יש לנו חשבון"', () => {
     });
     await act(async () => {
       fireEvent.click(screen.getByRole('button', { name: 'המשך עם Google' }));
+      await Promise.resolve();
     });
     // The sync layer delivers the family and its baby.
     act(() => {
@@ -34,10 +35,10 @@ describe('onboarding → "כבר יש לנו חשבון"', () => {
     });
     expect(await screen.findByRole('button', { name: /החלפת ילד\/ה/ }, LAZY)).toBeInTheDocument();
     expect(window.location.hash).toBe('#/');
-    expect(screen.queryByRole('dialog', { name: 'משפחה' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('dialog', { name: 'התחברת · עוד צעד אחד' })).not.toBeInTheDocument();
   });
 
-  it('a second parent without a family lands on "join with code"', async () => {
+  it('a second parent without a family gets the setup sheet with "join" preselected', async () => {
     render(<App />);
     fireEvent.click(
       await screen.findByRole('button', { name: 'כבר יש לנו חשבון — התחברות' }, LAZY),
@@ -48,9 +49,10 @@ describe('onboarding → "כבר יש לנו חשבון"', () => {
     });
     await act(async () => {
       fireEvent.click(screen.getByRole('button', { name: 'המשך עם Google' }));
+      await Promise.resolve();
     });
-    expect(screen.getByRole('dialog', { name: 'הצטרפות למשפחה' })).toBeInTheDocument();
-    expect(screen.getByLabelText('קוד הזמנה')).toBeInTheDocument();
+    const sheet = screen.getByRole('dialog', { name: 'התחברת · עוד צעד אחד' });
+    expect(within(sheet).getByRole('radio', { name: /הצטרפות עם קוד/ })).toBeChecked();
   });
 });
 

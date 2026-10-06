@@ -56,6 +56,20 @@ export function OnboardingPage() {
         <h1 className="onboarding__title">{isFirstRun ? he.onb.title : he.onb.addTitle}</h1>
         <p className="onboarding__lead">{isFirstRun ? he.onb.lead : he.onb.addLead}</p>
       </div>
+      {isFirstRun && isCloudConfigured && (
+        // New phone / second parent: sign in, then join the family (docs/ACCOUNTS.md §6).
+        <button
+          type="button"
+          className="btn btn--secondary btn--block"
+          onClick={() => {
+            setViaAccount(true);
+            flows.openSignIn('join');
+          }}
+        >
+          <LogIn className="flip-rtl" aria-hidden="true" />
+          {he.account.onboarding}
+        </button>
+      )}
       <BabyForm
         submitLabel={isFirstRun ? he.onb.start : he.common.save}
         onSubmit={submit}
@@ -66,20 +80,6 @@ export function OnboardingPage() {
               <ShieldCheck aria-hidden="true" />
               <span>{he.onb.privacy}</span>
             </p>
-            {isFirstRun && isCloudConfigured && (
-              // New phone / second parent: sign in, then join the family (docs/ACCOUNTS.md §6).
-              <button
-                type="button"
-                className="btn btn--secondary btn--block"
-                onClick={() => {
-                  setViaAccount(true);
-                  flows.openSignIn('join');
-                }}
-              >
-                <LogIn aria-hidden="true" />
-                {he.account.onboarding}
-              </button>
-            )}
             {isFirstRun && (
               <button
                 type="button"

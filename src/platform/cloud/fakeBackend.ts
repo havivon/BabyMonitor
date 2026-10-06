@@ -11,6 +11,7 @@ import { stableStringify, SYNC_COLLECTIONS, type SyncCollection } from './record
 interface StoredDoc {
   data: unknown;
   deleted: boolean;
+  startedBy?: string;
 }
 
 type Docs = Record<SyncCollection, Map<string, StoredDoc>>;
@@ -19,7 +20,13 @@ const emptyDocs = (): Docs =>
   Object.fromEntries(SYNC_COLLECTIONS.map((c) => [c, new Map<string, StoredDoc>()])) as Docs;
 
 const toStored = (op: WriteOp): StoredDoc =>
-  op.data === null ? { data: null, deleted: true } : { data: structuredClone(op.data), deleted: false };
+  op.data === null
+    ? { data: null, deleted: true }
+    : {
+        data: structuredClone(op.data),
+        deleted: false,
+        ...(op.startedBy ? { startedBy: op.startedBy } : {}),
+      };
 
 export class FakeServer {
   readonly docs: Docs = emptyDocs();
@@ -54,7 +61,11 @@ interface Listener {
 
 export class FakeClient implements CloudBackend {
   private online = true;
-  private readonly pending: { ops: WriteOp[]; resolve: () => void; reject: (e: unknown) => void }[] = [];
+  private readonly pending: {
+    ops: WriteOp[];
+    resolve: () => void;
+    reject: (e: unknown) => void;
+  }[] = [];
   private readonly listeners = new Set<Listener>();
   /** When set, the next write is rejected with this error (e.g. permission-denied). */
   failNextWrite: Error | null = null;
@@ -137,7 +148,14 @@ export class FakeClient implements CloudBackend {
     for (const [id, d] of docs) {
       const json = stableStringify(d);
       next.set(id, json);
-      if (l.view?.get(id) !== json) out.push({ id, data: structuredClone(d.data), deleted: d.deleted });
+      if (l.view?.get(id) !== json) {
+        out.push({
+          id,
+          data: structuredClone(d.data),
+          deleted: d.deleted,
+          ...(d.startedBy ? { startedBy: d.startedBy } : {}),
+        });
+      }
     }
     const initial = l.view === null;
     l.view = next;

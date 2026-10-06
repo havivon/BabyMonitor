@@ -29,7 +29,12 @@ import {
 import type { Connectivity } from './backend';
 import { toCloudError } from './errors';
 import { createFirestoreBackend } from './firestoreBackend';
-import { generateInviteCode, INVITE_TTL_MS, isValidInviteCode, normalizeInviteCode } from './inviteCode';
+import {
+  generateInviteCode,
+  INVITE_TTL_MS,
+  isValidInviteCode,
+  normalizeInviteCode,
+} from './inviteCode';
 import { startSync, type SyncEngine, type SyncStore } from './sync';
 import {
   CloudError,
@@ -52,10 +57,20 @@ export interface CloudServiceDeps {
   /** Extra platform sign-out (native Google session). */
   signOutNative?: () => Promise<void>;
   onState: (state: CloudState) => void;
+  /** Who started each running (synced) timer: babyId → member (empty without a family). */
+  onTimerStarters?: (starters: Record<string, TimerStarter>) => void;
   /** Remembers across launches that a session exists, so Firebase is only loaded when needed. */
   setSessionHint?: (signedIn: boolean) => void;
   connectivity?: Connectivity;
   now?: () => number;
+}
+
+/** The parent who started a shared running feed. */
+export interface TimerStarter {
+  uid: string;
+  /** Member name in the family ('' if unknown). */
+  name: string;
+  isMe: boolean;
 }
 
 export interface CloudService extends CloudActions {
@@ -71,11 +86,22 @@ interface FamilyDoc {
 }
 
 const MAX_NAME = 60;
-const OFF: CloudState = { ready: false, user: null, family: null, status: 'off', lastSyncedAt: null };
+const OFF: CloudState = {
+  ready: false,
+  user: null,
+  family: null,
+  status: 'off',
+  lastSyncedAt: null,
+};
 
 function toCloudUser(u: User): CloudUser {
   const google = u.providerData.some((p) => p.providerId === 'google.com');
-  return { uid: u.uid, displayName: u.displayName, email: u.email, provider: google ? 'google' : 'password' };
+  return {
+    uid: u.uid,
+    displayName: u.displayName,
+    email: u.email,
+    provider: google ? 'google' : 'password',
+  };
 }
 
 function millis(v: unknown): number {
@@ -84,7 +110,11 @@ function millis(v: unknown): number {
 
 function toFamily(id: string, d: FamilyDoc): Family {
   const members: FamilyMember[] = Object.entries(d.members ?? {})
-    .map(([uid, m]) => ({ uid, name: typeof m.name === 'string' ? m.name : '', joinedAt: millis(m.joinedAt) }))
+    .map(([uid, m]) => ({
+      uid,
+      name: typeof m.name === 'string' ? m.name : '',
+      joinedAt: millis(m.joinedAt),
+    }))
     .sort((a, b) => a.joinedAt - b.joinedAt);
   return { id, name: typeof d.name === 'string' ? d.name : '', members };
 }
@@ -111,6 +141,23 @@ export function createCloudService(deps: CloudServiceDeps): CloudService {
   let unsubProfile: (() => void) | null = null;
   let unsubFamily: (() => void) | null = null;
   let disposed = false;
+  let starterUids: Record<string, string> = {};
+
+  const publishStarters = (): void => {
+    if (disposed) return;
+    const members = state.family?.members ?? [];
+    const out: Record<string, TimerStarter> = {};
+    if (familyId) {
+      for (const [babyId, uid] of Object.entries(starterUids)) {
+        out[babyId] = {
+          uid,
+          name: members.find((m) => m.uid === uid)?.name ?? '',
+          isMe: uid === currentUser?.uid,
+        };
+      }
+    }
+    deps.onTimerStarters?.(out);
+  };
 
   const set = (patch: Partial<CloudState>): void => {
     state = { ...state, ...patch };
@@ -122,6 +169,10 @@ export function createCloudService(deps: CloudServiceDeps): CloudService {
     unsubFamily = null;
     engine?.stop();
     engine = null;
+    if (Object.keys(starterUids).length > 0) {
+      starterUids = {};
+      publishStarters();
+    }
   };
 
   const memberName = (): string => {
@@ -151,6 +202,7 @@ export function createCloudService(deps: CloudServiceDeps): CloudService {
           return;
         }
         set({ family: toFamily(snap.id, data) });
+        publishStarters(); // member names may have changed
       },
       () => {
         // Not readable any more (not a member): stop syncing, keep the local copy.
@@ -163,6 +215,12 @@ export function createCloudService(deps: CloudServiceDeps): CloudService {
       backend: createFirestoreBackend(db, next, uid),
       connectivity: deps.connectivity,
       now,
+      uid,
+      onTimerStarters: (starters) => {
+        if (familyId !== next) return;
+        starterUids = starters;
+        publishStarters();
+      },
       onStatus: ({ status, lastSyncedAt }) => {
         if (familyId === next) set({ status, lastSyncedAt });
       },
@@ -201,9 +259,15 @@ export function createCloudService(deps: CloudServiceDeps): CloudService {
         if (currentUser !== u) return;
         unsubProfile = onSnapshot(
           doc(db, 'users', u.uid),
+          { includeMetadataChanges: true }, // to see the pending → confirmed transition
           (snap) => {
-            const fid: unknown = snap.data()?.familyId;
-            setFamilyId(typeof fid === 'string' ? fid : null);
+            // Act on confirmed profile changes only: a pending local write of `familyId` (create /
+            // join) may reach us before the server has the family membership, and listening to
+            // the family that early would be rejected by the rules.
+            if (!snap.metadata.hasPendingWrites) {
+              const fid: unknown = snap.data()?.familyId;
+              setFamilyId(typeof fid === 'string' ? fid : null);
+            }
             if (!state.ready) set({ ready: true });
           },
           () => {
@@ -244,7 +308,8 @@ export function createCloudService(deps: CloudServiceDeps): CloudService {
     if (!isValidInviteCode(code)) throw new CloudError('invite-not-found');
     const snap = await getDoc(doc(db, 'invites', code));
     const d = snap.data();
-    if (!snap.exists() || !d || typeof d.familyId !== 'string') throw new CloudError('invite-not-found');
+    if (!snap.exists() || !d || typeof d.familyId !== 'string')
+      throw new CloudError('invite-not-found');
     if (millis(d.expiresAt) <= now()) throw new CloudError('invite-expired');
     return { code, familyId: d.familyId, data: d };
   };
@@ -279,7 +344,12 @@ export function createCloudService(deps: CloudServiceDeps): CloudService {
           await updateProfile(cred.user, { displayName });
           await setDoc(
             doc(db, 'users', cred.user.uid),
-            { displayName, email: cred.user.email ?? null, familyId: null, createdAt: serverTimestamp() },
+            {
+              displayName,
+              email: cred.user.email ?? null,
+              familyId: null,
+              createdAt: serverTimestamp(),
+            },
             { merge: true },
           );
           if (currentUser?.uid === cred.user.uid) set({ user: toCloudUser(cred.user) });
@@ -326,7 +396,7 @@ export function createCloudService(deps: CloudServiceDeps): CloudService {
           const code = generateInviteCode();
           const ref = doc(db, 'invites', code);
           const existing = await getDoc(ref);
-          if (existing.exists() && millis(existing.data().expiresAt) > now()) continue;
+          if (existing.exists()) continue; // codes are never reused (rules forbid updates)
           const expiresAt = now() + INVITE_TTL_MS;
           const s = store.getState();
           await setDoc(ref, {
@@ -362,11 +432,27 @@ export function createCloudService(deps: CloudServiceDeps): CloudService {
         if (familyId) throw new CloudError('already-in-family');
         const { code, familyId: fid } = await readInvite(rawCode);
         await updateDoc(doc(db, 'families', fid), {
-          [`members.${user.uid}`]: { name: memberName(), joinedAt: serverTimestamp(), inviteCode: code },
+          [`members.${user.uid}`]: {
+            name: memberName(),
+            joinedAt: serverTimestamp(),
+            inviteCode: code,
+          },
         });
         if (mode === 'replace') clearFamilyData(store);
         await setMyFamily(fid);
         await whenSynced(); // merge: the first pass uploads what this device has (union)
+      }),
+
+    retrySync: () =>
+      run(async () => {
+        requireUser();
+        const fid = familyId;
+        if (!fid) return;
+        // Restart listeners + engine from scratch (e.g. after a permission/network error).
+        stopFamily();
+        familyId = null;
+        setFamilyId(fid);
+        await whenSynced();
       }),
 
     leaveFamily: () =>

@@ -23,6 +23,11 @@ export interface ConfirmDialogProps {
   icon?: ReactNode;
   onConfirm: () => void;
   onCancel: () => void;
+  /**
+   * Non-destructive confirmation with a toned icon bubble and a primary confirm button
+   * (`dialog__icon--primary` / `--warning`, e.g. sign out). Ignored when `danger`.
+   */
+  tone?: 'primary' | 'warning';
   /** Optional third, destructive choice shown between confirm and cancel (e.g. "מחיקה"). */
   extraAction?: { label: string; onAction: () => void };
 }
@@ -43,6 +48,7 @@ export function ConfirmDialog({
   onConfirm,
   onCancel,
   extraAction,
+  tone,
 }: ConfirmDialogProps) {
   const ref = useRef<HTMLDialogElement>(null);
   const cancelRef = useRef<HTMLButtonElement>(null);
@@ -91,7 +97,10 @@ export function ConfirmDialog({
       {open && (
         <>
           {bubble && (
-            <span className="dialog__icon" aria-hidden="true">
+            <span
+              className={`dialog__icon${!danger && tone ? ` dialog__icon--${tone}` : ''}`}
+              aria-hidden="true"
+            >
               {bubble}
             </span>
           )}

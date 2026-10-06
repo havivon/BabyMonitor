@@ -38,6 +38,7 @@ import { CONTENT_LABEL, he, SIDE_LABEL, TYPE_LABEL } from '../../i18n/he';
 import { useActiveEntries, useActiveTimer, useSettings } from '../../store';
 import { Parts } from '../../components/Parts';
 import { BackupNote } from '../account/BackupNote';
+import { useOtherStarter } from '../account/useOtherStarter';
 import { useFeedingSheets } from '../feeding/sheetsContext';
 import { TimelineItem } from '../feeding/TimelineItem';
 import { MilkGuideline } from './MilkGuideline';
@@ -156,6 +157,7 @@ function ActiveFeedCard({ timer, onOpen }: { timer: ActiveTimer; onOpen: () => v
   const paused = isPaused(timer);
   const side = SIDE_LABEL[currentSide(timer) ?? 'right'];
   const label = paused ? he.home.active.paused : he.home.active.title;
+  const starter = useOtherStarter(timer.babyId);
   return (
     <button
       type="button"
@@ -194,6 +196,7 @@ function ActiveFeedCard({ timer, onOpen }: { timer: ActiveTimer; onOpen: () => v
               <>
                 {he.banner.meta}
                 <span className="ltr num">{formatClock(timerStartedAt(timer) ?? now)}</span>
+                {starter && ` · ${starter}`}
               </>,
             ]}
           />

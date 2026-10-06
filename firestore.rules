@@ -1,0 +1,153 @@
+rules_version = '2';
+
+// BabyMonitor — shared family data (docs/ACCOUNTS.md §5).
+// Tested by tests/rules/firestore.rules.test.ts (`npm run test:rules`, Firestore emulator).
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function me() {
+      return request.auth.uid;
+    }
+
+    function family(fid) {
+      return get(/databases/$(database)/documents/families/$(fid));
+    }
+
+    function isMember(fid) {
+      return signedIn() && me() in family(fid).data.members;
+    }
+
+    function shortString(v, max) {
+      return v is string && v.size() <= max;
+    }
+
+    // A member entry written by the member themself.
+    function validMember(m) {
+      return m is map
+        && m.keys().hasOnly(['name', 'joinedAt', 'inviteCode'])
+        && shortString(m.name, 60)
+        && m.joinedAt == request.time;
+    }
+
+    // ---------------------------------------------------------------- users/{uid}
+    match /users/{userId} {
+      allow get, delete: if signedIn() && me() == userId;
+      allow list: if false;
+      allow create, update: if signedIn() && me() == userId
+        && request.resource.data.keys().hasOnly(['displayName', 'email', 'familyId', 'createdAt'])
+        && (request.resource.data.get('displayName', null) == null || shortString(request.resource.data.displayName, 60))
+        && (request.resource.data.get('email', null) == null || shortString(request.resource.data.email, 320))
+        && (request.resource.data.get('familyId', null) == null || shortString(request.resource.data.familyId, 128));
+    }
+
+    // ---------------------------------------------------------------- families/{fid}
+    match /families/{fid} {
+      allow get: if signedIn() && me() in resource.data.members;
+      allow list: if false;
+      allow delete: if false;
+
+      // Create: the creator is the only member.
+      allow create: if signedIn()
+        && request.resource.data.keys().hasOnly(['name', 'createdBy', 'createdAt', 'members'])
+        && shortString(request.resource.data.name, 60)
+        && request.resource.data.createdBy == me()
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.members.keys().hasOnly([me()])
+        && validMember(request.resource.data.members[me()]);
+
+      allow update: if signedIn() && (leave() || rename() || join());
+
+      // A member may rename the family.
+      function rename() {
+        return me() in resource.data.members
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name'])
+          && shortString(request.resource.data.name, 60);
+      }
+
+      function onlyMyMemberEntryChanges() {
+        return request.resource.data.diff(resource.data).affectedKeys().hasOnly(['members'])
+          && request.resource.data.members.diff(resource.data.members).affectedKeys().hasOnly([me()]);
+      }
+
+      // Join: only adds the caller, with a valid, unexpired invite of THIS family.
+      // (Written without `let` so no branch can error out when the caller's entry is absent.)
+      function join() {
+        return !(me() in resource.data.members)
+          && me() in request.resource.data.members
+          && onlyMyMemberEntryChanges()
+          && validMember(request.resource.data.members[me()])
+          && inviteValid(request.resource.data.members[me()].get('inviteCode', ''));
+      }
+
+      function inviteValid(code) {
+        return code is string
+          && code.matches('^[ABCDEFGHJKMNPQRSTUVWXYZ23456789]{6}$')
+          && exists(/databases/$(database)/documents/invites/$(code))
+          && get(/databases/$(database)/documents/invites/$(code)).data.familyId == fid
+          && get(/databases/$(database)/documents/invites/$(code)).data.expiresAt > request.time;
+      }
+
+      // Leave: a member removes only themself.
+      function leave() {
+        return me() in resource.data.members
+          && onlyMyMemberEntryChanges()
+          && !(me() in request.resource.data.members);
+      }
+
+      // Synced records: { v, data, deleted, updatedAt, updatedBy[, startedBy] }.
+      match /{collection}/{docId} {
+        function syncedCollection() {
+          return collection in ['babies', 'entries', 'measurements', 'timers'];
+        }
+
+        function validSyncDoc() {
+          let d = request.resource.data;
+          return d.keys().hasOnly(['v', 'data', 'deleted', 'updatedAt', 'updatedBy', 'startedBy'])
+            && d.v == 1
+            && d.updatedBy == me()
+            && d.updatedAt == request.time
+            && d.deleted is bool
+            && (d.get('startedBy', null) == null || (collection == 'timers' && shortString(d.startedBy, 128)))
+            && (
+              (d.deleted == true && d.data == null)
+              || (d.deleted == false && d.data is map && d.data.size() <= 20
+                  && ((collection == 'timers' && d.data.babyId == docId)
+                      || (collection != 'timers' && d.data.id == docId)))
+            );
+        }
+
+        allow read: if syncedCollection() && isMember(fid);
+        allow create, update: if syncedCollection() && isMember(fid) && validSyncDoc();
+        // Hard deletes only for purging old tombstones.
+        allow delete: if syncedCollection() && isMember(fid) && resource.data.deleted == true;
+      }
+    }
+
+    // ---------------------------------------------------------------- invites/{code}
+    match /invites/{code} {
+      // Exact-code lookup only — invites can never be listed.
+      allow get: if signedIn();
+      allow list: if false;
+      allow update: if false;
+      allow delete: if signedIn() && isMember(resource.data.familyId);
+      allow create: if signedIn()
+        && code.matches('^[ABCDEFGHJKMNPQRSTUVWXYZ23456789]{6}$')
+        && request.resource.data.keys().hasOnly(['familyId', 'createdBy', 'createdAt', 'expiresAt', 'familyName', 'memberNames', 'hasData'])
+        && request.resource.data.familyId is string
+        && isMember(request.resource.data.familyId)
+        && request.resource.data.createdBy == me()
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.expiresAt is timestamp
+        && request.resource.data.expiresAt > request.time
+        && request.resource.data.expiresAt <= request.time + duration.value(8, 'd')
+        && shortString(request.resource.data.familyName, 60)
+        && request.resource.data.memberNames is list
+        && request.resource.data.memberNames.size() <= 10
+        && request.resource.data.hasData is bool;
+    }
+  }
+}

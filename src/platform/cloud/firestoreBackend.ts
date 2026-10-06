@@ -19,7 +19,9 @@ const BATCH_LIMIT = 450;
 function toRemote(snap: QueryDocumentSnapshot): RemoteDoc {
   const d = snap.data();
   const deleted = d.deleted === true;
-  return { id: snap.id, data: deleted ? null : (d.data as unknown), deleted };
+  const remote: RemoteDoc = { id: snap.id, data: deleted ? null : (d.data as unknown), deleted };
+  if (typeof d.startedBy === 'string') remote.startedBy = d.startedBy;
+  return remote;
 }
 
 export function createFirestoreBackend(db: Firestore, familyId: string, uid: string): CloudBackend {
@@ -34,11 +36,18 @@ export function createFirestoreBackend(db: Firestore, familyId: string, uid: str
         (snap) => {
           const docs: RemoteDoc[] = first
             ? snap.docs.map(toRemote)
-            : snap.docChanges().map((c) =>
-                c.type === 'removed' ? { id: c.doc.id, data: null, deleted: true } : toRemote(c.doc),
-              );
+            : snap
+                .docChanges()
+                .map((c) =>
+                  c.type === 'removed'
+                    ? { id: c.doc.id, data: null, deleted: true }
+                    : toRemote(c.doc),
+                );
           first = false;
-          onDocs(docs, { fromCache: snap.metadata.fromCache, hasPendingWrites: snap.metadata.hasPendingWrites });
+          onDocs(docs, {
+            fromCache: snap.metadata.fromCache,
+            hasPendingWrites: snap.metadata.hasPendingWrites,
+          });
         },
         onError,
       );
@@ -54,6 +63,7 @@ export function createFirestoreBackend(db: Firestore, familyId: string, uid: str
             deleted: op.data === null,
             updatedAt: serverTimestamp(),
             updatedBy: uid,
+            ...(op.startedBy && op.data !== null ? { startedBy: op.startedBy } : {}),
           });
         }
         await batch.commit();

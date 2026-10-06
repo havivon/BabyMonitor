@@ -1,10 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { cloudErrorMessage } from './cloudErrors';
+import type { CloudErrorCode } from '../../platform/cloud';
+import { cloudErrorCode, cloudErrorMessage } from './cloudErrors';
 
 export interface CloudAction {
   pending: boolean;
   /** Hebrew error of the last failed run (null after success, a cancel, or `clearError`). */
   error: string | null;
+  /** Code of the last failure ('cancelled' included, with `error` null), for field routing. */
+  errorCode: CloudErrorCode | null;
   /** Runs `fn`; resolves `true` on success, `false` on failure (error stored for display). */
   run: (fn: () => Promise<unknown>) => Promise<boolean>;
   clearError: () => void;
@@ -16,7 +19,9 @@ export interface CloudAction {
  */
 export function useCloudAction(): CloudAction {
   const [pending, setPending] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [failure, setFailure] = useState<{ code: CloudErrorCode; message: string | null } | null>(
+    null,
+  );
   const busy = useRef(false);
   const mounted = useRef(true);
   useEffect(() => {
@@ -30,12 +35,12 @@ export function useCloudAction(): CloudAction {
     if (busy.current) return false;
     busy.current = true;
     setPending(true);
-    setError(null);
+    setFailure(null);
     try {
       await fn();
       return true;
     } catch (e) {
-      if (mounted.current) setError(cloudErrorMessage(e));
+      if (mounted.current) setFailure({ code: cloudErrorCode(e), message: cloudErrorMessage(e) });
       return false;
     } finally {
       busy.current = false;
@@ -43,6 +48,12 @@ export function useCloudAction(): CloudAction {
     }
   }, []);
 
-  const clearError = useCallback(() => setError(null), []);
-  return { pending, error, run, clearError };
+  const clearError = useCallback(() => setFailure(null), []);
+  return {
+    pending,
+    error: failure?.message ?? null,
+    errorCode: failure?.code ?? null,
+    run,
+    clearError,
+  };
 }

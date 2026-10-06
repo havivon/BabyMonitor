@@ -19,8 +19,21 @@
  */
 import type { PersistedData } from '../../store/persistence';
 import type { ActiveTimer, Baby, FeedingEntry, Measurement } from '../../domain/types';
-import { browserConnectivity, type CloudBackend, type Connectivity, type RemoteDoc, type WriteOp } from './backend';
-import { decodeRecord, recordId, stableStringify, SYNC_COLLECTIONS, type SyncCollection, type SyncRecord } from './records';
+import {
+  browserConnectivity,
+  type CloudBackend,
+  type Connectivity,
+  type RemoteDoc,
+  type WriteOp,
+} from './backend';
+import {
+  decodeRecord,
+  recordId,
+  stableStringify,
+  SYNC_COLLECTIONS,
+  type SyncCollection,
+  type SyncRecord,
+} from './records';
 import type { SyncStatus } from './types';
 
 /** The part of the app store the engine reads and writes. */
@@ -41,6 +54,10 @@ export interface SyncEngineOptions {
   onStatus?: (info: SyncStatusInfo) => void;
   connectivity?: Connectivity;
   now?: () => number;
+  /** This device's user — recorded as `startedBy` on timers it starts. */
+  uid?: string;
+  /** Running timers' starters, babyId → uid (changes only). */
+  onTimerStarters?: (starters: Record<string, string>) => void;
   /** Called for remote docs that fail validation (default: console.warn). */
   onInvalidDoc?: (collection: SyncCollection, id: string) => void;
 }
@@ -69,7 +86,11 @@ export function localRecords(state: PersistedData, collection: SyncCollection): 
 }
 
 /** Store patch for one collection from its full record map (preserves array order where possible). */
-function patchFor(state: PersistedData, collection: SyncCollection, records: RecordMap): Partial<PersistedData> {
+function patchFor(
+  state: PersistedData,
+  collection: SyncCollection,
+  records: RecordMap,
+): Partial<PersistedData> {
   const ordered = (current: readonly SyncRecord[]): SyncRecord[] => {
     const out: SyncRecord[] = [];
     const seen = new Set<string>();
@@ -92,7 +113,9 @@ function patchFor(state: PersistedData, collection: SyncCollection, records: Rec
     case 'measurements':
       return { measurements: ordered(state.measurements) as Measurement[] };
     case 'timers':
-      return { activeTimers: Object.fromEntries([...records].map(([id, t]) => [id, t as ActiveTimer])) };
+      return {
+        activeTimers: Object.fromEntries([...records].map(([id, t]) => [id, t as ActiveTimer])),
+      };
   }
 }
 
@@ -106,14 +129,17 @@ export function startSync(options: SyncEngineOptions): SyncEngine {
       console.warn(`[sync] ignoring malformed ${collection}/${id}`);
     });
 
-  const known = Object.fromEntries(SYNC_COLLECTIONS.map((c) => [c, new Map<string, string>()])) as Record<
-    SyncCollection,
-    Map<string, string>
-  >;
-  const tombstoned = Object.fromEntries(SYNC_COLLECTIONS.map((c) => [c, new Set<string>()])) as Record<
-    SyncCollection,
-    Set<string>
-  >;
+  const known = Object.fromEntries(
+    SYNC_COLLECTIONS.map((c) => [c, new Map<string, string>()]),
+  ) as Record<SyncCollection, Map<string, string>>;
+  const tombstoned = Object.fromEntries(
+    SYNC_COLLECTIONS.map((c) => [c, new Set<string>()]),
+  ) as Record<SyncCollection, Set<string>>;
+  /** babyId → uid of the parent who started that running timer. */
+  const starters = new Map<string, string>();
+  const publishStarters = (): void => {
+    options.onTimerStarters?.(Object.fromEntries(starters));
+  };
   const firstSnapshot = new Set<SyncCollection>();
   const confirmedByServer = new Set<SyncCollection>();
   let pendingWrites = 0;
@@ -150,7 +176,16 @@ export function startSync(options: SyncEngineOptions): SyncEngine {
     const state = store.getState();
     const records = localRecords(state, collection);
     let changed = false;
+    let startersChanged = false;
     for (const doc of docs) {
+      if (collection === 'timers') {
+        const by = doc.deleted ? undefined : doc.startedBy;
+        if (by !== starters.get(doc.id)) {
+          if (by) starters.set(doc.id, by);
+          else starters.delete(doc.id);
+          startersChanged = true;
+        }
+      }
       if (doc.deleted) {
         tombstoned[collection].add(doc.id);
         known[collection].delete(doc.id);
@@ -171,6 +206,7 @@ export function startSync(options: SyncEngineOptions): SyncEngine {
         changed = true;
       }
     }
+    if (startersChanged) publishStarters();
     if (!changed) return;
     const patch = patchFor(state, collection, records);
     if (collection === 'babies') {
@@ -190,8 +226,10 @@ export function startSync(options: SyncEngineOptions): SyncEngine {
 
   // ---------------------------------------------------------------- UP
 
+  let startersDirty = false;
   const collectUploads = (state: PersistedData): WriteOp[] => {
     const ops: WriteOp[] = [];
+    startersDirty = false;
     for (const collection of SYNC_COLLECTIONS) {
       const records = localRecords(state, collection);
       const baseline = known[collection];
@@ -200,12 +238,26 @@ export function startSync(options: SyncEngineOptions): SyncEngine {
         if (baseline.get(id) === json) continue;
         baseline.set(id, json);
         tombstoned[collection].delete(id);
-        ops.push({ collection, id, data: record });
+        if (collection === 'timers') {
+          const startedBy = starters.get(id) ?? options.uid;
+          if (startedBy && !starters.has(id)) {
+            starters.set(id, startedBy);
+            startersDirty = true;
+          }
+          ops.push(
+            startedBy
+              ? { collection, id, data: record, startedBy }
+              : { collection, id, data: record },
+          );
+        } else {
+          ops.push({ collection, id, data: record });
+        }
       }
       for (const id of [...baseline.keys()]) {
         if (records.has(id)) continue;
         baseline.delete(id);
         tombstoned[collection].add(id);
+        if (collection === 'timers' && starters.delete(id)) startersDirty = true;
         ops.push({ collection, id, data: null });
       }
     }
@@ -213,6 +265,7 @@ export function startSync(options: SyncEngineOptions): SyncEngine {
   };
 
   const upload = (ops: WriteOp[]): void => {
+    if (startersDirty) publishStarters();
     if (ops.length === 0 || stopped) return;
     pendingWrites++;
     publish();

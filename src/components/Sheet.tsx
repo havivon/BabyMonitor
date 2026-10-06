@@ -1,4 +1,4 @@
-import { X } from 'lucide-react';
+import { ChevronRight, X } from 'lucide-react';
 import {
   useEffect,
   useId,
@@ -34,6 +34,10 @@ export interface SheetProps {
   closeIcon?: ReactNode;
   /** When true, a close request first asks "לצאת בלי לשמור?" (DESIGN §6.10). */
   dirty?: boolean;
+  /** Shows a back chevron (ChevronRight, "חזרה") in place of the icon — for multi-step sheets. */
+  onBack?: () => void;
+  /** 16px instead of 24px between body items (form-heavy sheets, DESIGN §15 mockups). */
+  dense?: boolean;
 }
 
 const FOCUSABLE =
@@ -60,6 +64,8 @@ export function Sheet({
   closeLabel = he.common.close,
   closeIcon,
   dirty = false,
+  onBack,
+  dense = false,
 }: SheetProps) {
   const ref = useRef<HTMLDialogElement>(null);
   const titleId = useId();
@@ -186,10 +192,21 @@ export function Sheet({
           {/* While the exit animation plays (open=false) the content is inert, so a fast second
               tap (e.g. double-tap on "שמירה") can never act twice. */}
           <div className="sheet__header" inert={!open}>
-            {icon && (
-              <span className="sheet__icon" aria-hidden="true">
-                {icon}
-              </span>
+            {onBack ? (
+              <button
+                type="button"
+                className="icon-btn"
+                aria-label={he.account.back}
+                onClick={onBack}
+              >
+                <ChevronRight aria-hidden="true" />
+              </button>
+            ) : (
+              icon && (
+                <span className="sheet__icon" aria-hidden="true">
+                  {icon}
+                </span>
+              )
             )}
             <h2 className="sheet__title" id={titleId}>
               {title}
@@ -203,7 +220,11 @@ export function Sheet({
               {closeIcon ?? <X aria-hidden="true" />}
             </button>
           </div>
-          <div className="sheet__body" inert={!open}>
+          <div
+            className="sheet__body"
+            inert={!open}
+            style={dense ? { gap: 'var(--space-4)' } : undefined}
+          >
             {children}
           </div>
           {footer && (

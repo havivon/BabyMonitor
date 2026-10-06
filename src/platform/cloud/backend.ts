@@ -9,6 +9,8 @@ export interface RemoteDoc {
   /** Raw record (validated by the engine); `null` for a tombstone. */
   data: unknown;
   deleted: boolean;
+  /** Timers only: uid of the parent who started the running feed. */
+  startedBy?: string;
 }
 
 export interface SnapshotInfo {
@@ -23,6 +25,8 @@ export interface WriteOp {
   collection: SyncCollection;
   id: string;
   data: unknown;
+  /** Timers only: uid of the parent who started the running feed (kept across side switches). */
+  startedBy?: string;
 }
 
 export interface CloudBackend {
@@ -47,7 +51,8 @@ export interface Connectivity {
 }
 
 export const browserConnectivity: Connectivity = {
-  isOnline: () => (typeof navigator === 'undefined' ? true : navigator.onLine),
+  // `onLine` is undefined outside browsers (e.g. Node) — treat that as online.
+  isOnline: () => typeof navigator === 'undefined' || (navigator as { onLine?: boolean }).onLine !== false,
   subscribe: (listener) => {
     if (typeof window === 'undefined') return () => undefined;
     const on = (): void => {

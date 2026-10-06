@@ -23,7 +23,7 @@ import {
 } from 'firebase/firestore';
 import { appStore } from '../../store/hooks';
 import { emulatorHost, firebaseConfig } from './config';
-import { createCloudService, type CloudService } from './service';
+import { createCloudService, type CloudService, type TimerStarter } from './service';
 import { CloudError, type CloudState } from './types';
 
 /** Google sign-in: native account picker on Android (WebViews block OAuth popups), popup on web. */
@@ -47,13 +47,18 @@ async function signOutNative(): Promise<void> {
 
 export interface RuntimeHooks {
   onState: (state: CloudState) => void;
+  onTimerStarters: (starters: Record<string, TimerStarter>) => void;
   setSessionHint: (signedIn: boolean) => void;
 }
 
 /** Creates the singleton service (Firebase app, auth with persistence, Firestore offline cache). */
 export function createRuntime(hooks: RuntimeHooks): CloudService {
   const config = emulatorHost
-    ? { ...firebaseConfig, apiKey: firebaseConfig.apiKey || 'demo-key', projectId: firebaseConfig.projectId || 'demo-babymonitor' }
+    ? {
+        ...firebaseConfig,
+        apiKey: firebaseConfig.apiKey || 'demo-key',
+        projectId: firebaseConfig.projectId || 'demo-babymonitor',
+      }
     : firebaseConfig;
   const app = initializeApp(config);
   const auth = initializeAuth(app, {
@@ -75,6 +80,7 @@ export function createRuntime(hooks: RuntimeHooks): CloudService {
     signInWithGoogle,
     signOutNative,
     onState: hooks.onState,
+    onTimerStarters: hooks.onTimerStarters,
     setSessionHint: hooks.setSessionHint,
   });
 }

@@ -1,42 +1,62 @@
-import { Cloud, CloudAlert, CloudCheck, CloudOff, RefreshCw, type LucideIcon } from 'lucide-react';
+import { CloudAlert, CloudCheck, CloudOff, RefreshCw } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useNow } from '../../hooks/useNow';
 import { he } from '../../i18n/he';
-import { isCloudConfigured, useCloud, type SyncStatus } from '../../platform/cloud';
-import { syncStatusShort } from './syncStatus';
+import { isCloudConfigured, useCloud } from '../../platform/cloud';
+import { syncedLabel } from './syncStatus';
+import { useDelayedSyncing } from './useDelayedSyncing';
 
-const ICON: Record<SyncStatus, LucideIcon> = {
-  synced: CloudCheck,
-  syncing: RefreshCw,
-  connecting: Cloud,
-  offline: CloudOff,
-  error: CloudAlert,
-  off: CloudOff,
-};
-
-/** Problems are visible (warning / danger tone); a healthy sync stays subtle (DESIGN/ACCOUNTS §6). */
-const COLOR: Partial<Record<SyncStatus, string>> = {
-  offline: 'var(--color-warning)',
-  error: 'var(--color-danger)',
-};
+const s = he.account.sync;
 
 /**
- * Small header sync-status indicator, only when signed in. Links to Settings → "חשבון ומשפחה";
- * its accessible name states the status. Not a live region — the Settings line has the details.
+ * Header sync indicator `a.sync-ind` (DESIGN §15.6), only when signed in AND in a family. Synced is a
+ * quiet icon; syncing spins (after 600 ms); offline / error are labelled pills. Links to Settings →
+ * "חשבון ומשפחה". Not a live region (the Settings sync row announces changes).
  */
 export function SyncIndicator() {
-  const { user, status } = useCloud();
-  if (!isCloudConfigured || !user) return null;
-  const Icon = ICON[status];
+  const { user, family, status, lastSyncedAt } = useCloud();
+  const shown = useDelayedSyncing(status);
+  const now = useNow(30_000);
+  if (!isCloudConfigured || !user || !family) return null;
+
+  let className = 'sync-ind';
+  let label: string;
+  let content;
+  switch (shown) {
+    case 'offline':
+      className += ' sync-ind--offline';
+      label = s.indOffline;
+      content = (
+        <>
+          <CloudOff aria-hidden="true" />
+          {s.offline}
+        </>
+      );
+      break;
+    case 'error':
+      className += ' sync-ind--error';
+      label = s.indError;
+      content = (
+        <>
+          <CloudAlert aria-hidden="true" />
+          {s.indErrorShort}
+        </>
+      );
+      break;
+    case 'syncing':
+    case 'connecting':
+      className += ' sync-ind--syncing';
+      label = s.syncing;
+      content = <RefreshCw aria-hidden="true" />;
+      break;
+    default:
+      label = syncedLabel(lastSyncedAt, now);
+      content = <CloudCheck aria-hidden="true" />;
+  }
+
   return (
-    <Link
-      to="/settings"
-      className="icon-btn"
-      aria-label={`${he.account.sync.label}: ${syncStatusShort(status)}`}
-      title={syncStatusShort(status)}
-      data-status={status}
-      style={COLOR[status] ? { color: COLOR[status] } : undefined}
-    >
-      <Icon aria-hidden="true" />
+    <Link to="/settings" state={{ scrollTo: 'account' }} className={className} aria-label={label}>
+      {content}
     </Link>
   );
 }
