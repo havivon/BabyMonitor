@@ -327,6 +327,46 @@ describe('persistence', () => {
     expect(errSpy).toHaveBeenCalledOnce();
   });
 
+  it.each([
+    ['truncated JSON', '{"state":{"babies":[{"id":"b1","name":"נועה"'],
+    ['not JSON at all', 'garbage'],
+    ['JSON but not an envelope', '"just a string"'],
+  ])('keeps unparseable stored bytes in :corrupt (%s) — BUG-008', (_label, raw) => {
+    const errSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const s = freshStore({ [STORAGE_KEY]: raw });
+    expect(s.getState().babies).toEqual([]);
+    expect(storage.data.get(`${STORAGE_KEY}:corrupt`)).toBe(raw);
+    expect(errSpy).toHaveBeenCalledOnce();
+    // The first write replaces the main key, but the original bytes survive.
+    s.getState().addBaby(newBaby);
+    expect(storage.data.get(`${STORAGE_KEY}:corrupt`)).toBe(raw);
+    expect(JSON.parse(storage.data.get(STORAGE_KEY) ?? '{}')).toMatchObject({
+      version: STORE_VERSION,
+    });
+  });
+
+  it('never overwrites an older, different :corrupt stash', () => {
+    vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    freshStore({ [STORAGE_KEY]: 'new garbage', [`${STORAGE_KEY}:corrupt`]: 'old garbage' });
+    expect(storage.data.get(`${STORAGE_KEY}:corrupt`)).toBe('old garbage');
+    const extra = [...storage.data.keys()].filter((k) => k.startsWith(`${STORAGE_KEY}:corrupt:`));
+    expect(extra).toHaveLength(1);
+    expect(storage.data.get(extra[0] ?? '')).toBe('new garbage');
+  });
+
+  it('runs in memory when storage is unavailable', () => {
+    const s = createAppStore({
+      storage: {
+        getItem: () => {
+          throw new Error('blocked');
+        },
+        setItem: () => undefined,
+        removeItem: () => undefined,
+      },
+    });
+    expect(s.getState().babies).toEqual([]);
+  });
+
   it('runs migrate for older versions (stub passes data through)', () => {
     const old = JSON.stringify({ state: { ...emptyData(), babies: [] }, version: 0 });
     const s = freshStore({ [STORAGE_KEY]: old });

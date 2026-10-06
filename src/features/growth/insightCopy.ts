@@ -49,7 +49,7 @@ export function insightCopy(insight: GrowthInsight): InsightCopy {
           insight.severity === 'alert'
             ? `ירידה של יותר מ-10% בימים הראשונים מצדיקה בדיקה. ${SEE_DOCTOR}`
             : insight.severity === 'warn'
-              ? `ירידה של 7%–10% בימים הראשונים כדאי לעקוב אחריה מקרוב. ${SEE_NURSE_OR_DOCTOR}`
+              ? `ירידה של 7–10% בימים הראשונים כדאי לעקוב אחריה מקרוב. ${SEE_NURSE_OR_DOCTOR}`
               : 'ירידה של עד כ-7% בימים הראשונים נפוצה ותקינה. רוב התינוקות חוזרים למשקל הלידה עד גיל שבועיים.',
       };
     case 'birthWeightRegained':

@@ -1,14 +1,11 @@
 # BabyMonitor: QA Report
 
-QA Engineer · build tested: working tree as of 6 Oct 2026 (commits up to `e737ff7` plus in-progress engineer edits) · Chromium (`/opt/pw-browsers/chromium`), mobile viewport 390×844 (plus 360×640 and 768 for layout), `he-IL`, `Asia/Jerusalem`.
+QA Engineer · build tested: working tree as of 6 Oct 2026 (commits up to `4b529fe` plus in-progress engineer edits) · Chromium (`/opt/pw-browsers/chromium`), mobile viewport 390×844 (plus 360×640 and 768 for layout), `he-IL`, `Asia/Jerusalem`.
 
 ## 1. Summary
 
-- **12 bugs found.** 6 were fixed by engineering while QA was running: BUG-001 to BUG-006. Each one now has a passing regression test.
-- **6 are open:**
-  - 2 Major: BUG-008 (data loss on unreadable storage) and BUG-010 (another baby's running timer is invisible).
-  - 3 Minor: BUG-007, BUG-009, BUG-012.
-  - 1 Cosmetic: BUG-011.
+- **12 bugs found.** Engineering fixed 10 of them while QA was running: BUG-001 to 006, 008, 010, 011 and 012. Each fix is verified by a passing regression test in the final run.
+- **2 remain open, both Minor:** BUG-007 (lb edit changes the stored grams) and BUG-009 (reversed ranges in insight copy). Fixes for both are in the working tree, not yet committed (`measurementForm.ts`, `insightCopy.ts`).
 - There are no Blocker bugs. The main flows work end to end in light and dark themes and from 360px to 768px:
   - onboarding
   - breastfeeding timer (switch / pause / resume / reload / stale)
@@ -21,22 +18,28 @@ QA Engineer · build tested: working tree as of 6 Oct 2026 (commits up to `e737f
 - **WHO percentiles** match an independent LMS computation from `data/who/weianthro.txt`.
 - **Performance** is good. With one year of data (4,015 entries) and 4× CPU throttling, every screen renders in ≤ 0.82 s (see §5).
 
-### E2E suite: `npm run e2e` result (last run)
+### E2E suite: `npm run e2e` result (final run)
 
 ```
-115 tests (113 QA + 2 smoke) · 107 passed · 8 failed   (2.8 min)
+115 tests (113 QA in 14 spec files + 2 smoke) · 113 passed · 2 failed   (2.2 min)
 ```
 
-The 8 failures were 6 open-bug tests plus 2 history paging tests. Those 2 failed only because of an engineer's mid-change to infinite scroll (OBS-1). I have since made both tests independent of that design choice, and both pass on the current and the committed code. **Expected state now: 109 pass, 6 fail — exactly the 6 open bugs below.** These tests assert the CORRECT behaviour on purpose and will pass once the bugs are fixed:
+The 2 failures are open-bug tests. They assert the CORRECT behaviour on purpose and will pass once the fixes land:
 
 | Failing test | Fails until |
 |---|---|
-| `persistence.spec.ts` › unparseable JSON … keeps the original bytes in :corrupt (BUG-008) | BUG-008 |
-| `babies.spec.ts` › a timer running for the non-active baby is still surfaced outside Home (BUG-010) | BUG-010 |
 | `growth.spec.ts` › editing only the note in lb mode keeps the stored grams (BUG-007) | BUG-007 |
 | `growth.spec.ts` › numeric ranges in growth insights are not visually reversed (BUG-009) | BUG-009 |
-| `bottle.spec.ts` › oz edit sheet shows the same amount as the list (BUG-012) | BUG-012 |
-| `layout.spec.ts` › a long name stays on one line in the header (BUG-011) | BUG-011 |
+
+These regression tests failed during QA and now pass after the engineering fixes:
+
+- BUG-001 to BUG-006
+- BUG-008: `persistence.spec.ts` › unparseable JSON …
+- BUG-010: `babies.spec.ts` › … non-active baby …
+- BUG-011: `layout.spec.ts` › long name …
+- BUG-012: `bottle.spec.ts` › oz edit sheet …
+
+Note on runs: `playwright.config.ts` reuses any server already on port 4173. Twice during QA, someone else's preview server on that port went away mid-run and caused a mass `ERR_CONNECTION_REFUSED`. That is environmental, not a product failure. Rerun with port 4173 free.
 
 `npm run lint`, `npm run typecheck` (`tsc -b`, incl. `tsconfig.e2e.json`) and `prettier --check` pass for all QA files in `e2e/`.
 
@@ -44,9 +47,11 @@ The 8 failures were 6 open-bug tests plus 2 history paging tests. Those 2 failed
 
 Severity scale: **Blocker** = core flow unusable / data loss for everyone · **Major** = wrong data, data loss in a plausible case, or a flow that misleads · **Minor** = wrong but recoverable / small · **Cosmetic** = visual only.
 
-### Open
+### Found by QA: details
 
-#### BUG-008 · Major · Unreadable stored data is silently discarded (no `:corrupt` copy)
+These bugs were open when found. Their status is in each heading.
+
+#### BUG-008 · Major · ✅ FIXED during QA (`4b529fe`) · Unreadable stored data is silently discarded (no `:corrupt` copy)
 - **Area:** `src/store/appStore.ts` (zustand `persist` + `createJSONStorage`).
 - **Steps:**
   1. Put a non-JSON / truncated value in localStorage `babymonitor:v1`, e.g. `{"state":{"babies":[{"id":"b1","name":"נועה"`. This is what an interrupted write or a full disk can leave behind.
@@ -61,7 +66,7 @@ Severity scale: **Blocker** = core flow unusable / data loss for everyone · **M
 - **Evidence:** `docs/qa/evidence/BUG-008-unparseable-storage-starts-fresh.png`. Test: `persistence.spec.ts` (BUG-008).
 - **Fix hint:** use a custom `storage.getItem` that catches the `JSON.parse` error, stashes the raw string in `${name}:corrupt`, and returns `null`.
 
-#### BUG-010 · Major · A running breastfeeding timer for the non-active baby is invisible
+#### BUG-010 · Major · ✅ FIXED during QA (`4b529fe`, `useBannerTimer`) · A running breastfeeding timer for the non-active baby is invisible
 - **Area:** `src/app/AppLayout.tsx` / `TimerBanner` (they use `useActiveTimer()` = active baby only). `selectAllTimers` exists but is unused.
 - **Steps:**
   1. With twins A and B, start a feed for B.
@@ -71,7 +76,7 @@ Severity scale: **Blocker** = core flow unusable / data loss for everyone · **M
 - **Actual:** A's screens show no banner and no indicator anywhere. The only hint is a small "הנקה" badge inside the baby-switcher sheet.
 - **Evidence:** `BUG-010-other-baby-timer-invisible-history.png`, `BUG-010-other-baby-timer-invisible-home.png`. Test: `babies.spec.ts` (BUG-010).
 
-#### BUG-007 · Minor · Editing a measurement in lb mode silently changes the stored weight
+#### BUG-007 · Minor · OPEN (fix in progress, uncommitted) · Editing a measurement in lb mode silently changes the stored weight
 - **Area:** `src/features/growth/measurementForm.ts` (`measurementToFormValues` pre-fills `gToLb(g).toFixed(2)`), `MeasurementSheet.tsx`.
 - **Steps:**
   1. Settings → weight unit lb.
@@ -81,7 +86,7 @@ Severity scale: **Blocker** = core flow unusable / data loss for everyone · **M
 - **Actual:** `weightG` becomes **3348**. The rounded lb value is converted back on every save, which changes medical data the user didn't touch.
 - **Evidence:** `BUG-007-lb-edit-prefill.png`. Test: `growth.spec.ts` (BUG-007).
 
-#### BUG-009 · Minor · Numeric ranges in growth insight text are shown reversed (RTL bidi)
+#### BUG-009 · Minor · OPEN (fix in progress, uncommitted) · Numeric ranges in growth insight text are shown reversed (RTL bidi)
 - **Area:** `src/features/growth/insightCopy.ts` (the strings are plain text inside RTL paragraphs).
 - **Steps:**
   1. Newborn with 7–10 % weight loss (e.g. birth 3,500 g, day 3 → 3,200 g). Banner text: "ירידה של 7%–10% בימים הראשונים…".
@@ -90,7 +95,7 @@ Severity scale: **Blocker** = core flow unusable / data loss for everyone · **M
 - **Actual:** They display as **"10%–7%"** and **"150–100 גר׳"**. This is medical-adjacent copy, so reversed ranges are misleading. An automated scan of every page / tab / baby found only these 2 instances: all other ranges (milk guideline 120–180, chart subtitles, legends) are correctly isolated.
 - **Evidence:** `BUG-009-range-reversed-7-10.png`, `BUG-009-range-reversed-100-150-dark.png`, `BUG-009-range-reversed-100-150-768.png`. Test: `growth.spec.ts` (BUG-009), via helper `unisolatedRanges()` in `e2e/fixtures.ts`.
 
-#### BUG-012 · Minor · oz mode: the edit sheet shows a different amount than the lists
+#### BUG-012 · Minor · ✅ FIXED during QA (`4b529fe`) · oz mode: the edit sheet shows a different amount than the lists
 - **Area:** `src/features/feeding/BottleSheet.tsx` (`displayVolume` rounds to the 0.5 oz step).
 - **Steps:**
   1. Volume unit oz.
@@ -100,14 +105,14 @@ Severity scale: **Blocker** = core flow unusable / data loss for everyone · **M
 - **Actual:** The stepper shows **4**. The stored ml is preserved when untouched, which is good. But the editor misreports the logged amount, and any +/− starts from the wrong value (4 → 4.5).
 - **Evidence:** `BUG-012-list-shows-4.2oz.png`, `BUG-012-editor-shows-4oz.png`. Test: `bottle.spec.ts` (BUG-012).
 
-#### BUG-011 · Cosmetic · A long baby name wraps onto two lines and grows the header
+#### BUG-011 · Cosmetic · ✅ FIXED during QA (`4b529fe`) · A long baby name wraps onto two lines and grows the header
 - **Area:** `.baby-switch__name` (`src/app/BabySwitcher.tsx` / `components.css`).
 - **Steps:** At 360px, use a 30-character name ("אלכסנדרה-מרגריטה בת-שבע לוי").
 - **Expected:** One line with an ellipsis (`.truncate`), and the header stays 56px.
 - **Actual:** The name wraps to 2 lines (43px tall), which pushes the header down.
 - **Evidence:** `BUG-011-long-name-wraps-header.png`. Test: `layout.spec.ts` (BUG-011).
 
-### Fixed during QA (regression tests in place, all passing)
+### Fixed during QA, earlier batch (regression tests in place, all passing)
 
 | ID | Sev. | Summary | Area | Regression test |
 |---|---|---|---|---|
@@ -120,10 +125,10 @@ Severity scale: **Blocker** = core flow unusable / data loss for everyone · **M
 
 ### Observations (not filed as bugs; for the Team Lead / engineers)
 
-- **OBS-1 · History paging (in flux).**
-  - The committed code starts infinite scroll only after the first tap on "הצגת ימים נוספים". This deliberately stops the button from jumping away under the user's finger.
-  - The current working-tree edit removes that gate. With the gate gone, scrolling the button into view loads more days and moves the button mid-tap. Playwright's own click hit exactly this ("element was detached"), so real taps can be swallowed too.
-  - **Recommendation:** keep the gate, or trigger loading from a sentinel *below* the button.
+- **OBS-1 · History paging (gate removed).**
+  - An earlier commit started infinite scroll only after the first tap on "הצגת ימים נוספים", so the button couldn't jump away under the user's finger.
+  - HEAD no longer has that gate. Scrolling the button into view loads more days and moves the button mid-tap. Playwright's own click hit exactly this ("element was detached"), so real taps can be swallowed too.
+  - **Recommendation:** restore the gate, or trigger loading from a sentinel *below* the button.
   - The tests accept both designs.
 - **OBS-2 · Import while a feed is running.** Importing a backup replaces a running timer without a word. The confirm text says "replaces all data", which is technically correct, but consider "(כולל הנקה פעילה)".
 - **OBS-3 · Counts differ between screens.** Home "האכלות" and Stats "האכלות ביום" count milk feeds only. The "האכלות לפי יום" chart stacks solids too, so the headline number (e.g. 9) is lower than the bar height (11). This follows a documented domain rule, but a legend note would avoid confusion.
@@ -138,19 +143,19 @@ Severity scale: **Blocker** = core flow unusable / data loss for everyone · **M
 | Area | What was verified | E2E file | Status |
 |---|---|---|---|
 | First run / onboarding | Hebrew RTL, no tab bar, required name / date / sex, future date, > 3 years, > 30 chars, birth-weight range, focus on first invalid field, lands on Home, persisted shape | `onboarding.spec.ts` | ✅ |
-| Multiple babies | Add 2nd baby via switcher, switch both ways, isolation in Home / History / Growth (sex label), per-baby timers, delete baby with confirm (only its data), non-active baby's timer visibility | `babies.spec.ts` | ✅ / ❌ BUG-010 |
+| Multiple babies | Add 2nd baby via switcher, switch both ways, isolation in Home / History / Growth (sex label), per-baby timers, delete baby with confirm (only its data), non-active baby's timer visibility | `babies.spec.ts` | ✅ (BUG-010 fixed) |
 | Breastfeeding timer | Right → left → pause → resume → finish with exact per-side durations, toast, undo restores timer, survives reload and keeps counting (clock API), banner on non-Home tabs, Home live card, pause/resume from banner, cancel + confirm + undo, < 1 min confirm, manual entry (validation, chips, stepper, default −30′, end-in-future), edit start time (incl. future refused), 90-min reminder, stale > 6 h (default end, custom end, end < start), next-side rule (other side, < 2 min same side, pause run) | `breastfeeding.spec.ts` | ✅ |
-| Bottle | Defaults, content seg, chips + stepper (snap / bounds / disabled), retro time chip, note, last-used defaults, 0 / NaN / > 500 rejected, > 400 warning, future time, edit + undo, delete + undo (exact restore), dirty-close confirm, double tap, ml ↔ oz everywhere (tile, hero, today, history, day summary, chips), whole-ml storage, ml unchanged on note-only edit, oz editor value | `bottle.spec.ts` | ✅ / ❌ BUG-012 |
+| Bottle | Defaults, content seg, chips + stepper (snap / bounds / disabled), retro time chip, note, last-used defaults, 0 / NaN / > 500 rejected, > 400 warning, future time, edit + undo, delete + undo (exact restore), dirty-close confirm, double tap, ml ↔ oz everywhere (tile, hero, today, history, day summary, chips), whole-ml storage, ml unchanged on note-only edit, oz editor value | `bottle.spec.ts` | ✅ (BUG-012 fixed) |
 | Solids | Enter / comma chips, remove chip, empty validation + focus, new-food auto flag, amount chip select / clear, reactions incl. "אחר" text round trip, recent-food suggestions (order, de-dup, case / space), timeline meta / badge / note, solids-only day summary | `solids.spec.ts` | ✅ |
 | History | Empty state, day grouping + Hebrew titles (היום / אתמול / weekday / שבת), newest first, midnight-crossing feed under its start day (seeded and live), exact day summaries, filters + empty filter + "הצגת הכול", 14-day paging + load more / infinite scroll, edit breastfeed minutes, **DST 25 Oct** (times, 30-min feed across fall-back, grouping) | `history.spec.ts` | ✅ |
 | Home totals | Exact hero (since last milk feed), last-feed meta, next side, tile metas, today: feeds / yesterday / ml / bottles / breast min / avg interval (2:10), recent 3, "—" when no data, since formats (עכשיו / minutes / יום אחד / ימים), bottle-only guideline (480–720 ml, 100 ml × 6, meter aria), DST "yesterday" | `home.spec.ts` | ✅ |
 | Growth | Empty state, add kg + length + head, grams input (> 100), lb input / display, validation (none, < 0.5, > 30, NaN, length, head, before birth, future), WHO P50 for boy 3.3464 kg at birth, girl day 65 5.00 kg and boy day 30 3.9 kg vs independent LMS math, < P3 banner, > 10 % loss banner (11.4 %) + consult copy, % vs birth, gain / day and / week, edit, delete + undo, dirty close, milk card only when bottle-fed, lb edit drift, reversed ranges | `growth.spec.ts`, `who.ts` | ✅ / ❌ BUG-007, BUG-009 |
 | Stats | Empty state (< 2 days), 7-day averages over complete days (6 / 300 ml / 30′ / 4:00), deltas (+1, +60 מ״ל, +6 ד׳, −42 ד׳) + SR context + caption, 14 / 30 days averaged only since the first entry (5.5 / 270 / 27 / 4:22), no delta without previous period, oz, guideline band only for bottle-fed, charts + "היום" tick, zero delta neutral | `stats.spec.ts` | ✅ |
 | Settings | Theme auto / light / dark → `data-theme` + theme-color + body bg + persists + arrow keys, export JSON (download, name, format, equality with store), **round trip into a fresh browser context** via onboarding import, import with confirm (summary, safe focus), invalid JSON / not-a-backup / future version / corrupt record → Hebrew error toast and nothing changed, import while a timer runs, CSV feedings + measurements (BOM, CRLF, exact Hebrew headers, rows, formula-injection escaping), delete-all double confirm (cancel at step 2 keeps data) → onboarding, About | `settings.spec.ts` | ✅ |
-| Persistence | Reload keeps entries / units / active baby, persisted envelope `{state, version: 1}`, schema-invalid data → onboarding + `:corrupt` copy, garbage never crashes, future store version not lost, unparseable JSON | `persistence.spec.ts` | ✅ / ❌ BUG-008 |
+| Persistence | Reload keeps entries / units / active baby, persisted envelope `{state, version: 1}`, schema-invalid data → onboarding + `:corrupt` copy, garbage never crashes, future store version not lost, unparseable JSON | `persistence.spec.ts` | ✅ (BUG-008 fixed) |
 | Accessibility | Every page and every sheet / dialog: no unlabeled controls (Chromium AX tree via CDP), `dir=rtl`, one `h1`, `aria-current` tab, Esc closes sheets, focus returns to trigger, initial focus (first field / right side), focus trap, nested confirm Esc keeps parent, safe-action focus, polite toast with real undo button, `role=timer` `aria-live=off`, banner `role=status`, side-button labels | `a11y.spec.ts`, `walk.ts` | ✅ |
 | Console hygiene | Every test fails on any console error / warning / page error (auto fixture `consoleGuard`) | `fixtures.ts` | ✅ |
-| Layout | No horizontal overflow at 360×640 on every page and every sheet, light + dark, worst-case content (long names / foods / notes, 450 ml, running timer), long-name header | `layout.spec.ts` | ✅ / ❌ BUG-011 |
+| Layout | No horizontal overflow at 360×640 on every page and every sheet, light + dark, worst-case content (long names / foods / notes, 450 ml, running timer), long-name header | `layout.spec.ts` | ✅ (BUG-011 fixed) |
 | PWA | Manifest linked + valid (he / rtl / standalone / colors / short_name ≤ 12 / icons 192, 512, maskable fetched and PNG size-checked), index meta, SW registers + activates, **offline reload** of Home / Growth (WHO chunk) / Stats, no external requests (self-hosted fonts) | `pwa.spec.ts` | ✅ |
 | Exploratory 🔍 | Light / dark at 360 / 390 / 768; midnight + DST live timers; 0 / 1 / many entries; 1-year perf; rapid double taps (all sheets); timer for A while on B; import during a timer; lb / oz round trips; Hebrew truncation; RTL mirroring (side buttons, stepper, tabs); number / range reversal scan on all pages; medical copy (loss 7 % / 10 %, regain by day 14, P3 / P97, crossing lines, 120–180 ml/kg capped 1,000, typical gains) | scratch scripts | findings above |
 

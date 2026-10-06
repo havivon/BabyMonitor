@@ -116,3 +116,29 @@ export function measurementToFormValues(
     note: m.note ?? '',
   };
 }
+
+/**
+ * Keeps the stored value of every numeric field the user did not touch (QA BUG-007): the form
+ * shows rounded display values (e.g. 7.38 lb for 3,346 g), so converting them back would silently
+ * change medical data on an unrelated edit (like the note). A field counts as untouched when its
+ * text equals the prefilled text.
+ */
+export function keepUntouchedValues(
+  input: MeasurementInput,
+  values: MeasurementFormValues,
+  initial: MeasurementFormValues,
+  original: Measurement | null,
+): MeasurementInput {
+  if (!original) return input;
+  const out: MeasurementInput = { ...input };
+  const fields = [
+    ['weight', 'weightG'],
+    ['length', 'lengthMm'],
+    ['head', 'headMm'],
+  ] as const;
+  for (const [field, key] of fields) {
+    const stored = original[key];
+    if (stored !== undefined && values[field].trim() === initial[field].trim()) out[key] = stored;
+  }
+  return out;
+}

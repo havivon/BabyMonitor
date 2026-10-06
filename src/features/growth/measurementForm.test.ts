@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   MEASUREMENT_ERRORS,
+  keepUntouchedValues,
   measurementToFormValues,
   parseDecimal,
   validateMeasurement,
@@ -115,5 +116,62 @@ describe('measurementToFormValues', () => {
       head: '',
       note: '',
     });
+  });
+});
+
+describe('keepUntouchedValues (BUG-007)', () => {
+  const original = {
+    id: 'm',
+    babyId: 'b',
+    date: '2026-07-01',
+    weightG: 3346,
+    lengthMm: 503,
+    headMm: 341,
+  };
+
+  it('keeps stored grams when the lb field was not edited', () => {
+    const initial = measurementToFormValues(original, 'lb', '2026-10-05');
+    expect(initial.weight).toBe('7.38');
+    const values = { ...initial, note: 'רק הערה' };
+    const r = validateMeasurement(values, {
+      birthDate: '2026-06-01',
+      today: '2026-10-05',
+      weightUnit: 'lb',
+    });
+    if (!r.ok) throw new Error('should validate');
+    expect(r.value.weightG).toBe(3348); // the lossy round trip QA found…
+    expect(keepUntouchedValues(r.value, values, initial, original)).toEqual({
+      date: '2026-07-01',
+      weightG: 3346, // …is avoided
+      lengthMm: 503,
+      headMm: 341,
+      note: 'רק הערה',
+    });
+  });
+
+  it('uses the new value for edited fields and leaves new measurements alone', () => {
+    const initial = measurementToFormValues(original, 'lb', '2026-10-05');
+    const values = { ...initial, weight: '7.5' };
+    const r = validateMeasurement(values, {
+      birthDate: '2026-06-01',
+      today: '2026-10-05',
+      weightUnit: 'lb',
+    });
+    if (!r.ok) throw new Error('should validate');
+    expect(keepUntouchedValues(r.value, values, initial, original).weightG).toBe(3402);
+    const fresh = { date: '2026-07-01', weightG: 3000 };
+    expect(keepUntouchedValues(fresh, values, initial, null)).toBe(fresh);
+  });
+
+  it('drops a value the user cleared', () => {
+    const initial = measurementToFormValues(original, 'kg', '2026-10-05');
+    const values = { ...initial, head: '' };
+    const r = validateMeasurement(values, {
+      birthDate: '2026-06-01',
+      today: '2026-10-05',
+      weightUnit: 'kg',
+    });
+    if (!r.ok) throw new Error('should validate');
+    expect(keepUntouchedValues(r.value, values, initial, original).headMm).toBeUndefined();
   });
 });

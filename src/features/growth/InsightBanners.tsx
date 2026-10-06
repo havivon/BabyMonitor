@@ -1,5 +1,6 @@
 import { CircleAlert, CircleCheck, Info, TriangleAlert } from 'lucide-react';
 import type { GrowthInsight } from '../../domain/growth/insights';
+import { isolateNumbers } from '../../i18n/format';
 import { insightCopy, type BannerTone } from './insightCopy';
 
 const ICON: Record<BannerTone, typeof Info> = {
@@ -9,7 +10,10 @@ const ICON: Record<BannerTone, typeof Info> = {
   success: CircleCheck,
 };
 
-/** Growth flags as `.banner`s (most severe first, as returned by `growthInsights`). */
+/**
+ * Growth flags as `.banner`s (most severe first, as returned by `growthInsights`). Numbers and
+ * ranges are bidi-isolated so "100–150" never renders reversed in RTL (QA BUG-009).
+ */
 export function InsightBanners({ insights }: { insights: readonly GrowthInsight[] }) {
   if (insights.length === 0) return null;
   return (
@@ -26,8 +30,8 @@ export function InsightBanners({ insights }: { insights: readonly GrowthInsight[
               <Icon aria-hidden />
             </span>
             <div className="banner__body">
-              <p className="banner__title">{copy.title}</p>
-              <p className="banner__text">{copy.text}</p>
+              <p className="banner__title">{isolateNumbers(copy.title)}</p>
+              <p className="banner__text">{isolateNumbers(copy.text)}</p>
             </div>
           </div>
         );

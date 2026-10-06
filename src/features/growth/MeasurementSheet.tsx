@@ -6,6 +6,7 @@ import type { IsoDate, Measurement, WeightUnit } from '../../domain/types';
 import { UNIT_LABELS } from '../../domain/units';
 import { he } from '../../i18n/he';
 import {
+  keepUntouchedValues,
   measurementToFormValues,
   validateMeasurement,
   type MeasurementErrors,
@@ -91,7 +92,7 @@ export function MeasurementSheet({
       if (first) document.getElementById(ids[first])?.focus();
       return;
     }
-    onSave(result.value);
+    onSave(keepUntouchedValues(result.value, values, initial, measurement));
   };
 
   const numberField = (

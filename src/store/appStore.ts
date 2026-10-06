@@ -5,7 +5,7 @@
  * storage, clock and id generator. The app uses the singleton `appStore` (see hooks.ts).
  */
 import { nanoid } from 'nanoid';
-import { createJSONStorage, persist, type StateStorage } from 'zustand/middleware';
+import { persist, type StateStorage } from 'zustand/middleware';
 import { createStore, type StoreApi } from 'zustand/vanilla';
 import type { BackupData } from '../domain/backup';
 import * as timer from '../domain/timer';
@@ -25,6 +25,8 @@ import {
   migratePersistedState,
   STORAGE_KEY,
   STORE_VERSION,
+  createSafeJsonStorage,
+  stashCorrupt,
   validatePersisted,
   type PersistedData,
 } from './persistence';
@@ -254,7 +256,7 @@ export function createAppStore(options: CreateAppStoreOptions = {}): AppStore {
       {
         name,
         version: STORE_VERSION,
-        storage: createJSONStorage(() => rawStorage ?? localStorage),
+        storage: createSafeJsonStorage<PersistedData>(() => rawStorage ?? localStorage),
         partialize: (s): PersistedData => ({
           babies: s.babies,
           entries: s.entries,
@@ -267,14 +269,15 @@ export function createAppStore(options: CreateAppStoreOptions = {}): AppStore {
           const result = validatePersisted(persisted);
           if (result.ok) return { ...current, ...result.data };
           // Never silently destroy user data: stash the unreadable state before starting fresh.
-          console.error(
-            `[store] persisted state rejected (${result.reason}); saved to "${name}:corrupt"`,
-          );
+          let key: string | null = null;
           try {
-            (rawStorage ?? localStorage).setItem(`${name}:corrupt`, JSON.stringify(persisted));
+            key = stashCorrupt(rawStorage ?? localStorage, name, JSON.stringify(persisted));
           } catch {
             /* storage unavailable — nothing more we can do */
           }
+          console.error(
+            `[store] persisted state rejected (${result.reason}); saved to "${key ?? '(unavailable)'}"`,
+          );
           return current;
         },
       },

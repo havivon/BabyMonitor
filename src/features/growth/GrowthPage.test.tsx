@@ -102,12 +102,30 @@ describe('GrowthPage', () => {
     expect(appStore.getState().measurements[0]?.weightG).toBe(4350);
   });
 
+  it('keeps the stored grams when only the note is edited in lb mode (BUG-007)', async () => {
+    const { user, baby } = setup(3300);
+    appStore.getState().updateSettings({ weightUnit: 'lb' });
+    appStore.getState().addMeasurement({ babyId: baby.id, date: '2026-07-01', weightG: 3346 });
+    await user.click(await screen.findByRole('button', { name: 'עריכת מדידה מ-1 ביולי 2026' }));
+    expect(screen.getByLabelText('משקל')).toHaveValue('7.38');
+    await user.type(screen.getByLabelText(/הערה/), 'נשקל בטיפת חלב');
+    await user.click(screen.getByRole('button', { name: 'שמירה' }));
+    expect(appStore.getState().measurements[0]).toMatchObject({
+      weightG: 3346,
+      note: 'נשקל בטיפת חלב',
+    });
+  });
+
   it('renders the percentile summary, birth row and flags with warm copy', async () => {
     vi.setSystemTime(local(2026, 6, 6, 10)); // day 5
     const { baby } = setup(3500);
     appStore.getState().addMeasurement({ babyId: baby.id, date: '2026-06-05', weightG: 3100 });
-    expect(await screen.findByText('ירידה של 11.4% ממשקל הלידה')).toBeInTheDocument();
+    const LRI = '\u2066';
+    const PDI = '\u2069';
+    expect(await screen.findByText(`ירידה של ${LRI}11.4${PDI}% ממשקל הלידה`)).toBeInTheDocument();
     expect(screen.getByText(/מצדיקה בדיקה. כדאי להתייעץ עם רופא\/ת הילדים/)).toBeInTheDocument();
+    // Numbers inside the Hebrew copy are bidi-isolated (BUG-009).
+    expect(screen.getByText(/מצדיקה בדיקה/).textContent).toContain(`${LRI}10${PDI}%`);
     expect(screen.getByText('משקל לידה')).toBeInTheDocument();
     // Percentile appears once the WHO tables have loaded.
     await waitFor(() => {
