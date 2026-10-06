@@ -7,7 +7,6 @@ import {
   onSnapshot,
   serverTimestamp,
   writeBatch,
-  type DocumentData,
   type Firestore,
   type QueryDocumentSnapshot,
 } from 'firebase/firestore';
@@ -17,7 +16,7 @@ import { SYNC_DOC_VERSION, type SyncCollection } from './records';
 /** Firestore allows 500 operations per batch; stay below it. */
 const BATCH_LIMIT = 450;
 
-function toRemote(snap: QueryDocumentSnapshot<DocumentData>): RemoteDoc {
+function toRemote(snap: QueryDocumentSnapshot): RemoteDoc {
   const d = snap.data();
   const deleted = d.deleted === true;
   return { id: snap.id, data: deleted ? null : (d.data as unknown), deleted };
