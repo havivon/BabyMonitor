@@ -83,6 +83,14 @@ describe('babies', () => {
     expect(selectBabies(store.getState()).map((x) => x.name)).toEqual(['נועה ר.', 'איתי']);
   });
 
+  it('updateBaby removes optional fields patched with undefined', () => {
+    const a = store.getState().addBaby({ ...newBaby, birthLengthMm: 500 });
+    store.getState().updateBaby(a.id, { birthWeightG: undefined, birthHeadMm: 340 });
+    const b = store.getState().babies[0];
+    expect(b).toMatchObject({ birthLengthMm: 500, birthHeadMm: 340 });
+    expect(b && 'birthWeightG' in b).toBe(false);
+  });
+
   it('removeBaby cascades entries, measurements and timer; active falls back', () => {
     const a = store.getState().addBaby(newBaby);
     const b = store.getState().addBaby({ ...newBaby, name: 'איתי' });

@@ -142,7 +142,16 @@ export function createAppStore(options: CreateAppStoreOptions = {}): AppStore {
           },
           updateBaby: (babyId, patch) =>
             set((s) => ({
-              babies: s.babies.map((b) => (b.id === babyId ? { ...b, ...patch } : b)),
+              babies: s.babies.map((b) => {
+                if (b.id !== babyId) return b;
+                // An explicit `undefined` in the patch removes that optional field (e.g. a cleared
+                // birth weight) instead of leaving an undefined-valued key behind.
+                const next: Baby = { ...b, ...patch };
+                for (const [k, v] of Object.entries(patch)) {
+                  if (v === undefined) Reflect.deleteProperty(next, k);
+                }
+                return next;
+              }),
             })),
           removeBaby: (babyId) =>
             set((s) => {
