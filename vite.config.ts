@@ -59,7 +59,11 @@ export default defineConfig(({ mode }) => {
           // Rubik ships Arabic/Cyrillic subsets we never render; skip precaching them (Hebrew + Latin only).
           // The Firebase SDK (accounts & sync) is only fetched by signed-in users: don't make every
           // local-only install download it; cache it at runtime instead (works offline after first use).
-          globIgnores: ['**/rubik-{arabic,cyrillic,cyrillic-ext}-*', '**/firebase-*.js', '**/firebaseRuntime-*.js'],
+          globIgnores: [
+            '**/rubik-{arabic,cyrillic,cyrillic-ext}-*',
+            '**/firebase-*.js',
+            '**/firebaseRuntime-*.js',
+          ],
           runtimeCaching: [
             {
               urlPattern: /\/assets\/firebase(Runtime)?-[\w-]+\.js$/,
@@ -84,7 +88,8 @@ export default defineConfig(({ mode }) => {
         output: {
           // One named chunk for the Firebase SDK (+ its Capacitor plugin), loaded only on demand.
           manualChunks(id: string) {
-            if (/node_modules\/(firebase|@firebase|@capacitor-firebase)\//.test(id)) return 'firebase';
+            if (/node_modules\/(firebase|@firebase|@capacitor-firebase)\//.test(id))
+              return 'firebase';
             return undefined;
           },
         },

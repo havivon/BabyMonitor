@@ -52,7 +52,8 @@ export interface Connectivity {
 
 export const browserConnectivity: Connectivity = {
   // `onLine` is undefined outside browsers (e.g. Node) — treat that as online.
-  isOnline: () => typeof navigator === 'undefined' || (navigator as { onLine?: boolean }).onLine !== false,
+  isOnline: () =>
+    typeof navigator === 'undefined' || (navigator as { onLine?: boolean }).onLine !== false,
   subscribe: (listener) => {
     if (typeof window === 'undefined') return () => undefined;
     const on = (): void => {

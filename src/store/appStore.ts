@@ -147,7 +147,7 @@ export function createAppStore(options: CreateAppStoreOptions = {}): AppStore {
                 // An explicit `undefined` in the patch removes that optional field (e.g. a cleared
                 // birth weight) instead of leaving an undefined-valued key behind.
                 const next: Baby = { ...b, ...patch };
-                for (const [k, v] of Object.entries(patch)) {
+                for (const [k, v] of Object.entries(patch) as [string, unknown][]) {
                   if (v === undefined) Reflect.deleteProperty(next, k);
                 }
                 return next;
