@@ -20,7 +20,7 @@ const fake = vi.hoisted(() => ({
   docs: new Map<string, Record<string, unknown>>(),
   listeners: [] as Listener[],
   writes: [] as { op: string; path: string; data: unknown }[],
-  failUpdate: null as null | ((path: string, data: unknown) => unknown),
+  failUpdate: null as null | ((path: string, data: unknown) => Error | null),
   authCb: null as null | ((u: unknown) => void),
   profiles: [] as unknown[],
   syncStarts: [] as string[],
@@ -96,7 +96,7 @@ vi.mock('firebase/firestore', () => {
     updateDoc: (ref: { path: string }, data: Data) => {
       fake.writes.push({ op: 'update', path: ref.path, data });
       const err = fake.failUpdate?.(ref.path, data);
-      if (err) return Promise.reject(err as Error);
+      if (err) return Promise.reject(err);
       const d = structuredClone(fake.docs.get(ref.path) ?? {});
       for (const [k, v] of Object.entries(data)) setPath(d, k, v);
       fake.docs.set(ref.path, d);

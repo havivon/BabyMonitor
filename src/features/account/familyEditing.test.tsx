@@ -207,6 +207,15 @@ describe('removed by another member', () => {
     expect(screen.getByText(REMOVED)).toBeInTheDocument();
   });
 
+  it('no false notice at startup while the session is still restoring (ready: false)', () => {
+    localStorage.setItem(LAST_FAMILY_KEY, JSON.stringify({ uid: 'u1', familyId: 'f1' }));
+    fakeCloud.set({ ready: false, family: null, status: 'off' });
+    renderInShell(<div />);
+    act(() => fakeCloud.set({ ready: true, status: 'connecting' }));
+    act(() => fakeCloud.set({ family: FAMILY, status: 'synced' }));
+    expect(screen.queryByText(REMOVED)).not.toBeInTheDocument();
+  });
+
   it('nothing while membership is unknown, for another account, or never in a family', () => {
     localStorage.setItem(LAST_FAMILY_KEY, JSON.stringify({ uid: 'other', familyId: 'f9' }));
     fakeCloud.set({ family: null, status: 'connecting' });

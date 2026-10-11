@@ -16,14 +16,16 @@ const NOTICE_MS = 8000;
  * One-time toast "הוסרת מהמשפחה. הנתונים נשארו בטלפון הזה." when the signed-in account's family
  * goes away without this device leaving it (another member removed us) — during the session, or
  * while the app was closed (the last family is remembered per account). Membership is only judged
- * once it is known (status ≠ 'connecting').
+ * once it is known (`ready` and status ≠ 'connecting').
  */
 export function useRemovedFromFamilyNotice(): void {
-  const { user, family, status } = useCloud();
+  const { ready, user, family, status } = useCloud();
   const toast = useToast();
   const uid = user?.uid ?? null;
   const familyId = family?.id ?? null;
-  const membershipKnown = uid !== null && status !== 'connecting';
+  // At startup the service briefly reports a user with `family: null` while `ready` is false;
+  // only `ready` + status ≠ 'connecting' means the family membership is really known.
+  const membershipKnown = uid !== null && ready && status !== 'connecting';
   const hadFamily = useRef<string | null>(null);
 
   useEffect(() => {
