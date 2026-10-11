@@ -28,6 +28,9 @@ describe('cloud API without a Firebase config', () => {
     ['joinFamily', () => cloud.joinFamily('ABCD23', 'merge')],
     ['leaveFamily', () => cloud.leaveFamily()],
     ['retrySync', () => cloud.retrySync()],
+    ['renameFamily', () => cloud.renameFamily('משפחה')],
+    ['updateMyName', () => cloud.updateMyName('אבא')],
+    ['removeMember', () => cloud.removeMember('u2')],
   ];
 
   it('covers every action', () => {

@@ -8,8 +8,11 @@ import { connectAuthEmulator, inMemoryPersistence, initializeAuth } from 'fireba
 import {
   connectFirestoreEmulator,
   disableNetwork,
+  doc,
   enableNetwork,
+  getDoc,
   initializeFirestore,
+  setDoc,
   type Firestore,
 } from 'firebase/firestore';
 import type { StateStorage } from 'zustand/middleware';
@@ -275,6 +278,81 @@ describe('family sync (emulators)', () => {
       .signInWithEmail(`mom${stamp}@example.com`, 'nope-nope')
       .catch((e: unknown) => e);
     expect((wrong as CloudError).code).toBe('wrong-password');
+  });
+
+  it('family editing: rename + my name propagate; the creator removes dad, who goes local-only', async () => {
+    const invite = await mom.service.createInvite();
+    await dad.service.joinFamily(invite.code, 'merge');
+    await waitFor(converged, 'converged after joining again');
+    const fid = mom.state().family?.id ?? '';
+    const dadUid = dad.state().user?.uid ?? '';
+    const momUid = mom.state().user?.uid ?? '';
+    expect(mom.state().family?.createdBy).toBe(momUid);
+
+    await mom.service.renameFamily('  בית   כהן ');
+    await waitFor(() => dad.state().family?.name === 'בית כהן', 'rename reaches dad');
+
+    await dad.service.updateMyName('אבי');
+    await waitFor(
+      () => mom.state().family?.members.some((m) => m.uid === dadUid && m.name === 'אבי') === true,
+      'new name reaches mom',
+    );
+    expect(dad.state().user?.displayName).toBe('אבי');
+    const dadProfile = await getDoc(doc(dad.db, 'users', dadUid));
+    expect(dadProfile.data()?.displayName).toBe('אבי');
+
+    // Only the creator removes, and never themself.
+    const denied = await dad.service.removeMember(momUid).catch((e: unknown) => e);
+    expect((denied as CloudError).code).toBe('permission-denied');
+    const self = await mom.service.removeMember(momUid).catch((e: unknown) => e);
+    expect((self as CloudError).code).toBe('permission-denied');
+
+    const dadData = stableStringify(sharedView(dad.store));
+    await mom.service.removeMember(dadUid);
+    await waitFor(() => mom.state().family?.members.length === 1, 'mom sees dad removed');
+    await waitFor(() => dad.state().family === null, 'dad notices removal');
+    expect(dad.state().status).toBe('off');
+    expect(stableStringify(sharedView(dad.store))).toBe(dadData); // local copy intact
+    await expect(getDoc(doc(dad.db, 'families', fid))).rejects.toThrow();
+    await waitFor(() => dad.state().status === 'off', 'no error loop');
+    // His profile no longer points at the family (best-effort cleanup).
+    let profileFid: unknown = 'pending';
+    await waitFor(() => {
+      void getDoc(doc(dad.db, 'users', dadUid)).then((d) => {
+        profileFid = d.data()?.familyId;
+      });
+      return profileFid === null;
+    }, 'profile familyId cleared');
+
+    // Mom's new data no longer reaches him.
+    const noa = mom.store.getState().babies.find((b) => b.name === 'נועה');
+    if (!noa) throw new Error('missing baby');
+    const after = mom.store
+      .getState()
+      .addEntry({ babyId: noa.id, type: 'solid', at: Date.now(), foods: ['תפוח'] });
+    await new Promise((r) => setTimeout(r, 800));
+    expect(dad.store.getState().entries.some((e) => e.id === after.id)).toBe(false);
+    expect(dad.state().status).toBe('off');
+  });
+
+  it('startup with a stale profile (familyId of a family he is not in) recovers to local-only', async () => {
+    const fid = mom.state().family?.id ?? '';
+    const dadUid = dad.state().user?.uid ?? '';
+    await setDoc(doc(dad.db, 'users', dadUid), { familyId: fid }, { merge: true });
+    const phone = device('dad-phone');
+    try {
+      await phone.service.signInWithEmail(`dad${stamp}@example.com`, 'secret-456');
+      await waitFor(() => phone.state().ready, 'phone ready');
+      // It tries the family, is denied, and settles local-only without looping.
+      await new Promise((r) => setTimeout(r, 1500));
+      expect(phone.state().family).toBeNull();
+      expect(phone.state().status).toBe('off');
+      const profile = await getDoc(doc(phone.db, 'users', dadUid));
+      expect(profile.data()?.familyId).toBeNull();
+    } finally {
+      phone.service.dispose();
+      await deleteApp(phone.app);
+    }
   });
 
   // Last: the emulator's write stream is flaky for the SAME client after disable/enableNetwork.

@@ -267,6 +267,76 @@ describe('leaving', () => {
   });
 });
 
+describe('family editing', () => {
+  const addDad = () =>
+    env.withSecurityRulesDisabled(async (ctx) => {
+      await updateDoc(doc(ctx.firestore(), 'families', FID), {
+        'members.dad': { name: 'אבא', joinedAt: Timestamp.now(), inviteCode: 'ABCD23' },
+      });
+    });
+  const fam = (uid: string) => doc(as(uid), 'families', FID);
+
+  it('rename: any member, valid name only; non-members denied', async () => {
+    await addDad();
+    await assertSucceeds(updateDoc(fam('mom'), { name: 'משפחת כהן' }));
+    await assertSucceeds(updateDoc(fam('dad'), { name: 'כהן' }));
+    await assertFails(updateDoc(fam('eve'), { name: 'נחטף' }));
+    await assertFails(updateDoc(fam('mom'), { name: 'x'.repeat(61) }));
+    await assertFails(updateDoc(fam('mom'), { name: 'כהן', createdBy: 'mom2' }));
+  });
+
+  it('updateMyName: only the name of the caller’s own entry', async () => {
+    await addDad();
+    await assertSucceeds(updateDoc(fam('dad'), { 'members.dad.name': 'אבי' }));
+    await assertSucceeds(updateDoc(fam('mom'), { 'members.mom.name': 'אמא רחל' }));
+    await assertFails(updateDoc(fam('dad'), { 'members.mom.name': 'x' })); // someone else's
+    await assertFails(updateDoc(fam('dad'), { 'members.dad.name': 'x'.repeat(61) }));
+    await assertFails(updateDoc(fam('dad'), { 'members.dad.joinedAt': Timestamp.now() }));
+    await assertFails(updateDoc(fam('dad'), { 'members.dad.inviteCode': 'QLDCDE' }));
+    await assertFails(updateDoc(fam('dad'), { 'members.dad.admin': true }));
+    await assertFails(updateDoc(fam('eve'), { 'members.eve.name': 'איב' })); // non-member
+    await assertFails(updateDoc(fam('dad'), { 'members.dad.name': 'אבא', name: 'x' }));
+  });
+
+  it('removeMember: the creator removes another member', async () => {
+    await addDad();
+    await assertSucceeds(updateDoc(fam('mom'), { 'members.dad': deleteField() }));
+    await assertFails(getDoc(fam('dad'))); // no access afterwards
+    await assertFails(getDocs(collection(as('dad'), 'families', FID, 'entries')));
+  });
+
+  it('removeMember: non-creators, self-removal by the creator path and side changes are denied', async () => {
+    await addDad();
+    await env.withSecurityRulesDisabled(async (ctx) => {
+      await updateDoc(doc(ctx.firestore(), 'families', FID), {
+        'members.eve': { name: 'איב', joinedAt: Timestamp.now(), inviteCode: 'ABCD23' },
+      });
+    });
+    await assertFails(updateDoc(fam('dad'), { 'members.eve': deleteField() })); // not the creator
+    await assertFails(updateDoc(fam('dad'), { 'members.mom': deleteField() }));
+    // Two at once, or remove + edit / add / rename.
+    await assertFails(
+      updateDoc(fam('mom'), { 'members.dad': deleteField(), 'members.eve': deleteField() }),
+    );
+    await assertFails(
+      updateDoc(fam('mom'), { 'members.dad': deleteField(), 'members.eve.name': 'x' }),
+    );
+    await assertFails(
+      updateDoc(fam('mom'), {
+        'members.dad': deleteField(),
+        'members.zed': { name: 'ז', joinedAt: serverTimestamp() },
+      }),
+    );
+    await assertFails(updateDoc(fam('mom'), { 'members.dad': deleteField(), name: 'x' }));
+    await assertFails(updateDoc(fam('mom'), { 'members.dad': deleteField(), createdBy: 'dad' }));
+    // The creator may not alter others' entries.
+    await assertFails(updateDoc(fam('mom'), { 'members.dad.name': 'x' }));
+    // The creator "removing" themself is only allowed as leaving (which they may do).
+    await assertSucceeds(updateDoc(fam('mom'), { 'members.mom': deleteField() }));
+    await assertFails(getDoc(fam('mom')));
+  });
+});
+
 describe('invites', () => {
   const invite = (uid: string, fid: string, expiresInMs = 7 * DAY) => ({
     familyId: fid,
