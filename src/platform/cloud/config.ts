@@ -14,14 +14,14 @@ export interface FirebaseWebConfig {
   appId: string;
 }
 
-/** Placeholders — the product owner supplies the real values. */
+/** Production project `babymonitor-917c8` (public web config, supplied by the product owner). */
 const STATIC_CONFIG: FirebaseWebConfig = {
-  apiKey: '',
-  authDomain: '',
-  projectId: '',
-  storageBucket: '',
-  messagingSenderId: '',
-  appId: '',
+  apiKey: 'AIzaSyBTdiNIjxyhW8cKhgxdJePuekQN6dFkJFo',
+  authDomain: 'babymonitor-917c8.firebaseapp.com',
+  projectId: 'babymonitor-917c8',
+  storageBucket: 'babymonitor-917c8.firebasestorage.app',
+  messagingSenderId: '784263944815',
+  appId: '1:784263944815:web:e32c7b14fa1056592a8b9a',
 };
 
 const env = import.meta.env as Record<string, string | undefined>;
@@ -49,4 +49,11 @@ export function isConfigComplete(config: FirebaseWebConfig): boolean {
   return Boolean(config.apiKey && config.projectId && config.appId);
 }
 
-export const isCloudConfigured: boolean = isConfigComplete(firebaseConfig) || emulatorHost !== null;
+/**
+ * `VITE_FIREBASE_DISABLED=1` forces local-only mode (unit tests of the local app, offline builds).
+ * The emulator switch still wins so emulator-backed development keeps working.
+ */
+const forcedOff = env.VITE_FIREBASE_DISABLED === '1';
+
+export const isCloudConfigured: boolean =
+  emulatorHost !== null || (!forcedOff && isConfigComplete(firebaseConfig));

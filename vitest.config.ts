@@ -13,7 +13,9 @@ export default defineConfig({
   },
   test: {
     environment: 'jsdom',
-    env: { TZ: 'Asia/Jerusalem' },
+    // Local-only by default: the production Firebase config is committed, but unit tests exercise
+    // the account UI through the fake in src/test/fakeCloud.ts, never the real project.
+    env: { TZ: 'Asia/Jerusalem', VITE_FIREBASE_DISABLED: '1' },
     setupFiles: ['./src/test/setup.ts'],
     include: ['src/**/*.test.{ts,tsx}'],
     restoreMocks: true,

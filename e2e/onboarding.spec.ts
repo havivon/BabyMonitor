@@ -14,7 +14,7 @@ test.describe('first run / onboarding', () => {
       page.getByRole('heading', { level: 1, name: 'ברוכים הבאים ל-BabyMonitor' }),
     ).toBeVisible();
     await expect(page.getByRole('navigation', { name: 'ניווט ראשי' })).toHaveCount(0);
-    await expect(page.getByText('בלי הרשמה ובלי שרת — הכול נשמר במכשיר שלך')).toBeVisible();
+    await expect(page.getByText('החשבון אינו חובה — בלעדיו הכול נשמר רק במכשיר הזה')).toBeVisible();
   });
 
   test('validates on blur: required name, birth date not in future, sex required', async ({
