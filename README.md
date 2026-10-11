@@ -44,7 +44,7 @@ cd android && ./gradlew assembleDebug  # הקובץ נוצר ב-android/app/buil
 **הקמת פרויקט Firebase (פעם אחת, בעל המוצר):**
 
 1. ב-[Firebase console](https://console.firebase.google.com) ליצור פרויקט ולהפעיל **Authentication** ← Sign-in method: ‏**Email/Password** ו-**Google**, ו-**Cloud Firestore**.
-2. לפרוס את כללי האבטחה: `npx firebase deploy --only firestore:rules --project <project-id>`.
+2. לפרוס את כללי האבטחה: `npx firebase deploy --only firestore:rules --project <project-id>`, או להדביק את `firestore.rules` ב-Firestore ← Rules ← Publish.
 3. **אפליקציית Web:** להוסיף Web app ולהעתיק את ה-config ל-`src/platform/cloud/config.ts`, או להגדיר משתני סביבה `VITE_FIREBASE_API_KEY`, `VITE_FIREBASE_AUTH_DOMAIN`, `VITE_FIREBASE_PROJECT_ID`, `VITE_FIREBASE_STORAGE_BUCKET`, `VITE_FIREBASE_MESSAGING_SENDER_ID`, `VITE_FIREBASE_APP_ID` (ב-GitHub: Settings ← Variables). זה config ציבורי מעצם הגדרתו; האבטחה באה מהכללים. להוסיף את דומיין האתר ל-Authorized domains.
 4. **אפליקציית Android:** להוסיף Android app עם package ‏`com.havivon.babymonitor` ולרשום את טביעת האצבע **SHA-1** של מפתח החתימה הקבוע:
 
@@ -52,7 +52,11 @@ cd android && ./gradlew assembleDebug  # הקובץ נוצר ב-android/app/buil
    AD:FD:8C:98:81:AB:8D:47:C6:97:BA:EF:0E:2C:83:A7:3F:A4:7D:5C
    ```
 
-   להוריד את `google-services.json` ולשמור אותו בקידוד base64 כ-secret בשם `GOOGLE_SERVICES_JSON_BASE64` (‏`base64 -w0 google-services.json`). ה-workflow כותב אותו ל-`android/app/` בזמן הבנייה; הקובץ לא נשמר במאגר. התחברות Google באנדרואיד נעשית בחלון המקורי של Google ‏(`@capacitor-firebase/authentication`) והסשן מנוהל ב-Firebase JS SDK.
+   **חובה:** בלי טביעת האצבע הזו התחברות Google באנדרואיד נכשלת ("משהו השתבש"). בודקים ב-Project settings ← Your apps ← האפליקציה ← SHA certificate fingerprints.
+
+   להוריד את `google-services.json` ולהדביק את כל תוכנו כ-secret בשם `GOOGLE_SERVICES_JSON` (או בקידוד base64 כ-`GOOGLE_SERVICES_JSON_BASE64`). ה-workflow כותב אותו ל-`android/app/` בזמן הבנייה ובודק שהוא JSON תקין; הקובץ לא נשמר במאגר. התחברות Google באנדרואיד נעשית בחלון המקורי של Google ‏(`@capacitor-firebase/authentication`) והסשן מנוהל ב-Firebase JS SDK.
+
+5. **מפתח חתימה קבוע** (secrets ב-GitHub): `ANDROID_KEYSTORE_BASE64`, `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS`. בלעדיהם כל בנייה נחתמת במפתח זמני אחר, עדכון לא יותקן מעל הגרסה הקודמת, וה-SHA-1 שנרשם ב-Firebase לא יתאים.
 
 **פיתוח מקומי מול אמולטורים** (ללא פרויקט אמיתי, project id ‏`demo-babymonitor`, נדרש Java 21):
 
