@@ -23,6 +23,8 @@ export interface Family {
   id: string;
   name: string;
   members: FamilyMember[];
+  /** uid of the member who created the family — the only one who may remove other members. */
+  createdBy: string;
 }
 
 export interface Invite {
@@ -95,4 +97,13 @@ export interface CloudActions {
   leaveFamily(): Promise<void>;
   /** Restarts the sync listeners after `status === 'error'` (the "ניסיון חוזר" button). */
   retrySync(): Promise<void>;
+  /** Renames the family (any member; 1–60 chars, trimmed). */
+  renameFamily(name: string): Promise<void>;
+  /** Changes how the current user appears to the family (1–60 chars, trimmed). */
+  updateMyName(name: string): Promise<void>;
+  /**
+   * Removes another member (family creator only; never yourself — use `leaveFamily`). The removed
+   * member's devices lose access and keep a local copy of the data.
+   */
+  removeMember(uid: string): Promise<void>;
 }
