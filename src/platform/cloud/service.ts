@@ -82,6 +82,7 @@ export interface CloudService extends CloudActions {
 
 interface FamilyDoc {
   name?: unknown;
+  createdBy?: unknown;
   members?: Record<string, { name?: unknown; joinedAt?: unknown }>;
 }
 
@@ -93,6 +94,13 @@ const OFF: CloudState = {
   status: 'off',
   lastSyncedAt: null,
 };
+
+/** Trims a family / member name; rejects empty input and caps it at 60 characters (rules limit). */
+export function cleanName(raw: string): string {
+  const name = raw.trim().replace(/\s+/g, ' ').slice(0, MAX_NAME);
+  if (!name) throw new CloudError('unknown', 'name is required');
+  return name;
+}
 
 function toCloudUser(u: User): CloudUser {
   const google = u.providerData.some((p) => p.providerId === 'google.com');
@@ -108,7 +116,7 @@ function millis(v: unknown): number {
   return v instanceof Timestamp ? v.toMillis() : typeof v === 'number' ? v : 0;
 }
 
-function toFamily(id: string, d: FamilyDoc): Family {
+export function toFamily(id: string, d: FamilyDoc): Family {
   const members: FamilyMember[] = Object.entries(d.members ?? {})
     .map(([uid, m]) => ({
       uid,
@@ -116,7 +124,12 @@ function toFamily(id: string, d: FamilyDoc): Family {
       joinedAt: millis(m.joinedAt),
     }))
     .sort((a, b) => a.joinedAt - b.joinedAt);
-  return { id, name: typeof d.name === 'string' ? d.name : '', members };
+  return {
+    id,
+    name: typeof d.name === 'string' ? d.name : '',
+    createdBy: typeof d.createdBy === 'string' ? d.createdBy : '',
+    members,
+  };
 }
 
 /** Clears the shared (family) data from this device; settings stay. */
@@ -142,6 +155,8 @@ export function createCloudService(deps: CloudServiceDeps): CloudService {
   let unsubFamily: (() => void) | null = null;
   let disposed = false;
   let starterUids: Record<string, string> = {};
+  /** Families this user was removed from (or left) during this session — never re-attached. */
+  const lostFamilies = new Set<string>();
 
   const publishStarters = (): void => {
     if (disposed) return;
@@ -180,8 +195,28 @@ export function createCloudService(deps: CloudServiceDeps): CloudService {
     return (u?.displayName ?? u?.email?.split('@')[0] ?? 'הורה').slice(0, MAX_NAME);
   };
 
+  /**
+   * The user is no longer a member of `fid` (removed by the creator, left elsewhere, or a stale
+   * profile on startup): stop syncing, keep the device's copy, go local-only, and best-effort clear
+   * the profile's `familyId` so the next launch starts clean. Never retried (no error loop).
+   */
+  const onLostFamily = (fid: string): void => {
+    if (familyId !== fid) return;
+    lostFamilies.add(fid);
+    stopFamily();
+    familyId = null;
+    set({ family: null, status: 'off', lastSyncedAt: null });
+    const user = currentUser;
+    if (user) {
+      void setDoc(doc(db, 'users', user.uid), { familyId: null }, { merge: true }).catch(
+        () => undefined,
+      );
+    }
+  };
+
   /** Starts/stops the family listener + sync engine when the profile's familyId changes. */
-  const setFamilyId = (next: string | null): void => {
+  const setFamilyId = (requested: string | null): void => {
+    const next = requested !== null && lostFamilies.has(requested) ? null : requested;
     if (next === familyId) return;
     stopFamily();
     familyId = next;
@@ -196,18 +231,18 @@ export function createCloudService(deps: CloudServiceDeps): CloudService {
       (snap) => {
         const data = snap.data() as FamilyDoc | undefined;
         if (!data?.members?.[uid]) {
-          // Removed from the family (e.g. left on another device).
-          stopFamily();
-          set({ family: null, status: 'off' });
+          // Removed by the creator, or left on another device. A cache-only snapshot (offline
+          // launch, doc not cached) proves nothing; the server answer or error follows.
+          if (!snap.metadata.fromCache) onLostFamily(next);
           return;
         }
         set({ family: toFamily(snap.id, data) });
         publishStarters(); // member names may have changed
       },
-      () => {
-        // Not readable any more (not a member): stop syncing, keep the local copy.
-        stopFamily();
-        set({ family: null, status: 'off' });
+      (e: { code?: string }) => {
+        // Not readable any more (no longer a member): same as leaving.
+        if (e.code === 'permission-denied') onLostFamily(next);
+        else if (familyId === next) set({ status: 'error' });
       },
     );
     engine = startSync({
@@ -245,6 +280,7 @@ export function createCloudService(deps: CloudServiceDeps): CloudService {
     unsubProfile = null;
     stopFamily();
     familyId = null;
+    lostFamilies.clear();
     currentUser = u;
     if (!u) {
       deps.setSessionHint?.(false);
@@ -449,8 +485,53 @@ export function createCloudService(deps: CloudServiceDeps): CloudService {
           },
         });
         if (mode === 'replace') clearFamilyData(store);
+        lostFamilies.delete(fid); // re-invited after being removed
         await setMyFamily(fid);
         await whenSynced(); // merge: the first pass uploads what this device has (union)
+      }),
+
+    renameFamily: (raw) =>
+      run(async () => {
+        const fid = requireFamily();
+        const name = cleanName(raw);
+        await updateDoc(doc(db, 'families', fid), { name });
+      }),
+
+    updateMyName: (raw) =>
+      run(async () => {
+        const user = requireUser();
+        const name = cleanName(raw);
+        if (familyId) {
+          await updateDoc(doc(db, 'families', familyId), { [`members.${user.uid}.name`]: name });
+        }
+        // Best-effort: the profile and the Firebase Auth display name follow.
+        await Promise.allSettled([
+          setDoc(doc(db, 'users', user.uid), { displayName: name }, { merge: true }),
+          updateProfile(user, { displayName: name }),
+        ]);
+        if (currentUser === user) set({ user: { ...toCloudUser(user), displayName: name } });
+      }),
+
+    removeMember: (uid) =>
+      run(async () => {
+        const fid = requireFamily();
+        const me = requireUser().uid;
+        if (uid === me) throw new CloudError('permission-denied', 'use leaveFamily to leave');
+        const family = state.family;
+        if (family && family.createdBy !== me) {
+          throw new CloudError('permission-denied', 'only the family creator can remove members');
+        }
+        if (family && !family.members.some((m) => m.uid === uid)) {
+          throw new CloudError('not-in-family');
+        }
+        await updateDoc(doc(db, 'families', fid), { [`members.${uid}`]: deleteField() }).catch(
+          async (e: unknown) => {
+            // Retried after it already succeeded: the member is gone, which is what we wanted.
+            const snap = await getDoc(doc(db, 'families', fid)).catch(() => null);
+            const members = (snap?.data() as FamilyDoc | undefined)?.members;
+            if (!members || uid in members) throw e;
+          },
+        );
       }),
 
     retrySync: () =>

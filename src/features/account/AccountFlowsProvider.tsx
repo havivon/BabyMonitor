@@ -6,6 +6,7 @@ import { FamilySetupSheet } from './FamilySetupSheet';
 import { AccountFlowsContext, type AccountFlowsApi, type SignInIntent } from './flowsContext';
 import { InviteSheet } from './InviteSheet';
 import { SignInSheet } from './SignInSheet';
+import { useRemovedFromFamilyNotice } from './useRemovedFromFamilyNotice';
 
 type Request =
   | { kind: 'signIn'; intent: SignInIntent }
@@ -17,6 +18,7 @@ type Request =
  * After a successful sign-in, as soon as family membership is known (status ≠ 'connecting'):
  * - with a family → toast "התחברת · הנתונים מסונכרנים";
  * - without one → the "התחברת · עוד צעד אחד" setup sheet (DESIGN §15.3 / §15.7).
+ * Also tells the user once when another member removed them from the family.
  * Renders only its children when the cloud is not configured.
  */
 export function AccountFlowsProvider({ children }: { children: ReactNode }) {
@@ -34,6 +36,7 @@ function ConfiguredAccountFlows({ children }: { children: ReactNode }) {
   /** Last sign-in's intent + count; keeps the setup sheet mounted so it can animate closed. */
   const [setup, setSetup] = useState<{ intent: SignInIntent; n: number } | null>(null);
   const welcomePending = useRef(false);
+  useRemovedFromFamilyNotice();
 
   const membershipKnown = user !== null && status !== 'connecting';
   // Signed in to an account that already has a family: nothing to set up (adjusted during render).

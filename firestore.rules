@@ -63,6 +63,8 @@ service cloud.firestore {
       allow update: if signedIn() && leave();
       allow update: if signedIn() && rename();
       allow update: if signedIn() && join();
+      allow update: if signedIn() && renameMe();
+      allow update: if signedIn() && removeMember();
 
       // A member may rename the family.
       function rename() {
@@ -92,6 +94,26 @@ service cloud.firestore {
           && exists(/databases/$(database)/documents/invites/$(code))
           && get(/databases/$(database)/documents/invites/$(code)).data.familyId == fid
           && get(/databases/$(database)/documents/invites/$(code)).data.expiresAt > request.time;
+      }
+
+      // A member changes only the `name` of their own member entry.
+      function renameMe() {
+        return me() in resource.data.members
+          && me() in request.resource.data.members
+          && onlyMyMemberEntryChanges()
+          && request.resource.data.members[me()].diff(resource.data.members[me()]).affectedKeys().hasOnly(['name'])
+          && shortString(request.resource.data.members[me()].name, 60);
+      }
+
+      // The family creator removes exactly one other member (and changes nothing else).
+      function removeMember() {
+        return resource.data.get('createdBy', '') == me()
+          && me() in resource.data.members
+          && me() in request.resource.data.members
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['members'])
+          && request.resource.data.members.diff(resource.data.members).addedKeys().size() == 0
+          && request.resource.data.members.diff(resource.data.members).changedKeys().size() == 0
+          && request.resource.data.members.diff(resource.data.members).removedKeys().size() == 1;
       }
 
       // Leave: a member removes only themself.

@@ -102,6 +102,9 @@ export const cloud: CloudActions = {
   joinFamily: (code, mode) => withService((s) => s.joinFamily(code, mode)),
   leaveFamily: () => withService((s) => s.leaveFamily()),
   retrySync: () => withService((s) => s.retrySync()),
+  renameFamily: (name) => withService((s) => s.renameFamily(name)),
+  updateMyName: (name) => withService((s) => s.updateMyName(name)),
+  removeMember: (uid) => withService((s) => s.removeMember(uid)),
 };
 
 /** Who started each shared running feed (babyId → starter); empty without a family. */

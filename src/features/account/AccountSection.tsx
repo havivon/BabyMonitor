@@ -7,8 +7,10 @@ import {
   KeyRound,
   LogOut,
   Mail,
+  Pencil,
   RefreshCw,
   Send,
+  Trash2,
 } from 'lucide-react';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { useLocation } from 'react-router-dom';
@@ -18,17 +20,27 @@ import { useToast } from '../../components/toast';
 import { toDateKey } from '../../domain/dates';
 import { useNow } from '../../hooks/useNow';
 import { he } from '../../i18n/he';
-import { cloud, isCloudConfigured, useCloud, type SyncStatus } from '../../platform/cloud';
+import {
+  cloud,
+  isCloudConfigured,
+  useCloud,
+  type FamilyMember,
+  type SyncStatus,
+} from '../../platform/cloud';
 import { formatDateNumeric } from '../growth/ui/format';
 import { BackupNote } from './BackupNote';
+import { clearOwnFamilyExit, markOwnFamilyExit } from './familyExit';
 import { useAccountFlows } from './flowsContext';
 import { initialOf } from './names';
+import { NameSheet } from './NameSheet';
 import { syncedAgo } from './syncStatus';
 import { useCloudAction } from './useCloudAction';
 
 const a = he.account;
 const s = a.sync;
 type Confirm = null | 'signOut' | 'leave';
+type NameEdit = 'family' | 'me';
+const f = a.family;
 
 const SYNC_ROW: Record<
   Exclude<SyncStatus, 'off'>,
@@ -62,6 +74,13 @@ function ConfiguredAccountSection() {
   const [confirm, setConfirm] = useState<Confirm>(null);
   const retry = useCloudAction();
   const session = useCloudAction();
+  const removal = useCloudAction();
+  /** Name sheet: which name, a fresh key per open; kept after close for the exit animation. */
+  const [nameEdit, setNameEdit] = useState<{ kind: NameEdit; n: number } | null>(null);
+  const [nameEditOpen, setNameEditOpen] = useState(false);
+  /** Member being removed (kept after close so the dialog's exit shows the name). */
+  const [toRemove, setToRemove] = useState<FamilyMember | null>(null);
+  const [removeOpen, setRemoveOpen] = useState(false);
 
   // Arrived from the header sync indicator: bring this section into view (after the route's
   // scroll-to-top, which runs in a parent effect).
@@ -75,6 +94,7 @@ function ConfiguredAccountSection() {
   // Errors of actions outside forms go to a toast (DESIGN §15.3 table).
   useToastOnError(session.error, session.clearError);
   useToastOnError(retry.error, retry.clearError);
+  useToastOnError(removal.error, removal.clearError);
 
   if (!ready) return null;
   if (!user) return <BackupNote variant="settings" />;
@@ -83,10 +103,25 @@ function ConfiguredAccountSection() {
     const which = confirm;
     setConfirm(null);
     if (!which) return;
+    markOwnFamilyExit(); // not "removed by someone else" (useRemovedFromFamilyNotice)
     const ok = await session.run(() =>
       which === 'signOut' ? cloud.signOut() : cloud.leaveFamily(),
     );
     if (ok) toast.show({ text: which === 'signOut' ? a.signedOut : a.family.left });
+    else clearOwnFamilyExit();
+  };
+
+  const openNameEdit = (kind: NameEdit): void => {
+    setNameEdit((prev) => ({ kind, n: (prev?.n ?? 0) + 1 }));
+    setNameEditOpen(true);
+  };
+
+  const confirmRemove = async (): Promise<void> => {
+    const member = toRemove;
+    setRemoveOpen(false);
+    if (!member) return;
+    if (await removal.run(() => cloud.removeMember(member.uid)))
+      toast.show({ text: f.removed(member.name) });
   };
 
   const displayName = user.displayName ?? user.email ?? '';
@@ -100,6 +135,7 @@ function ConfiguredAccountSection() {
           ? s.errorSub
           : null;
   const me = family?.members.find((m) => m.uid === user.uid);
+  const isCreator = family !== null && family.createdBy === user.uid;
   const others = family?.members.filter((m) => m.uid !== user.uid) ?? [];
   const members = me ? [me, ...others] : others;
 
@@ -172,12 +208,22 @@ function ConfiguredAccountSection() {
                 <span className="row__title">{family.name}</span>
                 <span className="row__sub">{a.family.members(family.members.length)}</span>
               </span>
-              <span className="avatar-stack" aria-hidden="true">
-                {members.map((m, i) => (
-                  <span key={m.uid} className={`avatar avatar--sm${i % 2 ? ' avatar--alt' : ''}`}>
-                    {initialOf(m.name)}
-                  </span>
-                ))}
+              <span className="row__end">
+                <span className="avatar-stack" aria-hidden="true">
+                  {members.map((m, i) => (
+                    <span key={m.uid} className={`avatar avatar--sm${i % 2 ? ' avatar--alt' : ''}`}>
+                      {initialOf(m.name)}
+                    </span>
+                  ))}
+                </span>
+                <button
+                  type="button"
+                  className="icon-btn icon-btn--sm"
+                  aria-label={f.editFamilyName}
+                  onClick={() => openNameEdit('family')}
+                >
+                  <Pencil aria-hidden="true" />
+                </button>
               </span>
             </div>
           </li>
@@ -196,10 +242,37 @@ function ConfiguredAccountSection() {
                     </span>
                   )}
                 </span>
-                {m.uid === user.uid && (
+                {m.uid === user.uid ? (
                   <span className="row__end">
                     <span className="badge">{a.family.me}</span>
+                    <button
+                      type="button"
+                      className="icon-btn icon-btn--sm"
+                      aria-label={f.editMyName}
+                      onClick={() => openNameEdit('me')}
+                    >
+                      <Pencil aria-hidden="true" />
+                    </button>
                   </span>
+                ) : (
+                  isCreator && (
+                    <span className="row__end">
+                      <button
+                        type="button"
+                        className="btn btn--ghost-danger btn--sm"
+                        aria-label={f.removeAria(m.name)}
+                        disabled={removal.pending}
+                        aria-busy={(removal.pending && toRemove?.uid === m.uid) || undefined}
+                        onClick={() => {
+                          setToRemove(m);
+                          setRemoveOpen(true);
+                        }}
+                      >
+                        <Trash2 aria-hidden="true" />
+                        {f.remove}
+                      </button>
+                    </span>
+                  )
                 )}
               </div>
             </li>
@@ -311,6 +384,46 @@ function ConfiguredAccountSection() {
         onConfirm={() => void runConfirmed()}
         onCancel={() => setConfirm(null)}
       />
+      <ConfirmDialog
+        open={removeOpen}
+        title={f.removeTitle(toRemove?.name ?? '')}
+        text={f.removeText(toRemove?.name ?? '')}
+        confirmLabel={f.removeConfirm}
+        danger
+        icon={<Trash2 aria-hidden="true" />}
+        onConfirm={() => void confirmRemove()}
+        onCancel={() => setRemoveOpen(false)}
+      />
+      {nameEdit && family && (
+        <NameSheet
+          key={nameEdit.n}
+          open={nameEditOpen}
+          onClose={() => setNameEditOpen(false)}
+          {...(nameEdit.kind === 'family'
+            ? {
+                title: f.familyNameTitle,
+                label: f.familyNameLabel,
+                hint: f.familyNameHint,
+                initial: family.name,
+                onSave: (name: string) => cloud.renameFamily(name),
+                onSaved: () => {
+                  setNameEditOpen(false);
+                  toast.show({ text: f.familyRenamed });
+                },
+              }
+            : {
+                title: f.myNameTitle,
+                label: f.myNameLabel,
+                hint: f.myNameHint,
+                initial: me?.name ?? displayName,
+                onSave: (name: string) => cloud.updateMyName(name),
+                onSaved: () => {
+                  setNameEditOpen(false);
+                  toast.show({ text: f.myNameUpdated });
+                },
+              })}
+        />
+      )}
     </section>
   );
 }

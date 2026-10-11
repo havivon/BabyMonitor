@@ -42,6 +42,7 @@ export const USER: CloudUser = {
 export const FAMILY: Family = {
   id: 'f1',
   name: 'המשפחה של נועה',
+  createdBy: 'u1',
   members: [
     { uid: 'u1', name: 'דנה', joinedAt: 1 },
     { uid: 'u2', name: 'יואב', joinedAt: 2 },
@@ -98,6 +99,9 @@ function makeActions(): { [K in keyof CloudActions]: ReturnType<typeof vi.fn<Clo
     joinFamily: vi.fn<CloudActions['joinFamily']>(ok),
     leaveFamily: vi.fn<CloudActions['leaveFamily']>(ok),
     retrySync: vi.fn<CloudActions['retrySync']>(ok),
+    renameFamily: vi.fn<CloudActions['renameFamily']>(ok),
+    updateMyName: vi.fn<CloudActions['updateMyName']>(ok),
+    removeMember: vi.fn<CloudActions['removeMember']>(ok),
   };
 }
 
