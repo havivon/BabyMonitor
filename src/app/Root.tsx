@@ -4,6 +4,7 @@ import { ToastProvider } from '../components/toast';
 import { AccountFlowsProvider } from '../features/account/AccountFlowsProvider';
 import { FeedingSheetsProvider } from '../features/feeding/FeedingSheetsProvider';
 import { appStore, useAppStore } from '../store';
+import { useAndroidBackButton } from './useAndroidBackButton';
 import { useBannerTimer } from './useBannerTimer';
 
 /**
@@ -13,6 +14,7 @@ import { useBannerTimer } from './useBannerTimer';
 export function Root({ children }: { children: ReactNode }) {
   const timer = useBannerTimer();
   const { pathname } = useLocation();
+  useAndroidBackButton();
   const babies = useAppStore((s) => s.babies);
   const activeBabyId = useAppStore((s) => s.settings.activeBabyId);
 
